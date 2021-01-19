@@ -1,0 +1,103 @@
+.min-height{
+  /*height: calc(100%);*/
+  height: 3000px;
+  /*width: 200px;*/
+}
+
+
+.mainContainer {
+  height: 3000px;
+  /*width: 4000px;*/
+  /*top: -1500px;*/
+  /*left: -1500px;*/
+  position: relative;
+  overflow: hidden;
+  outline: none !important;
+}
+
+#mainContainer {
+  outline: none !important;
+  height: 3000px;
+  /*width: 4000px;*/
+  position: relative;
+}
+
+
+.window {
+  position: absolute;
+  border: 1px solid #346789;
+  box-shadow: 2px 2px 19px #aaa;
+  -o-box-shadow: 2px 2px 19px #aaa;
+  -webkit-box-shadow: 2px 2px 19px #aaa;
+  -moz-box-shadow: 2px 2px 19px #aaa;
+  -moz-border-radius: 0.5em;
+  border-radius: 0.5em;
+  opacity: 0.8;
+  width: 150px;
+  /*height: 100px;*/
+  /*display: flex;*/
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  text-align: center;
+  z-index: 20;
+  /*position: absolute;*/
+  background-color: #eeeeef;
+  color: black;
+  font-family: helvetica, sans-serif;
+  padding: 0.5em;
+  font-size: 0.9em;
+  -webkit-transition: -webkit-box-shadow 0.15s ease-in;
+  -moz-transition: -moz-box-shadow 0.15s ease-in;
+  -o-transition: -o-box-shadow 0.15s ease-in;
+  transition: box-shadow 0.15s ease-in;
+}
+
+
+
+
+.flowChartWrap{
+  height: 100%;
+  position: relative;
+  box-shadow: inset 0 0 5px rgba(223, 212, 212, 0.5);
+  margin: 30px;
+  padding: 80px;
+  border: 20px solid black;
+  border-radius: 5px;
+}
+/*.col-md-11{*/
+/*  z-index: -1;*/
+/*}*/
+.btn{
+  z-index: 2;
+}
+.pa{
+  position: absolute;
+}
+.fixed-node{
+  position: absolute;
+  top: 80px;
+  left: 150px;
+}
+
+#end-node{
+  left: 150px;
+  top: 700px;
+}
+.panel-node{
+  width: 150px;
+  display: inline-block;
+  margin: auto 25px;
+}
+.panel-node-list{
+  padding: 10px 10px;
+}
+.delete-node{
+  cursor: pointer;
+  width: 20px;
+  display: inline-block;
+  text-align: center;
+}
+.delete-node:hover{
+  color: red
+}

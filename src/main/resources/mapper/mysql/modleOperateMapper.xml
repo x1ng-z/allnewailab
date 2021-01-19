@@ -1,0 +1,564 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="hs.industry.ailab.dao.mysql.operate.ProjectOperate">
+
+    <resultMap id="projectResult" type="hs.industry.ailab.entity.Project">
+        <id column="projectid" property="projectid"/>
+        <result column="name" property="name"/>
+        <result column="runperiod" property="runperiod"/>
+        <collection property="modleList" column="projectid" ofType="hs.industry.ailab.entity.modle.Modle"
+                    select="findModleByProjectid"/>
+
+    </resultMap>
+
+
+    <resultMap id="modleResult" type="hs.industry.ailab.entity.modle.Modle">
+        <id property="modleId" column="modleId"/>
+        <result property="modleName" column="modleName"/>
+        <result property="modleEnable" column="modleEnable"/>
+        <result property="modletype" column="modletype"/>
+        <result property="refprojectid" column="refprojectid"/>
+        <association property="modleSight" column="modleId" javaType="hs.industry.ailab.entity.ModleSight"
+                     select="findmodleSight"/>
+        <collection property="propertyImpList" column="modleId"
+                    ofType="hs.industry.ailab.entity.modle.BaseModlePropertyImp"
+                    select="findModlePins"/>
+        <!--       -->
+        <discriminator javaType="java.lang.String" column="modletype">
+            <case value="mpc" resultType="hs.industry.ailab.entity.modle.controlmodle.MPCModle">
+                <result property="predicttime_P" column="predicttime_P"/>
+                <result property="controlAPCOutCycle" column="controlAPCOutCycle"/>
+                <result property="timeserise_N" column="timeserise_N"/>
+                <result property="controltime_M" column="controltime_M"/>
+                <result property="runstyle" column="runstyle"/>
+
+                <collection property="responTimeSeriseList" column="modleId"
+                            ofType="hs.industry.ailab.entity.ResponTimeSerise"
+                            select="findModleRespon"/>
+            </case>
+
+            <case value="pid" resultType="hs.industry.ailab.entity.modle.controlmodle.PIDModle">
+<!--                <result property="kp" column="kp"/>-->
+<!--                <result property="ki" column="ki"/>-->
+<!--                <result property="kd" column="kd"/>-->
+            </case>
+
+            <case value="filter" resultType="hs.industry.ailab.entity.modle.filtermodle.FilterModle">
+                <association property="filter" column="modleId" javaType="hs.industry.ailab.entity.modle.filter.Filter"
+                             select="findfilter"/>
+            </case>
+
+
+            <case value="input" resultType="hs.industry.ailab.entity.modle.iomodle.INModle">
+            </case>
+
+            <case value="output" resultType="hs.industry.ailab.entity.modle.iomodle.OUTModle">
+            </case>
+
+            <case value="customize" resultType="hs.industry.ailab.entity.modle.customizemodle.CUSTOMIZEModle">
+                <result column="customizepyname" property="customizepyname"/>
+            </case>
+
+        </discriminator>
+    </resultMap>
+
+
+    <resultMap id="propertyResult" type="hs.industry.ailab.entity.modle.BaseModlePropertyImp">
+        <id property="modlepinsId" column="modlepinsId"/>
+        <result property="refmodleId" column="refmodleId"/>
+        <result property="modleOpcTag" column="modleOpcTag"/>
+        <result property="modlePinName" column="modlePinName"/>
+        <result property="opcTagName" column="opcTagName"/>
+        <result property="resource" column="resource" typeHandler="hs.industry.ailab.dao.mysql.hander.JsonObjectHandler"/>
+        <result property="pinEnable" column="pinEnable"/>
+        <result property="updateTime" column="updateTime"
+                typeHandler="hs.industry.ailab.dao.mysql.hander.InstantHandler"/>
+        <result property="pindir" column="pindir"/>
+        <result property="modlepropertyclazz" column="modlepropertyclazz"/>
+
+        <discriminator javaType="java.lang.String" column="modlepropertyclazz">
+            <case value="basepropery" resultType="hs.industry.ailab.entity.modle.BaseModlePropertyImp"/>
+            <case value="mpcproperty" resultType="hs.industry.ailab.entity.modle.modlerproerty.MPCModleProperty">
+                <result property="Q" column="Q"/>
+                <result property="dmvHigh" column="dmvHigh"/>
+                <result property="deadZone" column="deadZone"/>
+                <result property="funelinitValue" column="funelinitValue"/>
+                <result property="R" column="R"/>
+                <result property="dmvLow" column="dmvLow"/>
+                <result property="referTrajectoryCoef" column="referTrajectoryCoef"/>
+                <result property="tracoefmethod" column="tracoefmethod"/>
+                <result property="funneltype" column="funneltype"/>
+                <result property="pintype" column="pintype"/>
+            </case>
+        </discriminator>
+    </resultMap>
+
+
+    <resultMap id="filterResult" type="hs.industry.ailab.entity.modle.filter.Filter">
+        <id property="filterid" column="filterid"/>
+        <result property="filtermethod" column="filtermethod"/>
+        <result property="refmodleid" column="refmodleid"/>
+        <discriminator javaType="java.lang.String" column="filtermethod">
+            <case value="mvav" resultType="hs.industry.ailab.entity.modle.filter.MoveAverageFilter">
+                <result property="filtercapacity" column="filtercapacity"/>
+            </case>
+            <case value="fodl" resultType="hs.industry.ailab.entity.modle.filter.FirstOrderLagFilter">
+                <result property="filteralphe" column="filteralphe"/>
+            </case>
+        </discriminator>
+    </resultMap>
+
+    <resultMap id="modlesightResult" type="hs.industry.ailab.entity.ModleSight">
+        <id property="modlesightid" column="modlesightid"/>
+        <result property="positiontop" column="positiontop"/>
+        <result property="positionleft" column="positionleft"/>
+        <result property="childs" column="childs" jdbcType="VARCHAR" javaType="java.lang.String"
+                typeHandler="hs.industry.ailab.dao.mysql.hander.JsonArrayHandler"/>
+        <result property="refmodleid" column="refmodleid"/>
+        <result property="parents" column="parents" javaType="java.lang.String"
+                typeHandler="hs.industry.ailab.dao.mysql.hander.JsonArrayHandler"/>
+    </resultMap>
+
+
+    <select id="findModlePins" resultMap="propertyResult">
+        select * from modlepins where refmodleId=#{modleId}
+    </select>
+
+    <select id="findModleRespon" resultType="hs.industry.ailab.entity.ResponTimeSerise">
+        select * from modlerespon where refrencemodleId=#{modleId}
+    </select>
+
+    <select id="findmodleSight" resultMap="modlesightResult">
+        select * from modlesight where refmodleid=#{modleId}
+    </select>
+
+    <select id="findfilter" resultMap="filterResult">
+        select * from filter where refmodleid=#{modleId}
+    </select>
+
+
+    <!--    int insertProject(@Param("project") Project project);-->
+    <insert id="insertProject" parameterType="hs.industry.ailab.entity.Project" useGeneratedKeys="true"
+            keyProperty="projectid">
+        insert into project(name,runperiod)
+        value (#{project.name},#{project.runperiod})
+    </insert>
+
+    <!--    int deleteProject(@Param("projectid")int projectid);-->
+    <delete id="deleteProject">
+        delete from project
+        where projectid=#{projectid}
+    </delete>
+    <!--    int updateProject(@Param("project")Project project);-->
+    <update id="updateProject" parameterType="hs.industry.ailab.entity.Project">
+        update project
+        set name=#{project.name},runperiod=#{project.runperiod}
+        where projectid=#{project.projectid}
+    </update>
+    <!--    Project findProjectById(@Param("projectid")int projectid);-->
+    <select id="findProjectById" resultMap="projectResult">
+        select * from project where projectid=#{projectid}
+    </select>
+    <!--    Project findAllProject();-->
+    <select id="findAllProject" resultMap="projectResult">
+        select * from project
+    </select>
+
+    <!--    int insertMPCModle(@Param("modle") MPCModle modle);-->
+    <insert id="insertMPCModle" parameterType="hs.industry.ailab.entity.modle.controlmodle.MPCModle"
+            keyProperty="modleId" useGeneratedKeys="true">
+        insert into modle(modleName,modleEnable,modletype,refprojectid,predicttime_P,controltime_M,timeserise_N,controlAPCOutCycle,runstyle)
+        value (#{modle.modleName},#{modle.modleEnable},#{modle.modletype},#{modle.refprojectid},#{modle.predicttime_P},#{modle.controltime_M},#{modle.timeserise_N},#{modle.controlAPCOutCycle},#{modle.runstyle})
+    </insert>
+
+    <!--    int insertCUSTOMIZEModle(@Param("modle") CUSTOMIZEModle modle);-->
+    <insert id="insertCUSTOMIZEModle" parameterType="hs.industry.ailab.entity.modle.customizemodle.CUSTOMIZEModle"
+            keyProperty="modleId" useGeneratedKeys="true">
+            insert into modle(modleName,modleEnable,modletype,refprojectid,customizepyname)
+            value (#{modle.modleName},#{modle.modleEnable},#{modle.modletype},#{modle.refprojectid},#{modle.customizepyname})
+    </insert>
+    <!--    int insertPIDModle(@Param("modle") PIDModle modle);-->
+    <insert id="insertPIDModle" parameterType="hs.industry.ailab.entity.modle.controlmodle.PIDModle"
+            keyProperty="modleId" useGeneratedKeys="true">
+            insert into modle(modleName,modleEnable,modletype,refprojectid)
+            value (#{modle.modleName},#{modle.modleEnable},#{modle.modletype},#{modle.refprojectid})
+    </insert>
+
+    <!--    int insertFilterModle(@Param("modle") FilterModle modle);-->
+    <insert id="insertFilterModle" parameterType="hs.industry.ailab.entity.modle.filtermodle.FilterModle"
+            keyProperty="modleId" useGeneratedKeys="true">
+        insert into modle(modleName,modleEnable,modletype,refprojectid)
+        value (#{modle.modleName},#{modle.modleEnable},#{modle.modletype},#{modle.refprojectid})
+    </insert>
+    <!--    int insertINModle(@Param("modle") INModle modle);-->
+    <insert id="insertINModle" parameterType="hs.industry.ailab.entity.modle.iomodle.INModle" keyProperty="modleId"
+            useGeneratedKeys="true">
+        insert into modle(modleName,modleEnable,modletype,refprojectid)
+        value (#{modle.modleName},#{modle.modleEnable},#{modle.modletype},#{modle.refprojectid})
+    </insert>
+    <!--    int insertOUTModle(@Param("modle") OUTModle modle);-->
+    <insert id="insertOUTModle" parameterType="hs.industry.ailab.entity.modle.iomodle.OUTModle" keyProperty="modleId"
+            useGeneratedKeys="true">
+        insert into modle(modleName,modleEnable,modletype,refprojectid)
+        value (#{modle.modleName},#{modle.modleEnable},#{modle.modletype},#{modle.refprojectid})
+    </insert>
+
+    <!--    int insertBaseModleImp(@Param("modle") BaseModleImp modle);-->
+    <insert id="insertBaseModleImp" parameterType="hs.industry.ailab.entity.modle.BaseModleImp" keyProperty="modleId"
+            useGeneratedKeys="true">
+        insert into modle(modleName,modleEnable,modletype,refprojectid)
+        value (#{modle.modleName},#{modle.modleEnable},#{modle.modletype},#{modle.refprojectid})
+    </insert>
+
+    <!--    int deleteModleByid(@Param("modleid")int modleid);-->
+    <delete id="deleteModleByid" parameterType="java.lang.Integer">
+        delete from modle where modleId=#{modleid}
+    </delete>
+    <!--    int deleteModleByprojectid(@Param("projectid")int projectid);-->
+    <delete id="deleteModleByprojectid" parameterType="java.lang.Integer">
+        delete from modle where refprojectid=#{projectid}
+    </delete>
+
+    <!--    int updateMPCModle(@Param("modle") MPCModle modle);-->
+    <update id="updateMPCModle" parameterType="hs.industry.ailab.entity.modle.controlmodle.MPCModle">
+        update modle
+        set modleName=#{modle.modleName},modleEnable=#{modle.modleEnable},modletype=#{modle.modletype},refprojectid=#{modle.refprojectid},predicttime_P=#{modle.predicttime_P},controltime_M=#{modle.controltime_M},timeserise_N=#{modle.timeserise_N},controlAPCOutCycle=#{modle.controlAPCOutCycle},runstyle=#{modle.runstyle}
+        where modleId=#{modle.modleId}
+    </update>
+    <!--    int updateCUSTOMIZEModle(@Param("modle") CUSTOMIZEModle modle);-->
+    <update id="updateCUSTOMIZEModle" parameterType="hs.industry.ailab.entity.modle.customizemodle.CUSTOMIZEModle">
+        update modle
+        set modleName=#{modle.modleName},modleEnable=#{modle.modleEnable},modletype=#{modle.modletype},refprojectid=#{modle.refprojectid},customizepyname=#{modle.customizepyname}
+        where modleId=#{modle.modleId}
+    </update>
+    <!--    int updatePIDModle(@Param("modle") PIDModle modle);-->
+    <update id="updatePIDModle" parameterType="hs.industry.ailab.entity.modle.controlmodle.PIDModle">
+        update modle
+        set modleName=#{modle.modleName},modleEnable=#{modle.modleEnable},modletype=#{modle.modletype},refprojectid=#{modle.refprojectid}
+        where modleId=#{modle.modleId}
+    </update>
+
+    <!--    int updateFilterModle(@Param("modle") FilterModle modle);-->
+    <update id="updateFilterModle" parameterType="hs.industry.ailab.entity.modle.filtermodle.FilterModle">
+        update modle
+        set modleName=#{modle.modleName},modleEnable=#{modle.modleEnable},modletype=#{modle.modletype},refprojectid=#{modle.refprojectid}
+        where modleId=#{modle.modleId}
+    </update>
+    <!--    int updateINModle(@Param("modle") INModle modle);-->
+    <update id="updateINModle" parameterType="hs.industry.ailab.entity.modle.iomodle.INModle">
+        update modle
+        set modleName=#{modle.modleName},modleEnable=#{modle.modleEnable},modletype=#{modle.modletype},refprojectid=#{modle.refprojectid}
+        where modleId=#{modle.modleId}
+    </update>
+    <!--    int updateOUTModle(@Param("modle") OUTModle modle);-->
+    <update id="updateOUTModle" parameterType="hs.industry.ailab.entity.modle.iomodle.OUTModle">
+        update modle
+        set modleName=#{modle.modleName},modleEnable=#{modle.modleEnable},modletype=#{modle.modletype},refprojectid=#{modle.refprojectid}
+        where modleId=#{modle.modleId}
+    </update>
+
+
+    <!--    Modle findModleByid(@Param("modleid")int modleid);-->
+    <select id="findModleByid" resultMap="modleResult">
+        select * from modle
+        where modleId=#{modleid}
+    </select>
+    <!--    Modle findModleByProjectid(@Param("projectid")int projectid);-->
+    <select id="findModleByProjectid" resultMap="modleResult">
+        select * from modle
+        where refprojectid=#{projectid}
+    </select>
+
+
+    <!--    int insertBaseModleProperty(@Param("baseModlePropertyImp") BaseModlePropertyImp baseModlePropertyImp);-->
+    <insert id="insertBaseModleProperty" parameterType="hs.industry.ailab.entity.modle.BaseModlePropertyImp"
+            useGeneratedKeys="true" keyProperty="modlepinsId">
+        insert into modlepins(
+        refmodleId,
+        modleOpcTag,
+        modlePinName,
+        opcTagName,
+        resource,
+        pinEnable,
+        pindir,
+        modlepropertyclazz)
+        value (#{baseModlePropertyImp.refmodleId},
+        #{baseModlePropertyImp.modleOpcTag},
+        #{baseModlePropertyImp.modlePinName},
+        #{baseModlePropertyImp.opcTagName},
+        #{baseModlePropertyImp.resource,javaType=com.alibaba.fastjson.JSONObject,jdbcType=VARCHAR,typeHandler=hs.industry.ailab.dao.mysql.hander.JsonObjectHandler},
+        #{baseModlePropertyImp.pinEnable},
+        #{baseModlePropertyImp.pindir},
+        #{baseModlePropertyImp.modlepropertyclazz})
+    </insert>
+    <!--    int deleteBaseModlePropertyByid(@Param("modlepinsId") int modlepinsId);-->
+    <delete id="deleteBaseModlePropertyByid">
+        delete from modlepins
+        where modlepinsId=#{modlepinsId}
+    </delete>
+    <!--    int deleteBaseModlePropertyByMoldeid(@Param("modleId") int modleId);-->
+    <delete id="deleteBaseModlePropertyByMoldeid">
+        delete from modlepins
+        where refmodleId=#{modleId}
+    </delete>
+    <!--    int updateBaseModleProperty(@Param("baseModlePropertyImp") BaseModlePropertyImp baseModlePropertyImp);-->
+    <update id="updateBaseModleProperty" parameterType="hs.industry.ailab.entity.modle.BaseModlePropertyImp">
+        update modlepins set
+        refmodleId=#{baseModlePropertyImp.refmodleId},
+        modleOpcTag=#{baseModlePropertyImp.modleOpcTag},
+        modlePinName=#{baseModlePropertyImp.modlePinName},
+        opcTagName=#{baseModlePropertyImp.opcTagName},
+        resource=#{baseModlePropertyImp.resource,javaType=com.alibaba.fastjson.JSONObject,jdbcType=VARCHAR,typeHandler=hs.industry.ailab.dao.mysql.hander.JsonObjectHandler},
+        updateTime=current_timestamp(),
+        pindir=#{baseModlePropertyImp.pindir},
+        modlepropertyclazz=#{baseModlePropertyImp.modlepropertyclazz}
+        where modlepinsId=#{baseModlePropertyImp.modlepinsId}
+    </update>
+
+
+    <!--    int updateBaseModlePropertyEnable(@Param("enable") int enbale,@Param("propertyid") int propertyid);-->
+    <update id="updateBaseModlePropertyEnable" parameterType="java.lang.Integer">
+        update modlepins
+        set
+        pinEnable=#{enable},
+        updateTime=current_timestamp(),
+        where modlepinsId=#{propertyid}
+    </update>
+
+
+    <!--    BaseModlePropertyImp findBaseModlePropertyByid(@Param("modlepinsId") int modlepinsId);-->
+    <select id="findBaseModlePropertyByid" resultMap="propertyResult">
+        select * from modlepins
+        where modlepinsId=#{modlepinsId}
+    </select>
+    <!--    BaseModlePropertyImp findBaseModlePropertyByModleid(@Param("refmodleId") int refmodleId);-->
+    <select id="findBaseModlePropertyByModleid" resultMap="propertyResult">
+        select * from modlepins
+        where refmodleId=#{refmodleId}
+    </select>
+
+    <!--    int insertMPCModleProperty(@Param("mpcModleProperty") MPCModleProperty mpcModleProperty);-->
+    <insert id="insertMPCModleProperty" parameterType="hs.industry.ailab.entity.modle.modlerproerty.MPCModleProperty"
+            keyProperty="modlepinsId" useGeneratedKeys="true">
+        insert into modlepins(refmodleId
+                            ,modleOpcTag
+                            ,modlePinName
+                            ,opcTagName
+                            ,resource
+                            ,Q
+                            ,dmvHigh
+                            ,deadZone
+                            ,funelinitValue
+                            ,R
+                            ,dmvLow
+                            ,referTrajectoryCoef
+                            ,funneltype
+                            ,pinEnable
+                            ,pintype
+                            ,tracoefmethod
+                            ,pindir
+                            ,modlepropertyclazz)
+        value (#{mpcModleProperty.refmodleId},
+       #{mpcModleProperty.modleOpcTag},
+       #{mpcModleProperty.modlePinName},
+        #{mpcModleProperty.opcTagName},
+        #{mpcModleProperty.resource,javaType=com.alibaba.fastjson.JSONObject,jdbcType=VARCHAR,typeHandler=hs.industry.ailab.dao.mysql.hander.JsonObjectHandler},
+       #{mpcModleProperty.Q}
+        ,#{mpcModleProperty.dmvHigh}
+        ,#{mpcModleProperty.deadZone}
+        ,#{mpcModleProperty.funelinitValue}
+        ,#{mpcModleProperty.R}
+        ,#{mpcModleProperty.dmvLow}
+        ,#{mpcModleProperty.referTrajectoryCoef}
+        ,#{mpcModleProperty.funneltype}
+        ,#{baseModlePropertyImp.pinEnable}
+        ,#{mpcModleProperty.pintype}
+        ,#{mpcModleProperty.tracoefmethod}
+        ,#{mpcModleProperty.pindir}
+        #{mpcModleProperty.modlepropertyclazz})
+    </insert>
+    <!--    int deleteMPCModlePropertyByid(@Param("modlepinsId") int modlepinsId);-->
+    <delete id="deleteMPCModlePropertyByid">
+        delete from modlepins
+        where modlepinsId=#{modlepinsId}
+    </delete>
+    <!--    int deleteMPCModlePropertyByModleid(@Param("modleId") int modleId);-->
+    <delete id="deleteMPCModlePropertyByModleid">
+        delete from modlepins
+        where refmodleId=#{modleId}
+    </delete>
+
+    <!--    int updateMPCModleProperty(@Param("mpcModleProperty") MPCModleProperty mpcModleProperty);-->
+    <update id="updateMPCModleProperty" parameterType="hs.industry.ailab.entity.modle.modlerproerty.MPCModleProperty">
+        update modlepins set
+        refmodleId=#{baseModlePropertyImp.refmodleId},
+        modleOpcTag=#{baseModlePropertyImp.modleOpcTag},
+        modlePinName=#{baseModlePropertyImp.modlePinName},
+        opcTagName=#{baseModlePropertyImp.opcTagName},
+        resource=#{baseModlePropertyImp.resource,javaType=com.alibaba.fastjson.JSONObject,jdbcType=VARCHAR,typeHandler=hs.industry.ailab.dao.mysql.hander.JsonObjectHandler},
+        Q=#{baseModlePropertyImp.Q}
+        ,dmvHigh=#{baseModlePropertyImp.dmvHigh}
+        ,deadZone=#{baseModlePropertyImp.deadZone}
+        ,funelinitValue=#{baseModlePropertyImp.funelinitValue}
+        ,R=#{baseModlePropertyImp.R}
+        ,dmvLow=#{baseModlePropertyImp.dmvLow}
+        ,referTrajectoryCoef=#{baseModlePropertyImp.referTrajectoryCoef}
+        ,funneltype=#{baseModlePropertyImp.funneltype}
+--         ,pinEnable=#{baseModlePropertyImp.pinEnable}
+        ,updateTime=current_timestamp()
+        ,pintype=#{baseModlePropertyImp.pintype}
+        ,tracoefmethod=#{baseModlePropertyImp.tracoefmethod}
+        ,pindir=#{baseModlePropertyImp.pindir}
+        ,modlepropertyclazz=#{baseModlePropertyImp.modlepropertyclazz}
+        where  modlepinsId=#{baseModlePropertyImp.modlepinsId}
+    </update>
+    <!--    MPCModleProperty findMPCModlePropertyByid(@Param("modlepinsId") int modlepinsId);-->
+    <select id="findMPCModlePropertyByid" resultMap="propertyResult">
+        select * from modlepins 
+        where modlepinsId=#{modlepinsId}
+    </select>
+    <!--    MPCModleProperty findMPCModlePropertyByModleid(@Param("refmodleId") int refmodleId);-->
+    <select id="findMPCModlePropertyByModleid" resultMap="propertyResult">
+         select * from modlepins
+        where refmodleId=#{refmodleId}
+    </select>
+
+
+    <!--    int insertModleSight(@Param("modleSight") ModleSight modleSight);-->
+    <insert id="insertModleSight" parameterType="hs.industry.ailab.entity.ModleSight">
+        insert into modlesight(positiontop,positionleft,childs,parents,refmodleid)
+        value(#{modleSight.positiontop},
+       #{modleSight.positionleft},
+       #{modleSight.childs,javaType=com.alibaba.fastjson.JSONArray,jdbcType=VARCHAR,typeHandler=hs.industry.ailab.dao.mysql.hander.JsonArrayHandler},
+       #{modleSight.parents,javaType=com.alibaba.fastjson.JSONArray,jdbcType=VARCHAR,typeHandler=hs.industry.ailab.dao.mysql.hander.JsonArrayHandler},
+       #{modleSight.refmodleid})
+    </insert>
+    <!--    int deleteModleSightByid(@Param("modlesightid") int modlesightid);-->
+    <delete id="deleteModleSightByid">
+        delete from modlesight
+        where modlesightid=#{modlesightid}
+    </delete>
+    <!--    int deleteModleSightByModleid(@Param("modleid") int modleid);-->
+    <delete id="deleteModleSightByModleid">
+        delete from modlesight
+        where refmodleid=#{modleid}
+    </delete>
+
+    <!--    int updateModleSight(@Param("modleSight") ModleSight modleSight);-->
+    <update id="updateModleSight" parameterType="hs.industry.ailab.entity.ModleSight">
+        update modlesight set
+        positiontop=#{modleSight.positiontop},
+        positionleft=#{modleSight.positionleft},
+        childs=#{modleSight.childs,javaType=com.alibaba.fastjson.JSONArray,jdbcType=VARCHAR,typeHandler=hs.industry.ailab.dao.mysql.hander.JsonArrayHandler},
+        parents=#{modleSight.parents,javaType=com.alibaba.fastjson.JSONArray,jdbcType=VARCHAR,typeHandler=hs.industry.ailab.dao.mysql.hander.JsonArrayHandler}
+        where refmodleid=#{modleSight.refmodleid}
+    </update>
+    <!--    ModleSight findBaseModleSightByid(@Param("modlesightid") int modlesightid);-->
+    <select id="findBaseModleSightByid" resultMap="modlesightResult">
+        select * from modlesight
+        where modlesightid=#{modlesightid}
+    </select>
+    <!--    ModleSight findBaseModleSightByModleid(@Param("refmodleid") int refmodleid);-->
+    <select id="findBaseModleSightByModleid" resultMap="modlesightResult">
+        select * from modlesight
+        where refmodleid=#{refmodleid}
+    </select>
+
+    <!--    int insertResponTimeSerise(@Param("responTimeSerise") ResponTimeSerise responTimeSerise);-->
+    <insert id="insertResponTimeSerise" parameterType="hs.industry.ailab.entity.ResponTimeSerise">
+        insert into modlerespon(refrencemodleId,
+        stepRespJson,
+        inputPins,
+        outputPins,
+        effectRatio) value (#{responTimeSerise.refrencemodleId},
+        #{responTimeSerise.stepRespJson},
+       #{responTimeSerise.inputPins},
+       #{responTimeSerise.outputPins},
+        #{responTimeSerise.effectRatio})
+    </insert>
+    <!--    int deleteResponTimeSeriseByid(@Param("modleresponId") int modleresponId);-->
+    <delete id="deleteResponTimeSerise">
+        delete from modlerespon
+        where modleresponId=#{modleresponId}
+    </delete>
+    <!--    int deleteResponTimeSeriseByModleid(@Param("refrencemodleId") int refrencemodleId);-->
+    <delete id="deleteResponTimeSeriseByModleid">
+        delete from modlerespon
+        where refrencemodleId=#{refrencemodleId}
+    </delete>
+
+    <!--    int updateResponTimeSerise(@Param("responTimeSerise") ResponTimeSerise responTimeSerise);-->
+    <update id="updateResponTimeSerise" parameterType="hs.industry.ailab.entity.ResponTimeSerise">
+        update modlerespon set refrencemodleId=#{responTimeSerise.refrencemodleId},
+        stepRespJson=#{responTimeSerise.stepRespJson},
+        inputPins=#{responTimeSerise.inputPins},
+        outputPins=#{responTimeSerise.outputPins},
+        effectRatio=#{responTimeSerise.effectRatio}
+        where modleresponId=#{responTimeSerise.modleresponId}
+    </update>
+    <!--    ResponTimeSerise findResponTimeSeriseByid(@Param("modletagId") int modletagId);-->
+    <select id="findResponTimeSeriseByid" resultType="hs.industry.ailab.entity.ResponTimeSerise">
+        select * from modlerespon 
+        where modleresponId=#{modletagId}
+    </select>
+    <!--    ResponTimeSerise findResponTimeSeriseByModleid(@Param("refrencemodleId") int refrencemodleId);-->
+    <select id="findResponTimeSeriseByModleid" resultType="hs.industry.ailab.entity.ResponTimeSerise">
+        select * from modlerespon
+        where refrencemodleId=#{refrencemodleId}
+    </select>
+
+
+    <!--    int insertFirstOrderLagFilter(@Param("filter") FirstOrderLagFilter filter);-->
+    <insert id="insertFirstOrderLagFilter" parameterType="hs.industry.ailab.entity.modle.filter.FirstOrderLagFilter"
+            useGeneratedKeys="true" keyProperty="filterid">
+        insert into filter(filtermethod,filteralphe,refmodleid)
+        value#{filter.filtermethod},
+      #{filter.filteralphe},
+       #{filter.refmodleid})
+    </insert>
+    <!--    int insertMoveAverageFilter(@Param("filter") MoveAverageFilter filter);-->
+    <insert id="insertMoveAverageFilter" parameterType="hs.industry.ailab.entity.modle.filter.MoveAverageFilter"
+            useGeneratedKeys="true" keyProperty="filterid">
+        insert into filter(filtermethod,filtercapacity,refmodleid)
+        value(#{filter.filtermethod},
+       #{filter.filtercapacity},
+       #{filter.refmodleid})
+    </insert>
+
+    <!--    int deleteFilter(@Param("filterid") int filterid);-->
+    <delete id="deleteFilter" parameterType="java.lang.Integer">
+        delete from filter
+        where filterid=#{filterid}
+    </delete>
+    <!--    int deleteFilterByModleid(@Param("refmodleid") int refmodleid);-->
+    <delete id="deleteFilterByModleid" parameterType="java.lang.Integer">
+        delete from filter
+        where refmodleid=#{refmodleid}
+    </delete>
+    <!--    int updateFirstOrderLagFilter(@Param("filter") FirstOrderLagFilter filter);-->
+    <update id="updateFirstOrderLagFilter" parameterType="hs.industry.ailab.entity.modle.filter.FirstOrderLagFilter">
+         update filter
+         set filtermethod=#{filter.filtermethod},filteralphe=#{filter.filteralphe},refmodleid=#{filter.refmodleid}
+         where filterid=#{filter.filterid}
+    </update>
+    <!--    int updateMoveAverageFilter(@Param("filter") MoveAverageFilter filter);-->
+    <update id="updateMoveAverageFilter" parameterType="hs.industry.ailab.entity.modle.filter.MoveAverageFilter">
+         update filter
+         set filtermethod=#{filter.filtermethod},filtercapacity=#{filter.filtercapacity},refmodleid=#{filter.refmodleid}
+         where filterid=#{filter.filterid}
+    </update>
+    <!--    Filter findFilterByid(@Param("filterid") int filterid);-->
+    <select id="findFilterByid" parameterType="java.lang.Integer">
+        select * from filter
+        where filterid=#{filterid}
+    </select>
+    <!--    Filter findFilterByModleid(@Param("refmodleid") int refmodleid);-->
+    <select id="findFilterByModleid" parameterType="java.lang.Integer">
+        select * from filter
+        where refmodleid=#{refmodleid}
+    </select>
+
+
+</mapper>

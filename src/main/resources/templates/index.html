@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org/">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>jsplumb-viso</title>
+<!--    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">-->
+<!--    <link href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" rel="stylesheet">-->
+<!--    <link href="https://cdn.bootcss.com/jqueryui/1.12.1/jquery-ui.min.css" rel="stylesheet">-->
+    <link href="../../webapp/css/font-awesome.min.css" th:href="@{/css/font-awesome.min.css}" rel="stylesheet">
+    <link href="../../webapp/css/bootstrap.min.css" th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <link href="../../webapp/css/jquery-ui.min.css" th:href="@{/css/jquery-ui.min.css}" rel="stylesheet">
+
+    <!--    <link href="../static/css/jquery-ui.min.css" rel="stylesheet" th:href="@{/css/jquery-ui.min.css}">-->
+    <link rel="stylesheet" href="../../webapp/css/index.css" th:href="@{/css/index.css}">
+    <link rel="stylesheet" href="../../webapp/css/menu.css" th:href="@{/css/menu.css}">
+    <link rel="stylesheet" href="../../webapp/js/layui/css/layui.css" media="all" th:href="@{/js/layui/css/layui.css}">
+
+    <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+    <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+
+<!--    <script src="https://cdn.bootcss.com/node-uuid/1.4.8/uuid.min.js"></script>-->
+<!--    <script src="https://cdn.bootcss.com/mustache.js/2.3.0/mustache.min.js"></script>-->
+<!--    <script src="https://cdn.bootcss.com/jquery/1.12.1/jquery.min.js"></script>-->
+<!--    <script src="https://cdn.bootcss.com/jqueryui/1.12.1/jquery-ui.min.js"></script>-->
+    <!--<script src="https://cdn.bootcss.com/jsPlumb/1.7.6/jquery.jsPlumb.min.js"></script>-->
+    <script src="../../webapp/js/jsplumb.js" th:src="@{/js/jsplumb.js}"></script>
+    <script src="../../webapp/js/graphlib.min.js" th:src="@{/js/graphlib.min.js}"></script>
+    <script src="../../webapp/js/jquery.min.js" th:src="@{/js/jquery.min.js}"></script>
+    <script src="../../webapp/js/jquery-ui-1.9.2.min.js" th:src="@{/js/jquery-ui-1.9.2.min.js}"></script>
+
+    <!--    <script src="./public/js/data.js" th:src="@{/js/data.js}"></script>-->
+    <script src="../../webapp/js/modle.js" th:src="@{/js/modle.js}"></script>
+    <script src="./static/js/layoutmanager.js" th:src="@{/js/layoutmanager.js}"></script>
+    <script src="../../webapp/js/config.js" th:src="@{/js/config.js}"></script>
+    <script src="../../webapp/js/api.js" th:src="@{/js/api.js}"></script>
+    <script src="../../webapp/js/index.js" th:src="@{/js/index.js}"></script>
+    <script src="../../webapp/js/panzoom.js" th:src="@{/js/panzoom.js}"></script>
+    <script src="../../webapp/js/templefactory.js" th:src="@{/js/templefactory.js}"></script>
+    <script src="../../webapp/js/contextMenu.js" th:src="@{/js/contextMenu.js}"></script>
+    <script src="../../webapp/js/layui/layui.js" charset="utf-8" th:src="@{/js/layui/layui.js}"></script>
+</head>
+
+<body>
+<!--&lt;!&ndash;  <div id="app">&ndash;&gt;container-fluid-->
+<div id="app">
+    <div class="layui-container" projectid="1" th:projectid="${projectid}">
+        <div class="layui-row">
+            <div id="side-buttons" class="layui-col-md2"  style="background-color: rgb(217,237,247);height: 3000px;left: 0">
+                <div>
+                    <h5 style="font-size: 30px">模块列表</h5>
+                    <ul>
+
+                        <li>
+                            <a class="btn btn-success btn-controler" href="#" data-template="input" role="button">
+                                <i class="layui-icon" style="font-size: 20px; color: #fbfff8;">&#xe66e;输入模块</i>
+                            </a>
+                        </li>
+
+                        <li>
+                            <a class="btn btn-success btn-controler" href="#" data-template="output" role="button">
+                                <i class="layui-icon" style="font-size: 20px; color: #fbfff8;">&#xe691;输出模块</i>
+                            </a>
+                        </li>
+
+
+                        <li>
+                            <a class="btn btn-success btn-controler" href="#" data-template="customize" role="button">
+                                <i class="layui-icon" style="font-size: 20px; color: #fbfff8;">&#xe655;自定义脚本</i>
+                            </a>
+                        </li>
+
+                        <li>
+                            <a class="btn btn-success btn-controler" href="#" data-template="filter" role="button">
+                                <i class="layui-icon" style="font-size: 20px; color: #fbfff8;">&#xe663;滤波模块</i>
+                            </a>
+                        </li>
+
+
+                        <li>
+                            <a class="btn btn-success btn-controler" href="#" data-template="mpc" role="button">
+                                <i class="layui-icon" style="font-size: 20px; color: #fbfff8;">&#xe638;MPC</i>
+                            </a>
+                        </li>
+
+
+                        <li>
+                            <a class="btn btn-success btn-controler" href="#" data-template="pid" role="button">
+                                <i class="layui-icon" style="font-size: 20px; color: #fbfff8;">&#xe638;PID</i>
+                            </a>
+                        </li>
+
+
+                    </ul>
+
+
+                </div>
+            </div>
+            <div class="layui-col-md10 mainContainerWrap " style="background-color: rgb(223,240,216);">
+                <div style="height: 3000px;" id="mainContainer" data-id="mainContainer" data-projectid="1" th:data-projectid="${projectid}">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- 注意：如果你直接复制所有代码到本地，上述js路径需要改成你本地的 -->
+
+</body>
+
+<script>
+    var area = 'mainContainer'//画布
+    var areaId = '#' + area//获取id
+    var element;
+    var layer;
+    var jsplumbinstance;
+    layui.use(['element', 'layer'], function(){
+        element = layui.element;
+        layer = layui.layer;
+
+        //jueryui 拖拉
+        $('.btn-controler').draggable({
+            // revert: true,
+            helper: 'clone',
+            scope: 'ss',
+        });
+
+        //jueryui 设置放置
+        $(areaId).droppable({
+            scope: 'ss',
+            drop: function (event, ui) {
+                dropNode(ui.draggable[0].dataset.template, ui.position,$('.layui-container').attr('projectid'))
+            }
+        });
+
+        $('#app').on('click', function (event) {
+            event.stopPropagation()
+            event.preventDefault()
+            eventHandler(event.target.dataset)
+        })
+
+        jsPlumb.ready(main)//document.ready
+        //监听折叠
+        element.on('collapse(test)', function(data){
+            // layer.msg('展开状态：'+ data.show);
+        });
+    });
+    jsPlumb.importDefaults({
+        ConnectionsDetachable: false
+    })
+
+</script>
+
+</html>
