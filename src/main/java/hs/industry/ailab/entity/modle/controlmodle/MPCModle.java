@@ -15,10 +15,10 @@ import java.util.List;
 public class MPCModle extends BaseModleImp {
 
     /****db****/
-    private Integer predicttime_P = 12;//预测时域
-    private Integer controltime_M = 6;//单一控制输入未来控制M步增量(控制域)
-    private Integer timeserise_N = 40;//响应序列长度
-    private Integer controlAPCOutCycle = 0;//控制周期
+    private Integer predicttime_P;//预测时域
+    private Integer controltime_M;//单一控制输入未来控制M步增量(控制域)
+    private Integer timeserise_N;//响应序列长度
+    private Integer controlAPCOutCycle;//控制周期
     private Integer runstyle=0;//运行方式0-自动分配模式 1-手动分配模式
     /**************/
 

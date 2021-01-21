@@ -69,7 +69,7 @@
             <div class="layui-inline">
                 <label class="layui-form-label"></label>
                 <div class="layui-input-inline">
-                    <select name="modleOpcTag" lay-verify="required" lay-filter="selectopctag" lay-search="">
+                    <select name="modleOpcTag" lay-verify="required" lay-filter="selectopctag" lay-search="" lay-filter="selectopctag">
                         <option value="">请选择测点</option>
                         <c:forEach items="${points}" var="point" varStatus="Count">
                             <option value="${point.modleOpcTag}">${point.opcTagName}</option>

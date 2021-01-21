@@ -67,9 +67,9 @@
             </div>
 
             <div class="layui-inline">
-                <label class="layui-form-label"></label>
+                <label class="layui-form-label">数据绑定</label>
                 <div class="layui-input-inline">
-                    <select name="modleOpcTag" lay-verify="required"  lay-search="" lay-fiter="selectopctag">
+                    <select name="modleOpcTag" lay-verify="required"  lay-search="" lay-filter="selectopctag">
                         <option value="">请选择</option>
                         <c:forEach items="${points}" var="point" varStatus="Count">
                             <option value="${point.modlePinName}" resourcemodleId="${point.refmodleId}" resourcemodlepinsId="${point.modlepinsId}" >${point.opcTagName}</option>

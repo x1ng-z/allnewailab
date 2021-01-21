@@ -211,7 +211,7 @@
             <label class="layui-form-label">PV</label>
             <div class="layui-input-inline">
                 <input type="number" name="sp" autocomplete="off" class="layui-input"
-                       value="${pv.resource.getDouble("value")}" placeholder="请输入PV常量值" pvconstantid>
+                       value="${pv.resource.getDouble("value")}" placeholder="请输入PV常量值" id="pvconstantid">
             </div>
         </div>
         <div class="layui-inline">
@@ -632,7 +632,7 @@
             if (obj.event === 'del') {
                 if (confirm('确定删除吗？')) {
                     if (api.deletmodleproperties('${pageContext.request.contextPath}/projectedit/deletemodleproperties', data['modlepinsId'], layer)) {
-                        $("#bt_flush_outtab", document).trigger('click');
+                        $("#bt_flush_pvtab", document).trigger('click');
                     }
                 }
 

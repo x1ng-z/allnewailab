@@ -69,7 +69,7 @@
             <div class="layui-inline">
                 <label class="layui-form-label">引脚常量值</label>
                 <div class="layui-input-inline">
-                    <input type="text" name="modlePincontantvalue" lay-verify="number" autocomplete="off" class="layui-input"
+                    <input type="text" name="modlePincontantvalue"  autocomplete="off" class="layui-input"
                            value="${customizmodle.resource.getString("resource")=='constant'?customizmodle.resource.getDouble("value"):''}" id="modlePincontantvalueid">
                 </div>
             </div>

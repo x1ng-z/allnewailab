@@ -14,7 +14,7 @@
     <link rel="shortcut icon"
           href="/img/favicon.ico"  type="image/x-icon"/>
     <meta charset="utf-8">
-    <title>add customizmodle property</title>
+    <title>add fillermodle input property</title>
     <meta name="renderer" content="webkit">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -27,7 +27,7 @@
 <body>
 
 <fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
-    <legend>新测点选择设置</legend>
+    <legend>输入变量添加</legend>
 </fieldset>
 
 
@@ -48,7 +48,6 @@
                            style="visibility: hidden;width: 0px;height: 0px;z-index: -99;" />
                 </div>
             </div>
-
             <div class="layui-inline">
                 <div class="layui-input-inline">
                     <input type="text" name="pindir" value="${pindir}"
@@ -61,25 +60,16 @@
             <div class="layui-inline">
                 <label class="layui-form-label">引脚名称</label>
                 <div class="layui-input-inline">
-                    <input type="text" name="modlePinName" lay-verify="required" autocomplete="off" class="layui-input"
+                    <input type="text" name="modlePinName"  lay-verify="required" autocomplete="off" class="layui-input"
                            value="" id="modlePinNameid">
                 </div>
             </div>
 
-
             <div class="layui-inline">
-                <label class="layui-form-label">引脚常量值</label>
+                <label class="layui-form-label">输入引脚</label>
                 <div class="layui-input-inline">
-                    <input type="text" name="modlePincontantvalue"  autocomplete="off" class="layui-input"
-                           value="" id="modlePincontantvalueid">
-                </div>
-            </div>
-
-            <div class="layui-inline">
-                <label class="layui-form-label"></label>
-                <div class="layui-input-inline">
-                    <select name="modleOpcTag"  lay-filter="selectopctag"  lay-search="">
-                        <option value="">请选择测点</option>
+                    <select name="modleOpcTag" lay-verify="required"  lay-search="" lay-filter="selectopctag" id="selectopctagid">
+                        <option value="">请选择</option>
                         <c:forEach items="${points}" var="point" varStatus="Count">
                             <option value="${point.modlePinName}" resourcemodleId="${point.refmodleId}" resourcemodlepinsId="${point.modlepinsId}" >${point.opcTagName}</option>
                         </c:forEach>
@@ -87,6 +77,21 @@
                 </div>
             </div>
         </div>
+
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">输出映射</label>
+                <div class="layui-input-inline">
+                    <select name="outpinmappingtag" lay-verify="required" lay-filter="selectoutputpinmapping" lay-search="" id="selectoutputpinmappingid">
+                        <option value="">请选择测点</option>
+                        <c:forEach items="${outpinmappings}" var="point" varStatus="Count">
+                            <option value="${point.modleOpcTag}">${point.opcTagName}</option>
+                        </c:forEach>
+                    </select>
+                </div>
+            </div>
+        </div>
+
     </div>
 
 
@@ -107,28 +112,27 @@
 
 <script>
 
-    var layer;
-    var form;
-    var element
+
     $(document).ready(function () {
 
-
+        var layer;
         layui.use(['element', 'form', 'layer'], function () {
-             element = layui.element;
-            form= layui.form;
-            console.log("inputmodlepropertyadd get parent layer object",parent.layer === undefined);
-
+            var element = layui.element;
+            var form = layui.form;
+            // console.log("inputmodlepropertyadd get parent layer object",parent.layer === undefined);
             layer =parent.layer === undefined ? layui.layer : parent.layer;
             form.render(); //更新全部
-            form.render('select'); //刷新select选择框渲染
+            // form.render('select'); //刷新select选择框渲染
             //监听提交
             form.on('submit(newcontrlmodlepinsubmitbt)', function (data) {
+                console.log("in newcontrlmodlepinsubmitbt");
                 let url ="${pageContext.request.contextPath}/projectedit/createmodleproperties";
                 let partcontex=data.field;
 
-                partcontex['opcTagName']= $('select').find("option:selected").html();
-                partcontex['resourcemodleId']= $('select').find("option:selected").attr("resourcemodleId");
-                partcontex['resourcemodlepinsId']= $('select').find("option:selected").attr("resourcemodlepinsId");
+                partcontex['opcTagName']= $('#selectopctagid').find("option:selected").html();
+                partcontex['resourcemodleId']= $('#selectopctagid').find("option:selected").attr("resourcemodleId");
+                partcontex['resourcemodlepinsId']= $('#selectopctagid').find("option:selected").attr("resourcemodlepinsId");
+                partcontex['outputpinmappingtagname']=$('#selectoutputpinmappingid').find("option:selected").html();
                 console.log(partcontex);
                 if(api.addmodleproperties(url,partcontex,layer)){
                     let thiswindon = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
@@ -137,20 +141,16 @@
                 return false;
             });
 
-
             form.on('select(selectopctag)', function (data) {
-                if(data.value==''){
-                    $('#modlePincontantvalueid').removeAttr('disabled');
-                    // $('#modlePincontantvalueid').attr('value','');
-                    form.render();
-                    element.render();
-                }else{
+                if(data.value!=''){
                     $("#modlePinNameid").val(data.value);
-                    $('#modlePincontantvalueid').attr('disabled',true);
-                    form.render();
-                    element.render();
                 }
             });
+
+            form.on('select(selectoutputpinmapping)', function (data) {
+               console.log('data.value',data.value);
+            });
+
 
 
         });

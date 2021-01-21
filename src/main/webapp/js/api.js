@@ -313,6 +313,40 @@ var api = {
         return deletemodleinfo;
 
     },
+    addmodlerespon:function (url,responcontext,layer) {
+        let index = layer.msg('创建中，请稍候', {icon: 16, time: false, shade: 0.8});
+        let deletemodleinfo;
+        // console.log(JSON.stringify(modlepropertyinfo)+'');
+        $.ajax({
+            url: url + "?" + Math.random(),
+            async: false,
+            data: {
+                "responcontext":JSON.stringify(responcontext)+''
+            },
+            type: "POST",
+            success: function (result) {
+                layer.close(index);
+                console.log(result);
+                // layer.close(index);
+                let json = JSON.parse(result);
+                if (json['msg'] == "error") {
+                    layer.msg("添加失败！");
+                    deletemodleinfo=false;
+                } else {
+                    layer.msg("添加成功！");
+                    deletemodleinfo=true;
+                }
+            },
+            error:function (result) {
+                layer.close(index);
+                layer.msg("连接服务器异常！");
+                deletemodleinfo=false
+            }
+        });
+
+        return deletemodleinfo;
+
+    },
     deletmodleproperties:function (url,modlepropertyid,layer) {
         let index = layer.msg('删除，请稍候', {icon: 16, time: false, shade: 0.8});
         let deletemodleinfo;
@@ -346,8 +380,109 @@ var api = {
         return deletemodleinfo;
 
     },
+    deletmodlerespon:function (url,modleresponId,layer) {
+        let index = layer.msg('删除，请稍候', {icon: 16, time: false, shade: 0.8});
+        let deletemodleinfo;
+        $.ajax({
+            url: url + "?" + Math.random(),
+            async: false,
+            data: {
+                "modleresponId":modleresponId+''
+            },
+            type: "POST",
+            success: function (result) {
+                layer.close(index);
+                console.log(result);
+                // layer.close(index);
+                let json = JSON.parse(result);
+                if (json['msg'] == "error") {
+                    layer.msg("删除失败！");
+                    deletemodleinfo=false;
+                } else {
+                    layer.msg("删除成功！");
+                    deletemodleinfo=true;
+                }
+            },
+            error:function (result) {
+                layer.close(index);
+                layer.msg("连接服务器异常！");
+                deletemodleinfo=false
+            }
+        });
+
+        return deletemodleinfo;
+
+    },
     updatemodleproperties:function (url,modlepropertyinfo,layer) {
         let index = layer.msg('修改中，请稍候', {icon: 16, time: false, shade: 0.8});
+        let deletemodleinfo;
+        console.log(JSON.stringify(modlepropertyinfo)+'');
+        $.ajax({
+            url: url + "?" + Math.random(),
+            async: false,
+            data: {
+                "modlepropertyinfo":JSON.stringify(modlepropertyinfo)+''
+            },
+            type: "POST",
+            success: function (result) {
+                layer.close(index);
+                console.log(result);
+                // layer.close(index);
+                let json = JSON.parse(result);
+                if (json['msg'] == "error") {
+                    layer.msg("添加失败！");
+                    deletemodleinfo=false;
+                } else {
+                    layer.msg("添加成功！");
+                    deletemodleinfo=true;
+                }
+            },
+            error:function (result) {
+                layer.close(index);
+                layer.msg("连接服务器异常！");
+                deletemodleinfo=false
+            }
+        });
+
+        return deletemodleinfo;
+
+    },
+    updatemodlerespon:function (url,modlepropertyinfo,layer) {
+        let index = layer.msg('修改中，请稍候', {icon: 16, time: false, shade: 0.8});
+        let deletemodleinfo;
+        console.log(JSON.stringify(modlepropertyinfo)+'');
+        $.ajax({
+            url: url + "?" + Math.random(),
+            async: false,
+            data: {
+                "modlepropertyinfo":JSON.stringify(modlepropertyinfo)+''
+            },
+            type: "POST",
+            success: function (result) {
+                layer.close(index);
+                console.log(result);
+                // layer.close(index);
+                let json = JSON.parse(result);
+                if (json['msg'] == "error") {
+                    layer.msg("添加失败！");
+                    deletemodleinfo=false;
+                } else {
+                    layer.msg("添加成功！");
+                    deletemodleinfo=true;
+                }
+            },
+            error:function (result) {
+                layer.close(index);
+                layer.msg("连接服务器异常！");
+                deletemodleinfo=false
+            }
+        });
+
+        return deletemodleinfo;
+
+    },
+    addmpcmodleproperties:function (url,modlepropertyinfo,layer) {
+        let index = layer.msg('创建中，请稍候', {icon: 16, time: false, shade: 0.8});
         let deletemodleinfo;
         console.log(JSON.stringify(modlepropertyinfo)+'');
         $.ajax({

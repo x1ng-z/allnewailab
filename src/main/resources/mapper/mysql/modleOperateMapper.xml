@@ -121,6 +121,16 @@
                 typeHandler="hs.industry.ailab.dao.mysql.hander.JsonArrayHandler"/>
     </resultMap>
 
+    <resultMap id="mpcmodleresponResult" type="hs.industry.ailab.entity.ResponTimeSerise">
+        <id property="modleresponId" column="modleresponId"/>
+        <result property="refrencemodleId" column="refrencemodleId"/>
+        <result property="inputPins" column="inputPins"/>
+        <result property="stepRespJson" column="stepRespJson" jdbcType="VARCHAR" javaType="java.lang.String"
+                typeHandler="hs.industry.ailab.dao.mysql.hander.JsonObjectHandler"/>
+        <result property="outputPins" column="outputPins"/>
+        <result property="effectRatio" column="effectRatio"/>
+    </resultMap>
+
 
     <select id="findModlePins" resultMap="propertyResult">
         select * from modlepins where refmodleId=#{modleId}
@@ -365,18 +375,18 @@
        #{mpcModleProperty.modlePinName},
         #{mpcModleProperty.opcTagName},
         #{mpcModleProperty.resource,javaType=com.alibaba.fastjson.JSONObject,jdbcType=VARCHAR,typeHandler=hs.industry.ailab.dao.mysql.hander.JsonObjectHandler},
-       #{mpcModleProperty.Q}
-        ,#{mpcModleProperty.dmvHigh}
-        ,#{mpcModleProperty.deadZone}
-        ,#{mpcModleProperty.funelinitValue}
-        ,#{mpcModleProperty.R}
-        ,#{mpcModleProperty.dmvLow}
-        ,#{mpcModleProperty.referTrajectoryCoef}
-        ,#{mpcModleProperty.funneltype}
-        ,#{baseModlePropertyImp.pinEnable}
-        ,#{mpcModleProperty.pintype}
-        ,#{mpcModleProperty.tracoefmethod}
-        ,#{mpcModleProperty.pindir}
+       #{mpcModleProperty.Q},
+        #{mpcModleProperty.dmvHigh},
+        #{mpcModleProperty.deadZone},
+        #{mpcModleProperty.funelinitValue},
+        #{mpcModleProperty.R},
+        #{mpcModleProperty.dmvLow},
+        #{mpcModleProperty.referTrajectoryCoef},
+        #{mpcModleProperty.funneltype},
+        #{mpcModleProperty.pinEnable},
+        #{mpcModleProperty.pintype},
+        #{mpcModleProperty.tracoefmethod},
+        #{mpcModleProperty.pindir},
         #{mpcModleProperty.modlepropertyclazz})
     </insert>
     <!--    int deleteMPCModlePropertyByid(@Param("modlepinsId") int modlepinsId);-->
@@ -393,26 +403,25 @@
     <!--    int updateMPCModleProperty(@Param("mpcModleProperty") MPCModleProperty mpcModleProperty);-->
     <update id="updateMPCModleProperty" parameterType="hs.industry.ailab.entity.modle.modlerproerty.MPCModleProperty">
         update modlepins set
-        refmodleId=#{baseModlePropertyImp.refmodleId},
-        modleOpcTag=#{baseModlePropertyImp.modleOpcTag},
-        modlePinName=#{baseModlePropertyImp.modlePinName},
-        opcTagName=#{baseModlePropertyImp.opcTagName},
-        resource=#{baseModlePropertyImp.resource,javaType=com.alibaba.fastjson.JSONObject,jdbcType=VARCHAR,typeHandler=hs.industry.ailab.dao.mysql.hander.JsonObjectHandler},
-        Q=#{baseModlePropertyImp.Q}
-        ,dmvHigh=#{baseModlePropertyImp.dmvHigh}
-        ,deadZone=#{baseModlePropertyImp.deadZone}
-        ,funelinitValue=#{baseModlePropertyImp.funelinitValue}
-        ,R=#{baseModlePropertyImp.R}
-        ,dmvLow=#{baseModlePropertyImp.dmvLow}
-        ,referTrajectoryCoef=#{baseModlePropertyImp.referTrajectoryCoef}
-        ,funneltype=#{baseModlePropertyImp.funneltype}
---         ,pinEnable=#{baseModlePropertyImp.pinEnable}
-        ,updateTime=current_timestamp()
-        ,pintype=#{baseModlePropertyImp.pintype}
-        ,tracoefmethod=#{baseModlePropertyImp.tracoefmethod}
-        ,pindir=#{baseModlePropertyImp.pindir}
-        ,modlepropertyclazz=#{baseModlePropertyImp.modlepropertyclazz}
-        where  modlepinsId=#{baseModlePropertyImp.modlepinsId}
+        refmodleId=#{mpcModleProperty.refmodleId},
+        modleOpcTag=#{mpcModleProperty.modleOpcTag},
+        modlePinName=#{mpcModleProperty.modlePinName},
+        opcTagName=#{mpcModleProperty.opcTagName},
+        resource=#{mpcModleProperty.resource,javaType=com.alibaba.fastjson.JSONObject,jdbcType=VARCHAR,typeHandler=hs.industry.ailab.dao.mysql.hander.JsonObjectHandler},
+        Q=#{mpcModleProperty.Q},
+        dmvHigh=#{mpcModleProperty.dmvHigh},
+        deadZone=#{mpcModleProperty.deadZone},
+        funelinitValue=#{mpcModleProperty.funelinitValue},
+        R=#{mpcModleProperty.R},
+        dmvLow=#{mpcModleProperty.dmvLow},
+        referTrajectoryCoef=#{mpcModleProperty.referTrajectoryCoef},
+        funneltype=#{mpcModleProperty.funneltype},
+        updateTime=current_timestamp(),
+        pintype=#{mpcModleProperty.pintype},
+        tracoefmethod=#{mpcModleProperty.tracoefmethod},
+        pindir=#{mpcModleProperty.pindir},
+        modlepropertyclazz=#{mpcModleProperty.modlepropertyclazz}
+        where  modlepinsId=#{mpcModleProperty.modlepinsId}
     </update>
     <!--    MPCModleProperty findMPCModlePropertyByid(@Param("modlepinsId") int modlepinsId);-->
     <select id="findMPCModlePropertyByid" resultMap="propertyResult">
@@ -473,7 +482,7 @@
         inputPins,
         outputPins,
         effectRatio) value (#{responTimeSerise.refrencemodleId},
-        #{responTimeSerise.stepRespJson},
+        #{responTimeSerise.stepRespJson,javaType=com.alibaba.fastjson.JSONObject,jdbcType=VARCHAR,typeHandler=hs.industry.ailab.dao.mysql.hander.JsonObjectHandler},
        #{responTimeSerise.inputPins},
        #{responTimeSerise.outputPins},
         #{responTimeSerise.effectRatio})
@@ -492,7 +501,7 @@
     <!--    int updateResponTimeSerise(@Param("responTimeSerise") ResponTimeSerise responTimeSerise);-->
     <update id="updateResponTimeSerise" parameterType="hs.industry.ailab.entity.ResponTimeSerise">
         update modlerespon set refrencemodleId=#{responTimeSerise.refrencemodleId},
-        stepRespJson=#{responTimeSerise.stepRespJson},
+        stepRespJson=#{responTimeSerise.stepRespJson,javaType=com.alibaba.fastjson.JSONObject,jdbcType=VARCHAR,typeHandler=hs.industry.ailab.dao.mysql.hander.JsonObjectHandler},
         inputPins=#{responTimeSerise.inputPins},
         outputPins=#{responTimeSerise.outputPins},
         effectRatio=#{responTimeSerise.effectRatio}
@@ -504,7 +513,7 @@
         where modleresponId=#{modletagId}
     </select>
     <!--    ResponTimeSerise findResponTimeSeriseByModleid(@Param("refrencemodleId") int refrencemodleId);-->
-    <select id="findResponTimeSeriseByModleid" resultType="hs.industry.ailab.entity.ResponTimeSerise">
+    <select id="findResponTimeSeriseByModleid" resultMap="mpcmodleresponResult">
         select * from modlerespon
         where refrencemodleId=#{refrencemodleId}
     </select>

@@ -657,8 +657,8 @@ var DataDraw = {
     addEndpointOfDefault: function (node) {
         addDraggable(node.id);
         if (node.type == 'input') {
-            console.log("*******node")
-            console.log(node)
+            // console.log("*******node")
+            // console.log(node)
 
             // $( "#1" ).accordion({
             //     collapsible: true

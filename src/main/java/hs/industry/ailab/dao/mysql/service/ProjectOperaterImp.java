@@ -216,7 +216,7 @@ public class ProjectOperaterImp {
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED, transactionManager = "mysqlTransactionManager")
-    public MPCModleProperty findMPCModlePropertyByModleid(int refmodleId) {
+    public List<MPCModleProperty> findMPCModlePropertyByModleid(int refmodleId) {
         return projectOperate.findMPCModlePropertyByModleid(refmodleId);
     }
 
@@ -278,7 +278,7 @@ public class ProjectOperaterImp {
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED, transactionManager = "mysqlTransactionManager")
-    public ResponTimeSerise findResponTimeSeriseByModleid(int refrencemodleId) {
+    public List<ResponTimeSerise> findResponTimeSeriseByModleid(int refrencemodleId) {
         return projectOperate.findResponTimeSeriseByModleid(refrencemodleId);
     }
 
@@ -440,7 +440,14 @@ public class ProjectOperaterImp {
         Modle modle = projectOperate.findModleByid(modleid);
         BaseModleImp baseModleImp = (BaseModleImp) modle;
         baseModleImp.setModleName(modename);
-        return projectOperate.updateINModle((INModle) baseModleImp);
+        int count=0;
+        if(modle instanceof INModle){
+            count+=projectOperate.updateINModle((INModle) baseModleImp);
+        }
+       if(modle instanceof OUTModle){
+           count+=projectOperate.updateOUTModle((OUTModle)baseModleImp);
+       }
+        return count;
     }
 
 
@@ -662,6 +669,46 @@ public class ProjectOperaterImp {
         }
         return count;
 
+    }
+
+
+    @Transactional(isolation = Isolation.READ_COMMITTED, transactionManager = "mysqlTransactionManager")
+    public int insertoutmodlepropertybusiness(BaseModlePropertyImp inproperty,BaseModlePropertyImp outproperty) {
+        int count = 0;
+        count+=projectOperate.insertBaseModleProperty(inproperty);
+        outproperty.getResource().put("modlepinsId",inproperty.getModlepinsId());
+        count+=projectOperate.insertBaseModleProperty(outproperty);
+        return count;
+    }
+
+
+
+    @Transactional(isolation = Isolation.READ_COMMITTED, transactionManager = "mysqlTransactionManager")
+    public int updateoutmodlepropertybusiness(BaseModlePropertyImp inproperty,BaseModlePropertyImp outproperty) {
+        int count = 0;
+        count+=projectOperate.updateBaseModleProperty(inproperty);
+        count+=projectOperate.updateBaseModleProperty(outproperty);
+        return count;
+    }
+
+
+    @Transactional(isolation = Isolation.READ_COMMITTED, transactionManager = "mysqlTransactionManager")
+    public int insertmpcmodlepvrelationpropertybusiness(MPCModleProperty... mpcModleProperties) {
+        int count = 0;
+        for(MPCModleProperty mpcModleProperty:mpcModleProperties){
+            count+=projectOperate.insertMPCModleProperty(mpcModleProperty);
+        }
+        return count;
+    }
+
+
+    @Transactional(isolation = Isolation.READ_COMMITTED, transactionManager = "mysqlTransactionManager")
+    public int updatempcmodlepvrelationpropertybusiness(MPCModleProperty... mpcModleProperties) {
+        int count = 0;
+        for(MPCModleProperty mpcModleProperty:mpcModleProperties){
+            count+=projectOperate.updateMPCModleProperty(mpcModleProperty);
+        }
+        return count;
     }
 
 

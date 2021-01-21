@@ -76,7 +76,7 @@ public interface ProjectOperate {
     int deleteMPCModlePropertyByModleid(@Param("modleId") int modleId);
     int updateMPCModleProperty(@Param("mpcModleProperty") MPCModleProperty mpcModleProperty);
     MPCModleProperty findMPCModlePropertyByid(@Param("modlepinsId") int modlepinsId);
-    MPCModleProperty findMPCModlePropertyByModleid(@Param("refmodleId") int refmodleId);
+    List<MPCModleProperty> findMPCModlePropertyByModleid(@Param("refmodleId") int refmodleId);
 
 
 
@@ -94,7 +94,7 @@ public interface ProjectOperate {
     int deleteResponTimeSeriseByModleid(@Param("refrencemodleId") int refrencemodleId);
     int updateResponTimeSerise(@Param("responTimeSerise") ResponTimeSerise responTimeSerise);
     ResponTimeSerise findResponTimeSeriseByid(@Param("modletagId") int modletagId);
-    ResponTimeSerise findResponTimeSeriseByModleid(@Param("refrencemodleId") int refrencemodleId);
+    List<ResponTimeSerise> findResponTimeSeriseByModleid(@Param("refrencemodleId") int refrencemodleId);
 
 
 

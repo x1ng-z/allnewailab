@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import hs.industry.ailab.dao.mysql.service.ProjectOperaterImp;
 import hs.industry.ailab.entity.ModleSight;
 import hs.industry.ailab.entity.Project;
+import hs.industry.ailab.entity.ResponTimeSerise;
 import hs.industry.ailab.entity.modle.BaseModleImp;
 import hs.industry.ailab.entity.modle.BaseModlePropertyImp;
 import hs.industry.ailab.entity.modle.Modle;
@@ -22,22 +23,20 @@ import hs.industry.ailab.entity.modle.modlerproerty.MPCModleProperty;
 import hs.industry.ailab.utils.help.FileHelp;
 import hs.industry.ailab.utils.help.Tool;
 import hs.industry.ailab.utils.httpclient.HttpUtils;
-import org.apache.ibatis.annotations.Param;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author zzx
@@ -48,6 +47,12 @@ import java.util.List;
 @RequestMapping("/projectedit")
 public class ProjectEdit {
     private Logger logger = LoggerFactory.getLogger(ProjectEdit.class);
+    private static Pattern pvpattern = Pattern.compile("(^pv(\\d+)$)");
+    private static Pattern ffpattern = Pattern.compile("(^ff(\\d+)$)");
+    private static Pattern mvpattern = Pattern.compile("(^mv(\\d+)$)");
+
+    @Value("${mpcpinnumber}")
+    private int mpcpinnumber;
 
     @Value("${oceandir}")
     private String oceandir;
@@ -708,7 +713,20 @@ public class ProjectEdit {
                     break;
                 }
                 case Modle.MODLETYPE_MPC: {
+                    int modleId = jsonmodeinfo.getInteger("modleId");
+                    String modleName = jsonmodeinfo.getString("modleName");
+                    String predicttime_P = jsonmodeinfo.getString("predicttime_P");
+                    String timeserise_N = jsonmodeinfo.getString("timeserise_N");
+                    String controltime_M = jsonmodeinfo.getString("controltime_M");
+                    String runstyle = jsonmodeinfo.getString("runstyle");
 
+                    MPCModle mpcmodle = (MPCModle) projectOperaterImp.findModleByid(modleId);
+                    mpcmodle.setModleName(modleName);
+                    mpcmodle.setPredicttime_P(Integer.parseInt(predicttime_P));
+                    mpcmodle.setTimeserise_N(Integer.parseInt(timeserise_N));
+                    mpcmodle.setControltime_M(Integer.parseInt(controltime_M));
+                    mpcmodle.setRunstyle(Integer.parseInt(runstyle));
+                    count += projectOperaterImp.updateMPCModle(mpcmodle);
                     result.put("msg", "success");
                     result.put("count", count);
                     break;
@@ -892,7 +910,7 @@ public class ProjectEdit {
 
     @RequestMapping("/getmodleproperties")
     @ResponseBody
-    public String getmodleproperties(@RequestParam("modleid") int modleid, @RequestParam("pindir") String pindir) {
+    public String getbasemodleproperties(@RequestParam("modleid") int modleid, @RequestParam("pindir") String pindir) {
         try {
             List<BaseModlePropertyImp> baseModlePropertyImps = projectOperaterImp.findBaseModlePropertyByModleid(modleid);
             JSONArray modleproperties = new JSONArray();
@@ -905,6 +923,9 @@ public class ProjectEdit {
                     property.put("modlePinName", baseModlePropertyImp.getModlePinName());
                     property.put("modleOpcTag", baseModlePropertyImp.getModleOpcTag());
                     property.put("opcTagName", baseModlePropertyImp.getOpcTagName());
+                    if (baseModlePropertyImp.getResource().getString("outputpinmappingtagname") != null) {
+                        property.put("outpotopcTagName", baseModlePropertyImp.getResource().getString("outputpinmappingtagname"));
+                    }
                     modleproperties.add(property);
                 }
 
@@ -916,10 +937,68 @@ public class ProjectEdit {
         return null;
     }
 
+    @RequestMapping("/getmpcmodleproperties")
+    @ResponseBody
+    public String getmpcmodleproperties(@RequestParam("modleid") int modleid, @RequestParam("pintype") String pintype) {
+        try {
+            List<BaseModlePropertyImp> baseModlePropertyImps = projectOperaterImp.findBaseModlePropertyByModleid(modleid);
+            JSONArray modleproperties = new JSONArray();
+            for (BaseModlePropertyImp basemodleproperty : baseModlePropertyImps) {
+                MPCModleProperty mpcmodleproperty = (MPCModleProperty) basemodleproperty;
+                if (mpcmodleproperty.getPintype().equals(pintype)) {
+                    JSONObject property = new JSONObject();
+                    property.put("modlepinsId", mpcmodleproperty.getModlepinsId());
+                    property.put("refmodleId", mpcmodleproperty.getRefmodleId());
+                    property.put("modlePinName", mpcmodleproperty.getModlePinName());
+                    property.put("modleOpcTag", mpcmodleproperty.getModleOpcTag());
+                    property.put("opcTagName", mpcmodleproperty.getOpcTagName());
+                    property.put("Q", mpcmodleproperty.getQ());
+                    property.put("R", mpcmodleproperty.getR());
+                    modleproperties.add(property);
+                }
+
+            }
+            return Tool.sendLayuiPage(baseModlePropertyImps.size(), modleproperties).toJSONString();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+        return null;
+    }
+
+    @RequestMapping("/getmpcmodlerespon")
+    @ResponseBody
+    public String getmpcmodlerespon(@RequestParam("modleId") int modleId) {
+//        JSONObject result=new JSONObject();
+        try {
+            List<ResponTimeSerise> resps = projectOperaterImp.findResponTimeSeriseByModleid(modleId);
+
+
+            JSONArray datas = new JSONArray();
+
+            for (ResponTimeSerise resp : resps) {
+                JSONObject jsonresp = resp.getStepRespJson();//{k:1,t:180,tao:1}
+                JSONObject pincontext = new JSONObject();
+                pincontext.put("refrencemodleId", resp.getRefrencemodleId());
+                pincontext.put("modleresponId", resp.getModleresponId());
+                pincontext.put("input", resp.getInputPins());
+                pincontext.put("output", resp.getOutputPins());
+                pincontext.put("K", jsonresp.getFloat("k"));
+                pincontext.put("T", jsonresp.getFloat("t"));
+                pincontext.put("Tau", jsonresp.getFloat("tao"));
+                pincontext.put("effectRatio", resp.getEffectRatio());
+                datas.add(pincontext);
+            }
+            return Tool.sendLayuiPage(resps.size(), datas).toJSONString();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+        return null;
+    }
+
 
     @RequestMapping("/updatemodleproperties")
     @ResponseBody
-    public String updatemodleproperties(@RequestParam("modlepropertyinfo") String modlepropertyinfo) {
+    public String updatebasemodleproperties(@RequestParam("modlepropertyinfo") String modlepropertyinfo) {
         JSONObject result = new JSONObject();
         try {
             JSONObject jsonmodlepropertyinfo = JSONObject.parseObject(modlepropertyinfo);
@@ -963,7 +1042,7 @@ public class ProjectEdit {
                 }
                 case Modle.MODLETYPE_FILTER: {
                     BaseModlePropertyImp propertyImp = projectOperaterImp.findBaseModlePropertyByid(jsonmodlepropertyinfo.getInteger("modlepinsId"));
-                    propertyImp.setModleOpcTag(jsonmodlepropertyinfo.getString("modlePinName"));
+                    propertyImp.setModleOpcTag(jsonmodlepropertyinfo.getString("modleOpcTag"));
                     propertyImp.setModlePinName(jsonmodlepropertyinfo.getString("modlePinName"));
                     propertyImp.setOpcTagName(jsonmodlepropertyinfo.getString("opcTagName"));
 
@@ -981,8 +1060,15 @@ public class ProjectEdit {
                         resource.put("modlepinsId", Integer.parseInt(refmodlepinsId));
                         propertyImp.setResource(resource);
                     } else {
+                        String refmodleId = jsonmodlepropertyinfo.getString("resourcemodleId");
+                        String refmodlepinsId = jsonmodlepropertyinfo.getString("resourcemodlepinsId");
+                        if (Tool.isNoneString(refmodleId) || Tool.isNoneString(refmodlepinsId)) {
+                            throw new RuntimeException("pin data resource is none!");
+                        }
                         JSONObject resource = new JSONObject();
                         resource.put("resource", ModleProperty.SOURCE_TYPE_MEMORY);
+                        resource.put("modleId", Integer.parseInt(refmodleId));
+                        resource.put("modlepinsId", Integer.parseInt(refmodlepinsId));
                         propertyImp.setResource(resource);
                     }
 //                    mpcModleProperty.setPinEnable(jsonmodlepropertyinfo.getInteger("pinEnable"));
@@ -1054,6 +1140,45 @@ public class ProjectEdit {
                     count = projectOperaterImp.updateBaseModleProperty(propertyImp);
                     break;
                 }
+                case Modle.MODLETYPE_OUTPUT: {
+
+                    /**输入引脚*/
+                    BaseModlePropertyImp inputpropertyImp = projectOperaterImp.findBaseModlePropertyByid(jsonmodlepropertyinfo.getInteger("inmodlepinsId"));
+                    inputpropertyImp.setModleOpcTag(jsonmodlepropertyinfo.getString("modleOpcTag"));
+                    inputpropertyImp.setModlePinName(jsonmodlepropertyinfo.getString("modlePinName"));
+                    inputpropertyImp.setOpcTagName(jsonmodlepropertyinfo.getString("opcTagName"));
+
+                    String inrefmodleId = jsonmodlepropertyinfo.getString("resourcemodleId");
+                    String inrefmodlepinsId = jsonmodlepropertyinfo.getString("resourcemodlepinsId");
+                    if (Tool.isNoneString(inrefmodleId) || Tool.isNoneString(inrefmodlepinsId)) {
+                        throw new RuntimeException("pin data resource is none!");
+                    }
+                    JSONObject inresource = new JSONObject();
+
+                    inresource.put("resource", ModleProperty.SOURCE_TYPE_MODLE);
+                    inresource.put("modleId", Integer.parseInt(inrefmodleId));
+                    inresource.put("modlepinsId", Integer.parseInt(inrefmodlepinsId));
+                    inresource.put("outputpinmappingtagname", jsonmodlepropertyinfo.getString("outputpinmappingtagname"));
+                    inputpropertyImp.setResource(inresource);
+
+
+                    /**输出引脚*/
+                    BaseModlePropertyImp outputpropertyImp = projectOperaterImp.findBaseModlePropertyByid(jsonmodlepropertyinfo.getInteger("outmodlepinsId"));
+                    outputpropertyImp.setModleOpcTag(jsonmodlepropertyinfo.getString("outpinmappingtag"));
+                    outputpropertyImp.setModlePinName(jsonmodlepropertyinfo.getString("outpinmappingtag"));
+                    outputpropertyImp.setOpcTagName(jsonmodlepropertyinfo.getString("outputpinmappingtagname"));
+                    if (Tool.isNoneString(jsonmodlepropertyinfo.getString("outpinmappingtag"))) {
+                        throw new RuntimeException("out mapping is none");
+                    }
+                    JSONObject outresource = new JSONObject();
+                    outresource.put("resource", ModleProperty.SOURCE_TYPE_OPC);
+                    outresource.put("outmappingtag", jsonmodlepropertyinfo.getString("outpinmappingtag"));
+                    outresource.put("modlepinsId", inputpropertyImp.getModlepinsId());//输出模块的输入引脚id
+                    outputpropertyImp.setResource(outresource);
+
+                    count = projectOperaterImp.updateoutmodlepropertybusiness(inputpropertyImp, outputpropertyImp);
+                    break;
+                }
                 default: {
                     BaseModlePropertyImp propertyImp = new BaseModlePropertyImp();
                     propertyImp.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
@@ -1068,6 +1193,428 @@ public class ProjectEdit {
                     propertyImp.setPindir(ModleProperty.PINDIRINPUT);
                     propertyImp.setModlepropertyclazz(ModleProperty.MODLEPROPERTYCLAZZ_BASE);
                     count = projectOperaterImp.updateBaseModleProperty(propertyImp);
+                    break;
+                }
+
+            }
+
+            result.put("msg", "success");
+            result.put("count", count);
+
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            result.put("msg", "error");
+        }
+        return result.toJSONString();
+    }
+
+
+    @RequestMapping("/updatempcmodleproperties")
+    @ResponseBody
+    public String updatempcmodleproperties(@RequestParam("modlepropertyinfo") String modlepropertyinfo) {
+
+        JSONObject result = new JSONObject();
+        try {
+            JSONObject jsonmodlepropertyinfo = JSONObject.parseObject(modlepropertyinfo);
+            int count = 0;
+            switch (jsonmodlepropertyinfo.getString("pintype")) {
+
+                case ModleProperty.TYPE_PIN_PV: {
+
+                    MPCModleProperty pvpinmpcModleProperty = projectOperaterImp.findMPCModlePropertyByid(jsonmodlepropertyinfo.getInteger("modlepinsId"));
+//                    MPCModleProperty pvpinmpcModleProperty = new MPCModleProperty();
+//                    pvpinmpcModleProperty.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
+                    pvpinmpcModleProperty.setModlePinName(jsonmodlepropertyinfo.getString("pvmodlePinName"));
+                    pvpinmpcModleProperty.setPindir(ModleProperty.PINDIRINPUT);
+                    pvpinmpcModleProperty.setPintype(ModleProperty.TYPE_PIN_PV);
+                    pvpinmpcModleProperty.setModlepropertyclazz(ModleProperty.MODLEPROPERTYCLAZZ_MPC);
+                    pvpinmpcModleProperty.setOpcTagName(jsonmodlepropertyinfo.getString("pvmodleOpcTagName"));//spmodleOpcTag
+                    pvpinmpcModleProperty.setModleOpcTag(jsonmodlepropertyinfo.getString("pvmodleOpcTag"));
+                    String pvresourcemodleId = jsonmodlepropertyinfo.getString("pvresourcemodleId");
+                    String pvresourcemodlepinsId = jsonmodlepropertyinfo.getString("pvresourcemodlepinsId");
+                    String pvpincontantvalue = jsonmodlepropertyinfo.getString("pvpincontantvalue");
+                    if (Tool.isNoneString(pvresourcemodleId) || Tool.isNoneString(pvresourcemodlepinsId)) {
+                        if (Tool.isNoneString(pvpincontantvalue)) {
+                            throw new RuntimeException("pv pin data resource is none!");
+                        } else {
+                            JSONObject resource = new JSONObject();
+                            resource.put("resource", ModleProperty.SOURCE_TYPE_CONSTANT);
+                            resource.put("value", Double.parseDouble(pvpincontantvalue));
+                            pvpinmpcModleProperty.setResource(resource);
+                            pvpinmpcModleProperty.setOpcTagName("");
+                        }
+                    } else {
+                        JSONObject resource = new JSONObject();
+
+                        resource.put("resource", ModleProperty.SOURCE_TYPE_MODLE);
+                        resource.put("modleId", Integer.parseInt(pvresourcemodleId));
+                        resource.put("modlepinsId", Integer.parseInt(pvresourcemodlepinsId));
+                        pvpinmpcModleProperty.setResource(resource);
+
+                    }
+
+                    pvpinmpcModleProperty.setDeadZone(jsonmodlepropertyinfo.getDouble("deadZone"));
+                    pvpinmpcModleProperty.setFunelinitValue(jsonmodlepropertyinfo.getDouble("funelinitValue"));
+
+                    pvpinmpcModleProperty.setFunneltype(jsonmodlepropertyinfo.getString("funneltype"));
+                    pvpinmpcModleProperty.setQ(jsonmodlepropertyinfo.getDouble("Q"));
+                    pvpinmpcModleProperty.setReferTrajectoryCoef(jsonmodlepropertyinfo.getDouble("referTrajectoryCoef"));
+                    pvpinmpcModleProperty.setTracoefmethod(jsonmodlepropertyinfo.getString("tracoefmethod"));
+
+
+                    int pinorder = 0;
+                    Matcher pvmatch = pvpattern.matcher(jsonmodlepropertyinfo.getString("pvmodlePinName"));
+                    if (pvmatch.find()) {
+                        pinorder = Integer.parseInt(pvmatch.group(2));
+                    } else {
+                        throw new RuntimeException("can't match pin order");
+                    }
+
+
+                    MPCModleProperty pvuppinmpcModleProperty = projectOperaterImp.findMPCModlePropertyByid(jsonmodlepropertyinfo.getInteger("pvuppinid"));//new MPCModleProperty();//sppinid
+                    pvuppinmpcModleProperty.setPindir(ModleProperty.PINDIRINPUT);
+//                    pvuppinmpcModleProperty.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
+                    pvuppinmpcModleProperty.setModlePinName(ModleProperty.TYPE_PIN_PVUP + pinorder);
+                    pvuppinmpcModleProperty.setPintype(ModleProperty.TYPE_PIN_PVUP);
+                    pvuppinmpcModleProperty.setModlepropertyclazz(ModleProperty.MODLEPROPERTYCLAZZ_MPC);
+
+                    pvuppinmpcModleProperty.setOpcTagName(jsonmodlepropertyinfo.getString("pvupmodleOpcTagName"));//spmodleOpcTag
+                    pvuppinmpcModleProperty.setModleOpcTag(jsonmodlepropertyinfo.getString("pvupmodleOpcTag"));
+
+                    String pvupresourcemodleId = jsonmodlepropertyinfo.getString("pvupresourcemodleId");
+                    String pvupresourcemodlepinsId = jsonmodlepropertyinfo.getString("pvupresourcemodlepinsId");
+                    String pvuppincontantvalue = jsonmodlepropertyinfo.getString("pvuppincontantvalue");
+                    if (Tool.isNoneString(pvupresourcemodleId) || Tool.isNoneString(pvupresourcemodlepinsId)) {
+                        if (Tool.isNoneString(pvuppincontantvalue)) {
+                            throw new RuntimeException("pvup pin data resource is none!");
+                        } else {
+                            JSONObject resource = new JSONObject();
+                            resource.put("resource", ModleProperty.SOURCE_TYPE_CONSTANT);
+                            resource.put("value", Double.parseDouble(pvuppincontantvalue));
+                            pvuppinmpcModleProperty.setResource(resource);
+                            pvuppinmpcModleProperty.setOpcTagName("");
+                        }
+                    } else {
+                        JSONObject resource = new JSONObject();
+                        resource.put("resource", ModleProperty.SOURCE_TYPE_MODLE);
+                        resource.put("modleId", Integer.parseInt(pvupresourcemodleId));
+                        resource.put("modlepinsId", Integer.parseInt(pvupresourcemodlepinsId));
+                        pvuppinmpcModleProperty.setResource(resource);
+                    }
+
+
+                    MPCModleProperty pvdownpinmpcModleProperty = projectOperaterImp.findMPCModlePropertyByid(jsonmodlepropertyinfo.getInteger("pvdownpinid"));//new MPCModleProperty();
+                    pvdownpinmpcModleProperty.setPindir(ModleProperty.PINDIRINPUT);
+                    pvdownpinmpcModleProperty.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
+                    pvdownpinmpcModleProperty.setModlePinName(ModleProperty.TYPE_PIN_PVDOWN + pinorder);
+                    pvdownpinmpcModleProperty.setPintype(ModleProperty.TYPE_PIN_PVDOWN);
+                    pvdownpinmpcModleProperty.setModlepropertyclazz(ModleProperty.MODLEPROPERTYCLAZZ_MPC);
+                    pvdownpinmpcModleProperty.setOpcTagName(jsonmodlepropertyinfo.getString("pvdownmodleOpcTagName"));//spmodleOpcTag
+                    pvdownpinmpcModleProperty.setModleOpcTag(jsonmodlepropertyinfo.getString("pvdownmodleOpcTag"));
+
+                    String pvdownresourcemodleId = jsonmodlepropertyinfo.getString("pvdownresourcemodleId");
+                    String pvdownresourcemodlepinsId = jsonmodlepropertyinfo.getString("pvdownresourcemodlepinsId");
+                    String pvdownpincontantvalue = jsonmodlepropertyinfo.getString("pvdownpincontantvalue");
+                    if (Tool.isNoneString(pvdownresourcemodleId) || Tool.isNoneString(pvdownresourcemodlepinsId)) {
+                        if (Tool.isNoneString(pvdownpincontantvalue)) {
+                            throw new RuntimeException("pvdown pin data resource is none!");
+                        } else {
+                            JSONObject resource = new JSONObject();
+                            resource.put("resource", ModleProperty.SOURCE_TYPE_CONSTANT);
+                            resource.put("value", Double.parseDouble(pvdownpincontantvalue));
+                            pvdownpinmpcModleProperty.setResource(resource);
+                            pvdownpinmpcModleProperty.setOpcTagName("");
+                        }
+                    } else {
+                        JSONObject resource = new JSONObject();
+                        resource.put("resource", ModleProperty.SOURCE_TYPE_MODLE);
+                        resource.put("modleId", Integer.parseInt(pvdownresourcemodleId));
+                        resource.put("modlepinsId", Integer.parseInt(pvdownresourcemodlepinsId));
+                        pvdownpinmpcModleProperty.setResource(resource);
+                    }
+
+
+                    MPCModleProperty sppinmpcModleProperty = projectOperaterImp.findMPCModlePropertyByid(jsonmodlepropertyinfo.getInteger("sppinid"));//new MPCModleProperty();
+                    sppinmpcModleProperty.setPindir(ModleProperty.PINDIRINPUT);
+//                    sppinmpcModleProperty.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
+                    sppinmpcModleProperty.setModlePinName(ModleProperty.TYPE_PIN_SP + pinorder);
+                    sppinmpcModleProperty.setPintype(ModleProperty.TYPE_PIN_SP);
+                    sppinmpcModleProperty.setModlepropertyclazz(ModleProperty.MODLEPROPERTYCLAZZ_MPC);
+                    sppinmpcModleProperty.setOpcTagName(jsonmodlepropertyinfo.getString("spmodleOpcTagName"));//spmodleOpcTag
+                    sppinmpcModleProperty.setModleOpcTag(jsonmodlepropertyinfo.getString("spmodleOpcTag"));
+
+                    String spresourcemodleId = jsonmodlepropertyinfo.getString("spresourcemodleId");
+                    String spresourcemodlepinsId = jsonmodlepropertyinfo.getString("spresourcemodlepinsId");
+                    String sppincontantvalue = jsonmodlepropertyinfo.getString("sppincontantvalue");
+                    if (Tool.isNoneString(spresourcemodleId) || Tool.isNoneString(spresourcemodlepinsId)) {
+                        if (Tool.isNoneString(sppincontantvalue)) {
+                            throw new RuntimeException("pvdown pin data resource is none!");
+                        } else {
+                            JSONObject resource = new JSONObject();
+                            resource.put("resource", ModleProperty.SOURCE_TYPE_CONSTANT);
+                            resource.put("value", Double.parseDouble(sppincontantvalue));
+                            sppinmpcModleProperty.setResource(resource);
+                            sppinmpcModleProperty.setOpcTagName("");
+                        }
+                    } else {
+                        JSONObject resource = new JSONObject();
+                        resource.put("resource", ModleProperty.SOURCE_TYPE_MODLE);
+                        resource.put("modleId", Integer.parseInt(spresourcemodleId));
+                        resource.put("modlepinsId", Integer.parseInt(spresourcemodlepinsId));
+                        sppinmpcModleProperty.setResource(resource);
+                    }
+                    count = projectOperaterImp.updatempcmodlepvrelationpropertybusiness(pvpinmpcModleProperty, pvuppinmpcModleProperty, pvdownpinmpcModleProperty, sppinmpcModleProperty);
+                    break;
+                }
+                case ModleProperty.TYPE_PIN_MV: {
+
+                    MPCModleProperty mvpinmpcModleProperty = projectOperaterImp.findMPCModlePropertyByid(jsonmodlepropertyinfo.getInteger("mvpinid"));//new MPCModleProperty();
+//                    mvpinmpcModleProperty.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
+                    mvpinmpcModleProperty.setModlePinName(jsonmodlepropertyinfo.getString("mvmodlePinName"));
+                    mvpinmpcModleProperty.setPindir(ModleProperty.PINDIRINPUT);
+                    mvpinmpcModleProperty.setPintype(ModleProperty.TYPE_PIN_MV);
+                    mvpinmpcModleProperty.setModlepropertyclazz(ModleProperty.MODLEPROPERTYCLAZZ_MPC);
+                    mvpinmpcModleProperty.setOpcTagName(jsonmodlepropertyinfo.getString("mvmodleOpcTagName"));
+                    mvpinmpcModleProperty.setModleOpcTag(jsonmodlepropertyinfo.getString("mvmodleOpcTag"));
+                    String mvresourcemodleId = jsonmodlepropertyinfo.getString("mvresourcemodleId");
+                    String mvresourcemodlepinsId = jsonmodlepropertyinfo.getString("mvresourcemodlepinsId");
+                    String mvpincontantvalue = jsonmodlepropertyinfo.getString("mvpincontantvalue");
+                    if (Tool.isNoneString(mvresourcemodleId) || Tool.isNoneString(mvresourcemodlepinsId)) {
+                        if (Tool.isNoneString(mvpincontantvalue)) {
+                            throw new RuntimeException("mv pin data resource is none!");
+                        } else {
+                            JSONObject resource = new JSONObject();
+                            resource.put("resource", ModleProperty.SOURCE_TYPE_CONSTANT);
+                            resource.put("value", Double.parseDouble(mvpincontantvalue));
+                            mvpinmpcModleProperty.setResource(resource);
+                            mvpinmpcModleProperty.setOpcTagName("");
+                        }
+                    } else {
+                        JSONObject resource = new JSONObject();
+
+                        resource.put("resource", ModleProperty.SOURCE_TYPE_MODLE);
+                        resource.put("modleId", Integer.parseInt(mvresourcemodleId));
+                        resource.put("modlepinsId", Integer.parseInt(mvresourcemodlepinsId));
+                        mvpinmpcModleProperty.setResource(resource);
+                    }
+
+                    mvpinmpcModleProperty.setR(jsonmodlepropertyinfo.getDouble("R"));
+                    mvpinmpcModleProperty.setDmvHigh(jsonmodlepropertyinfo.getDouble("dmvHigh"));
+
+                    mvpinmpcModleProperty.setDmvLow(jsonmodlepropertyinfo.getDouble("dmvLow"));
+
+
+                    int pinorder = 0;
+                    Matcher pvmatch = mvpattern.matcher(jsonmodlepropertyinfo.getString("mvmodlePinName"));
+                    if (pvmatch.find()) {
+                        pinorder = Integer.parseInt(pvmatch.group(2));
+                    } else {
+                        throw new RuntimeException("can't match pin order");
+                    }
+
+
+                    MPCModleProperty mvuppinmpcModleProperty = projectOperaterImp.findMPCModlePropertyByid(jsonmodlepropertyinfo.getInteger("mvuppinid"));//new MPCModleProperty();
+                    mvuppinmpcModleProperty.setPindir(ModleProperty.PINDIRINPUT);
+//                    mvuppinmpcModleProperty.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
+                    mvuppinmpcModleProperty.setModlePinName(ModleProperty.TYPE_PIN_MVUP + pinorder);
+                    mvuppinmpcModleProperty.setPintype(ModleProperty.TYPE_PIN_MVUP);
+                    mvuppinmpcModleProperty.setModlepropertyclazz(ModleProperty.MODLEPROPERTYCLAZZ_MPC);
+
+                    mvuppinmpcModleProperty.setOpcTagName(jsonmodlepropertyinfo.getString("mvupmodleOpcTagName"));//spmodleOpcTag
+                    mvuppinmpcModleProperty.setModleOpcTag(jsonmodlepropertyinfo.getString("mvupmodleOpcTag"));
+
+                    String mvupresourcemodleId = jsonmodlepropertyinfo.getString("mvupresourcemodleId");
+                    String mvupresourcemodlepinsId = jsonmodlepropertyinfo.getString("mvupresourcemodlepinsId");
+                    String mvuppincontantvalue = jsonmodlepropertyinfo.getString("mvuppincontantvalue");
+                    if (Tool.isNoneString(mvupresourcemodleId) || Tool.isNoneString(mvupresourcemodlepinsId)) {
+                        if (Tool.isNoneString(mvuppincontantvalue)) {
+                            throw new RuntimeException("mvup pin data resource is none!");
+                        } else {
+                            JSONObject resource = new JSONObject();
+                            resource.put("resource", ModleProperty.SOURCE_TYPE_CONSTANT);
+                            resource.put("value", Double.parseDouble(mvuppincontantvalue));
+                            mvuppinmpcModleProperty.setResource(resource);
+                            mvuppinmpcModleProperty.setOpcTagName("");
+                        }
+                    } else {
+                        JSONObject resource = new JSONObject();
+                        resource.put("resource", ModleProperty.SOURCE_TYPE_MODLE);
+                        resource.put("modleId", Integer.parseInt(mvupresourcemodleId));
+                        resource.put("modlepinsId", Integer.parseInt(mvupresourcemodlepinsId));
+                        mvuppinmpcModleProperty.setResource(resource);
+                    }
+
+
+                    MPCModleProperty mvdownpinmpcModleProperty = projectOperaterImp.findMPCModlePropertyByid(jsonmodlepropertyinfo.getInteger("mvdownpinid"));//new MPCModleProperty();
+                    mvdownpinmpcModleProperty.setPindir(ModleProperty.PINDIRINPUT);
+//                    mvdownpinmpcModleProperty.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
+                    mvdownpinmpcModleProperty.setModlePinName(ModleProperty.TYPE_PIN_MVDOWN + pinorder);
+                    mvdownpinmpcModleProperty.setPintype(ModleProperty.TYPE_PIN_MVDOWN);
+                    mvdownpinmpcModleProperty.setModlepropertyclazz(ModleProperty.MODLEPROPERTYCLAZZ_MPC);
+                    mvdownpinmpcModleProperty.setOpcTagName(jsonmodlepropertyinfo.getString("mvdownmodleOpcTagName"));//spmodleOpcTag
+                    mvdownpinmpcModleProperty.setModleOpcTag(jsonmodlepropertyinfo.getString("mvdownmodleOpcTag"));
+
+                    String mvdownresourcemodleId = jsonmodlepropertyinfo.getString("mvdownresourcemodleId");
+                    String mvdownresourcemodlepinsId = jsonmodlepropertyinfo.getString("mvdownresourcemodlepinsId");
+                    String mvdownpincontantvalue = jsonmodlepropertyinfo.getString("mvdownpincontantvalue");
+                    if (Tool.isNoneString(mvdownresourcemodleId) || Tool.isNoneString(mvdownresourcemodlepinsId)) {
+                        if (Tool.isNoneString(mvdownpincontantvalue)) {
+                            throw new RuntimeException("mvdown pin data resource is none!");
+                        } else {
+                            JSONObject resource = new JSONObject();
+                            resource.put("resource", ModleProperty.SOURCE_TYPE_CONSTANT);
+                            resource.put("value", Double.parseDouble(mvdownpincontantvalue));
+                            mvdownpinmpcModleProperty.setResource(resource);
+                            mvdownpinmpcModleProperty.setOpcTagName("");
+                        }
+                    } else {
+                        JSONObject resource = new JSONObject();
+                        resource.put("resource", ModleProperty.SOURCE_TYPE_MODLE);
+                        resource.put("modleId", Integer.parseInt(mvdownresourcemodleId));
+                        resource.put("modlepinsId", Integer.parseInt(mvdownresourcemodlepinsId));
+                        mvdownpinmpcModleProperty.setResource(resource);
+                    }
+
+
+                    MPCModleProperty mvfbpinmpcModleProperty = projectOperaterImp.findMPCModlePropertyByid(jsonmodlepropertyinfo.getInteger("mvfbpinid"));//new MPCModleProperty();
+                    mvfbpinmpcModleProperty.setPindir(ModleProperty.PINDIRINPUT);
+//                    mvfbpinmpcModleProperty.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
+                    mvfbpinmpcModleProperty.setModlePinName(ModleProperty.TYPE_PIN_MVFB + pinorder);
+                    mvfbpinmpcModleProperty.setPintype(ModleProperty.TYPE_PIN_MVFB);
+                    mvfbpinmpcModleProperty.setModlepropertyclazz(ModleProperty.MODLEPROPERTYCLAZZ_MPC);
+                    mvfbpinmpcModleProperty.setOpcTagName(jsonmodlepropertyinfo.getString("mvfbmodleOpcTagName"));//mvfbmodleOpcTag
+                    mvfbpinmpcModleProperty.setModleOpcTag(jsonmodlepropertyinfo.getString("mvfbmodleOpcTag"));
+
+                    String mvfbresourcemodleId = jsonmodlepropertyinfo.getString("mvfbresourcemodleId");
+                    String mvfbresourcemodlepinsId = jsonmodlepropertyinfo.getString("mvfbresourcemodlepinsId");
+                    String mvfbpincontantvalue = jsonmodlepropertyinfo.getString("mvfbpincontantvalue");
+                    if (Tool.isNoneString(mvfbresourcemodleId) || Tool.isNoneString(mvfbresourcemodlepinsId)) {
+                        if (Tool.isNoneString(mvfbpincontantvalue)) {
+                            throw new RuntimeException("mvfbdown pin data resource is none!");
+                        } else {
+                            JSONObject resource = new JSONObject();
+                            resource.put("resource", ModleProperty.SOURCE_TYPE_CONSTANT);
+                            resource.put("value", Double.parseDouble(mvfbpincontantvalue));
+                            mvfbpinmpcModleProperty.setResource(resource);
+                            mvfbpinmpcModleProperty.setOpcTagName("");
+                        }
+                    } else {
+                        JSONObject resource = new JSONObject();
+                        resource.put("resource", ModleProperty.SOURCE_TYPE_MODLE);
+                        resource.put("modleId", Integer.parseInt(mvfbresourcemodleId));
+                        resource.put("modlepinsId", Integer.parseInt(mvfbresourcemodlepinsId));
+                        mvfbpinmpcModleProperty.setResource(resource);
+                    }
+                    count = projectOperaterImp.updatempcmodlepvrelationpropertybusiness(mvpinmpcModleProperty, mvuppinmpcModleProperty, mvdownpinmpcModleProperty, mvfbpinmpcModleProperty);
+                    break;
+                }
+                case ModleProperty.TYPE_PIN_FF: {
+                    MPCModleProperty ffpinmpcModleProperty = projectOperaterImp.findMPCModlePropertyByid(jsonmodlepropertyinfo.getInteger("ffpinid"));//= new MPCModleProperty();
+//                    ffpinmpcModleProperty.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
+                    ffpinmpcModleProperty.setModlePinName(jsonmodlepropertyinfo.getString("ffmodlePinName"));
+                    ffpinmpcModleProperty.setPindir(ModleProperty.PINDIRINPUT);
+                    ffpinmpcModleProperty.setPintype(ModleProperty.TYPE_PIN_FF);
+                    ffpinmpcModleProperty.setModlepropertyclazz(ModleProperty.MODLEPROPERTYCLAZZ_MPC);
+                    ffpinmpcModleProperty.setOpcTagName(jsonmodlepropertyinfo.getString("ffmodleOpcTagName"));
+                    ffpinmpcModleProperty.setModleOpcTag(jsonmodlepropertyinfo.getString("ffmodleOpcTag"));
+                    String ffresourcemodleId = jsonmodlepropertyinfo.getString("ffresourcemodleId");
+                    String ffresourcemodlepinsId = jsonmodlepropertyinfo.getString("ffresourcemodlepinsId");
+                    String ffpincontantvalue = jsonmodlepropertyinfo.getString("ffpincontantvalue");
+                    if (Tool.isNoneString(ffresourcemodleId) || Tool.isNoneString(ffresourcemodlepinsId)) {
+                        if (Tool.isNoneString(ffpincontantvalue)) {
+                            throw new RuntimeException("ff pin data resource is none!");
+                        } else {
+                            JSONObject resource = new JSONObject();
+                            resource.put("resource", ModleProperty.SOURCE_TYPE_CONSTANT);
+                            resource.put("value", Double.parseDouble(ffpincontantvalue));
+                            ffpinmpcModleProperty.setResource(resource);
+                            ffpinmpcModleProperty.setOpcTagName("");
+                        }
+                    } else {
+                        JSONObject resource = new JSONObject();
+
+                        resource.put("resource", ModleProperty.SOURCE_TYPE_MODLE);
+                        resource.put("modleId", Integer.parseInt(ffresourcemodleId));
+                        resource.put("modlepinsId", Integer.parseInt(ffresourcemodlepinsId));
+                        ffpinmpcModleProperty.setResource(resource);
+                    }
+
+
+                    int pinorder = 0;
+                    Matcher pvmatch = ffpattern.matcher(jsonmodlepropertyinfo.getString("ffmodlePinName"));
+                    if (pvmatch.find()) {
+                        pinorder = Integer.parseInt(pvmatch.group(2));
+                    } else {
+                        throw new RuntimeException("can't match pin order");
+                    }
+
+
+                    MPCModleProperty ffuppinmpcModleProperty = projectOperaterImp.findMPCModlePropertyByid(jsonmodlepropertyinfo.getInteger("ffuppinid"));//new MPCModleProperty();
+                    ffuppinmpcModleProperty.setPindir(ModleProperty.PINDIRINPUT);
+//                    ffuppinmpcModleProperty.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
+                    ffuppinmpcModleProperty.setModlePinName(ModleProperty.TYPE_PIN_FFUP + pinorder);
+                    ffuppinmpcModleProperty.setPintype(ModleProperty.TYPE_PIN_FFUP);
+                    ffuppinmpcModleProperty.setModlepropertyclazz(ModleProperty.MODLEPROPERTYCLAZZ_MPC);
+
+                    ffuppinmpcModleProperty.setOpcTagName(jsonmodlepropertyinfo.getString("ffupmodleOpcTagName"));//spmodleOpcTag
+                    ffuppinmpcModleProperty.setModleOpcTag(jsonmodlepropertyinfo.getString("ffupmodleOpcTag"));
+
+                    String mvupresourcemodleId = jsonmodlepropertyinfo.getString("ffupresourcemodleId");
+                    String mvupresourcemodlepinsId = jsonmodlepropertyinfo.getString("ffupresourcemodlepinsId");
+                    String mvuppincontantvalue = jsonmodlepropertyinfo.getString("ffuppincontantvalue");
+                    if (Tool.isNoneString(mvupresourcemodleId) || Tool.isNoneString(mvupresourcemodlepinsId)) {
+                        if (Tool.isNoneString(mvuppincontantvalue)) {
+                            throw new RuntimeException("ffup pin data resource is none!");
+                        } else {
+                            JSONObject resource = new JSONObject();
+                            resource.put("resource", ModleProperty.SOURCE_TYPE_CONSTANT);
+                            resource.put("value", Double.parseDouble(mvuppincontantvalue));
+                            ffuppinmpcModleProperty.setResource(resource);
+                            ffuppinmpcModleProperty.setOpcTagName("");
+                        }
+                    } else {
+                        JSONObject resource = new JSONObject();
+                        resource.put("resource", ModleProperty.SOURCE_TYPE_MODLE);
+                        resource.put("modleId", Integer.parseInt(mvupresourcemodleId));
+                        resource.put("modlepinsId", Integer.parseInt(mvupresourcemodlepinsId));
+                        ffuppinmpcModleProperty.setResource(resource);
+                    }
+
+
+                    MPCModleProperty ffdownpinmpcModleProperty = projectOperaterImp.findMPCModlePropertyByid(jsonmodlepropertyinfo.getInteger("ffdownpinid"));//new MPCModleProperty();
+                    ffdownpinmpcModleProperty.setPindir(ModleProperty.PINDIRINPUT);
+//                    ffdownpinmpcModleProperty.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
+                    ffdownpinmpcModleProperty.setModlePinName(ModleProperty.TYPE_PIN_FFDOWN + pinorder);
+                    ffdownpinmpcModleProperty.setPintype(ModleProperty.TYPE_PIN_FFDOWN);
+                    ffdownpinmpcModleProperty.setModlepropertyclazz(ModleProperty.MODLEPROPERTYCLAZZ_MPC);
+                    ffdownpinmpcModleProperty.setOpcTagName(jsonmodlepropertyinfo.getString("ffdownmodleOpcTagName"));//spmodleOpcTag
+                    ffdownpinmpcModleProperty.setModleOpcTag(jsonmodlepropertyinfo.getString("ffdownmodleOpcTag"));
+
+                    String mvdownresourcemodleId = jsonmodlepropertyinfo.getString("ffdownresourcemodleId");
+                    String mvdownresourcemodlepinsId = jsonmodlepropertyinfo.getString("ffdownresourcemodlepinsId");
+                    String mvdownpincontantvalue = jsonmodlepropertyinfo.getString("ffdownpincontantvalue");
+                    if (Tool.isNoneString(mvdownresourcemodleId) || Tool.isNoneString(mvdownresourcemodlepinsId)) {
+                        if (Tool.isNoneString(mvdownpincontantvalue)) {
+                            throw new RuntimeException("ffdown pin data resource is none!");
+                        } else {
+                            JSONObject resource = new JSONObject();
+                            resource.put("resource", ModleProperty.SOURCE_TYPE_CONSTANT);
+                            resource.put("value", Double.parseDouble(mvdownpincontantvalue));
+                            ffdownpinmpcModleProperty.setResource(resource);
+                            ffdownpinmpcModleProperty.setOpcTagName("");
+                        }
+                    } else {
+                        JSONObject resource = new JSONObject();
+                        resource.put("resource", ModleProperty.SOURCE_TYPE_MODLE);
+                        resource.put("modleId", Integer.parseInt(mvdownresourcemodleId));
+                        resource.put("modlepinsId", Integer.parseInt(mvdownresourcemodlepinsId));
+                        ffdownpinmpcModleProperty.setResource(resource);
+                    }
+                    count = projectOperaterImp.updatempcmodlepvrelationpropertybusiness(ffpinmpcModleProperty, ffuppinmpcModleProperty, ffdownpinmpcModleProperty);
+                    break;
+                }
+                default: {
+
                     break;
                 }
 
@@ -1103,7 +1650,7 @@ public class ProjectEdit {
 
     @RequestMapping("/createmodleproperties")
     @ResponseBody
-    public String createmodleproperties(@RequestParam("modlepropertyinfo") String modlepropertyinfo) {
+    public String createbasemodleproperties(@RequestParam("modlepropertyinfo") String modlepropertyinfo) {
 
         JSONObject result = new JSONObject();
         try {
@@ -1112,27 +1659,6 @@ public class ProjectEdit {
             switch (jsonmodlepropertyinfo.getString("modletype")) {
 
                 case Modle.MODLETYPE_MPC: {
-                    MPCModleProperty mpcModleProperty = new MPCModleProperty();
-                    mpcModleProperty.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
-                    mpcModleProperty.setModleOpcTag(jsonmodlepropertyinfo.getString("modleOpcTag"));
-                    mpcModleProperty.setModlePinName(jsonmodlepropertyinfo.getString("modlePinName"));
-                    mpcModleProperty.setOpcTagName(jsonmodlepropertyinfo.getString("opcTagName"));
-                    JSONObject resource = new JSONObject();
-                    resource.put("resource", ModleProperty.SOURCE_TYPE_MODLE);
-                    mpcModleProperty.setResource(resource);
-                    mpcModleProperty.setQ(jsonmodlepropertyinfo.getDouble("Q"));
-                    mpcModleProperty.setDmvHigh(jsonmodlepropertyinfo.getDouble("dmvHigh"));
-                    mpcModleProperty.setDeadZone(jsonmodlepropertyinfo.getDouble("deadZone"));
-                    mpcModleProperty.setFunelinitValue(jsonmodlepropertyinfo.getDouble("funelinitValue"));
-                    mpcModleProperty.setR(jsonmodlepropertyinfo.getDouble("R"));
-                    mpcModleProperty.setDmvLow(jsonmodlepropertyinfo.getDouble("dmvLow"));
-                    mpcModleProperty.setModleOpcTag(jsonmodlepropertyinfo.getString("referTrajectoryCoef"));
-                    mpcModleProperty.setFunneltype(jsonmodlepropertyinfo.getString("funneltype"));
-//                    mpcModleProperty.setPinEnable(jsonmodlepropertyinfo.getInteger("pinEnable"));
-                    mpcModleProperty.setTracoefmethod(jsonmodlepropertyinfo.getString("tracoefmethod"));
-                    mpcModleProperty.setPindir(jsonmodlepropertyinfo.getString("pindir"));
-                    mpcModleProperty.setModlepropertyclazz(ModleProperty.MODLEPROPERTYCLAZZ_MPC);
-                    count = projectOperaterImp.insertMPCModleProperty(mpcModleProperty);
                     break;
                 }
                 case Modle.MODLETYPE_INPUT: {
@@ -1154,7 +1680,7 @@ public class ProjectEdit {
                 case Modle.MODLETYPE_FILTER: {
                     BaseModlePropertyImp propertyImp = new BaseModlePropertyImp();
                     propertyImp.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
-                    propertyImp.setModleOpcTag(jsonmodlepropertyinfo.getString("modlePinName"));
+                    propertyImp.setModleOpcTag(jsonmodlepropertyinfo.getString("modleOpcTag"));
                     propertyImp.setModlePinName(jsonmodlepropertyinfo.getString("modlePinName"));
                     propertyImp.setOpcTagName(jsonmodlepropertyinfo.getString("opcTagName"));
 
@@ -1172,8 +1698,15 @@ public class ProjectEdit {
                         resource.put("modlepinsId", Integer.parseInt(refmodlepinsId));
                         propertyImp.setResource(resource);
                     } else {
+                        String refmodleId = jsonmodlepropertyinfo.getString("resourcemodleId");
+                        String refmodlepinsId = jsonmodlepropertyinfo.getString("resourcemodlepinsId");
+                        if (Tool.isNoneString(refmodleId) || Tool.isNoneString(refmodlepinsId)) {
+                            throw new RuntimeException("pin data resource is none!");
+                        }
                         JSONObject resource = new JSONObject();
                         resource.put("resource", ModleProperty.SOURCE_TYPE_MEMORY);
+                        resource.put("modleId", Integer.parseInt(refmodleId));
+                        resource.put("modlepinsId", Integer.parseInt(refmodlepinsId));
                         propertyImp.setResource(resource);
                     }
 //                    mpcModleProperty.setPinEnable(jsonmodlepropertyinfo.getInteger("pinEnable"));
@@ -1252,6 +1785,51 @@ public class ProjectEdit {
                     count = projectOperaterImp.insertBaseModleProperty(propertyImp);
                     break;
                 }
+
+                case Modle.MODLETYPE_OUTPUT: {
+
+                    /**输入引脚*/
+                    BaseModlePropertyImp inputpropertyImp = new BaseModlePropertyImp();
+                    inputpropertyImp.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
+                    inputpropertyImp.setModleOpcTag(jsonmodlepropertyinfo.getString("modleOpcTag"));
+                    inputpropertyImp.setModlePinName(jsonmodlepropertyinfo.getString("modlePinName"));
+                    inputpropertyImp.setOpcTagName(jsonmodlepropertyinfo.getString("opcTagName"));
+
+                    String inrefmodleId = jsonmodlepropertyinfo.getString("resourcemodleId");
+                    String inrefmodlepinsId = jsonmodlepropertyinfo.getString("resourcemodlepinsId");
+                    if (Tool.isNoneString(inrefmodleId) || Tool.isNoneString(inrefmodlepinsId)) {
+                        throw new RuntimeException("pin data resource is none!");
+                    }
+                    JSONObject inresource = new JSONObject();
+
+                    inresource.put("resource", ModleProperty.SOURCE_TYPE_MODLE);
+                    inresource.put("modleId", Integer.parseInt(inrefmodleId));
+                    inresource.put("modlepinsId", Integer.parseInt(inrefmodlepinsId));
+                    inresource.put("outputpinmappingtagname", jsonmodlepropertyinfo.getString("outputpinmappingtagname"));
+                    inputpropertyImp.setResource(inresource);
+                    inputpropertyImp.setPindir(ModleProperty.PINDIRINPUT);
+                    inputpropertyImp.setModlepropertyclazz(ModleProperty.MODLEPROPERTYCLAZZ_BASE);
+
+
+                    /**输出引脚*/
+                    BaseModlePropertyImp outputpropertyImp = new BaseModlePropertyImp();
+                    outputpropertyImp.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
+                    outputpropertyImp.setModleOpcTag(jsonmodlepropertyinfo.getString("outpinmappingtag"));
+                    outputpropertyImp.setModlePinName(jsonmodlepropertyinfo.getString("outpinmappingtag"));
+                    outputpropertyImp.setOpcTagName(jsonmodlepropertyinfo.getString("outputpinmappingtagname"));
+                    if (Tool.isNoneString(jsonmodlepropertyinfo.getString("outpinmappingtag"))) {
+                        throw new RuntimeException("out mapping is none");
+                    }
+                    JSONObject outresource = new JSONObject();
+                    outresource.put("resource", ModleProperty.SOURCE_TYPE_OPC);
+                    outresource.put("outmappingtag", jsonmodlepropertyinfo.getString("outpinmappingtag"));
+                    outresource.put("modlepinsId", -1);//输出模块的输入引脚id
+                    outputpropertyImp.setResource(outresource);
+                    outputpropertyImp.setPindir(ModleProperty.PINDIROUTPUT);
+                    outputpropertyImp.setModlepropertyclazz(ModleProperty.MODLEPROPERTYCLAZZ_BASE);
+                    count = projectOperaterImp.insertoutmodlepropertybusiness(inputpropertyImp, outputpropertyImp);
+                    break;
+                }
                 default: {
                     BaseModlePropertyImp propertyImp = new BaseModlePropertyImp();
                     propertyImp.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
@@ -1279,6 +1857,484 @@ public class ProjectEdit {
             logger.error(e.getMessage(), e);
             result.put("msg", "error");
         }
+        return result.toJSONString();
+    }
+
+
+    @RequestMapping("/creatempcmodleproperties")
+    @ResponseBody
+    public String creatempcmodleproperties(@RequestParam("modlepropertyinfo") String modlepropertyinfo) {
+
+        JSONObject result = new JSONObject();
+        try {
+            JSONObject jsonmodlepropertyinfo = JSONObject.parseObject(modlepropertyinfo);
+            int count = 0;
+            switch (jsonmodlepropertyinfo.getString("pintype")) {
+
+                case ModleProperty.TYPE_PIN_PV: {
+                    MPCModleProperty pvpinmpcModleProperty = new MPCModleProperty();
+                    pvpinmpcModleProperty.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
+                    pvpinmpcModleProperty.setModlePinName(jsonmodlepropertyinfo.getString("pvmodlePinName"));
+                    pvpinmpcModleProperty.setPindir(ModleProperty.PINDIRINPUT);
+                    pvpinmpcModleProperty.setPintype(ModleProperty.TYPE_PIN_PV);
+                    pvpinmpcModleProperty.setModlepropertyclazz(ModleProperty.MODLEPROPERTYCLAZZ_MPC);
+                    pvpinmpcModleProperty.setOpcTagName(jsonmodlepropertyinfo.getString("pvmodleOpcTagName"));//spmodleOpcTag
+                    pvpinmpcModleProperty.setModleOpcTag(jsonmodlepropertyinfo.getString("pvmodleOpcTag"));
+                    String pvresourcemodleId = jsonmodlepropertyinfo.getString("pvresourcemodleId");
+                    String pvresourcemodlepinsId = jsonmodlepropertyinfo.getString("pvresourcemodlepinsId");
+                    String pvpincontantvalue = jsonmodlepropertyinfo.getString("pvpincontantvalue");
+                    if (Tool.isNoneString(pvresourcemodleId) || Tool.isNoneString(pvresourcemodlepinsId)) {
+                        if (Tool.isNoneString(pvpincontantvalue)) {
+                            throw new RuntimeException("pv pin data resource is none!");
+                        } else {
+                            JSONObject resource = new JSONObject();
+                            resource.put("resource", ModleProperty.SOURCE_TYPE_CONSTANT);
+                            resource.put("value", Double.parseDouble(pvpincontantvalue));
+                            pvpinmpcModleProperty.setResource(resource);
+                            pvpinmpcModleProperty.setOpcTagName("");
+                        }
+                    } else {
+                        JSONObject resource = new JSONObject();
+
+                        resource.put("resource", ModleProperty.SOURCE_TYPE_MODLE);
+                        resource.put("modleId", Integer.parseInt(pvresourcemodleId));
+                        resource.put("modlepinsId", Integer.parseInt(pvresourcemodlepinsId));
+                        pvpinmpcModleProperty.setResource(resource);
+
+                    }
+
+                    pvpinmpcModleProperty.setDeadZone(jsonmodlepropertyinfo.getDouble("deadZone"));
+                    pvpinmpcModleProperty.setFunelinitValue(jsonmodlepropertyinfo.getDouble("funelinitValue"));
+
+                    pvpinmpcModleProperty.setFunneltype(jsonmodlepropertyinfo.getString("funneltype"));
+                    pvpinmpcModleProperty.setQ(jsonmodlepropertyinfo.getDouble("Q"));
+                    pvpinmpcModleProperty.setReferTrajectoryCoef(jsonmodlepropertyinfo.getDouble("referTrajectoryCoef"));
+                    pvpinmpcModleProperty.setTracoefmethod(jsonmodlepropertyinfo.getString("tracoefmethod"));
+
+
+                    int pinorder = 0;
+                    Matcher pvmatch = pvpattern.matcher(jsonmodlepropertyinfo.getString("pvmodlePinName"));
+                    if (pvmatch.find()) {
+                        pinorder = Integer.parseInt(pvmatch.group(2));
+                    } else {
+                        throw new RuntimeException("can't match pin order");
+                    }
+
+
+                    MPCModleProperty pvuppinmpcModleProperty = new MPCModleProperty();
+                    pvuppinmpcModleProperty.setPindir(ModleProperty.PINDIRINPUT);
+                    pvuppinmpcModleProperty.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
+                    pvuppinmpcModleProperty.setModlePinName(ModleProperty.TYPE_PIN_PVUP + pinorder);
+                    pvuppinmpcModleProperty.setPintype(ModleProperty.TYPE_PIN_PVUP);
+                    pvuppinmpcModleProperty.setModlepropertyclazz(ModleProperty.MODLEPROPERTYCLAZZ_MPC);
+
+                    pvuppinmpcModleProperty.setOpcTagName(jsonmodlepropertyinfo.getString("pvupmodleOpcTagName"));//spmodleOpcTag
+                    pvuppinmpcModleProperty.setModleOpcTag(jsonmodlepropertyinfo.getString("pvupmodleOpcTag"));
+
+                    String pvupresourcemodleId = jsonmodlepropertyinfo.getString("pvupresourcemodleId");
+                    String pvupresourcemodlepinsId = jsonmodlepropertyinfo.getString("pvupresourcemodlepinsId");
+                    String pvuppincontantvalue = jsonmodlepropertyinfo.getString("pvuppincontantvalue");
+                    if (Tool.isNoneString(pvupresourcemodleId) || Tool.isNoneString(pvupresourcemodlepinsId)) {
+                        if (Tool.isNoneString(pvuppincontantvalue)) {
+                            throw new RuntimeException("pvup pin data resource is none!");
+                        } else {
+                            JSONObject resource = new JSONObject();
+                            resource.put("resource", ModleProperty.SOURCE_TYPE_CONSTANT);
+                            resource.put("value", Double.parseDouble(pvuppincontantvalue));
+                            pvuppinmpcModleProperty.setResource(resource);
+                            pvuppinmpcModleProperty.setOpcTagName("");
+                        }
+                    } else {
+                        JSONObject resource = new JSONObject();
+                        resource.put("resource", ModleProperty.SOURCE_TYPE_MODLE);
+                        resource.put("modleId", Integer.parseInt(pvupresourcemodleId));
+                        resource.put("modlepinsId", Integer.parseInt(pvupresourcemodlepinsId));
+                        pvuppinmpcModleProperty.setResource(resource);
+                    }
+
+
+                    MPCModleProperty pvdownpinmpcModleProperty = new MPCModleProperty();
+                    pvdownpinmpcModleProperty.setPindir(ModleProperty.PINDIRINPUT);
+                    pvdownpinmpcModleProperty.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
+                    pvdownpinmpcModleProperty.setModlePinName(ModleProperty.TYPE_PIN_PVDOWN + pinorder);
+                    pvdownpinmpcModleProperty.setPintype(ModleProperty.TYPE_PIN_PVDOWN);
+                    pvdownpinmpcModleProperty.setModlepropertyclazz(ModleProperty.MODLEPROPERTYCLAZZ_MPC);
+                    pvdownpinmpcModleProperty.setOpcTagName(jsonmodlepropertyinfo.getString("pvdownmodleOpcTagName"));//spmodleOpcTag
+                    pvdownpinmpcModleProperty.setModleOpcTag(jsonmodlepropertyinfo.getString("pvdownmodleOpcTag"));
+
+                    String pvdownresourcemodleId = jsonmodlepropertyinfo.getString("pvdownresourcemodleId");
+                    String pvdownresourcemodlepinsId = jsonmodlepropertyinfo.getString("pvdownresourcemodlepinsId");
+                    String pvdownpincontantvalue = jsonmodlepropertyinfo.getString("pvdownpincontantvalue");
+                    if (Tool.isNoneString(pvdownresourcemodleId) || Tool.isNoneString(pvdownresourcemodlepinsId)) {
+                        if (Tool.isNoneString(pvdownpincontantvalue)) {
+                            throw new RuntimeException("pvdown pin data resource is none!");
+                        } else {
+                            JSONObject resource = new JSONObject();
+                            resource.put("resource", ModleProperty.SOURCE_TYPE_CONSTANT);
+                            resource.put("value", Double.parseDouble(pvdownpincontantvalue));
+                            pvdownpinmpcModleProperty.setResource(resource);
+                            pvdownpinmpcModleProperty.setOpcTagName("");
+                        }
+                    } else {
+                        JSONObject resource = new JSONObject();
+                        resource.put("resource", ModleProperty.SOURCE_TYPE_MODLE);
+                        resource.put("modleId", Integer.parseInt(pvdownresourcemodleId));
+                        resource.put("modlepinsId", Integer.parseInt(pvdownresourcemodlepinsId));
+                        pvdownpinmpcModleProperty.setResource(resource);
+                    }
+
+
+                    MPCModleProperty sppinmpcModleProperty = new MPCModleProperty();
+                    sppinmpcModleProperty.setPindir(ModleProperty.PINDIRINPUT);
+                    sppinmpcModleProperty.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
+                    sppinmpcModleProperty.setModlePinName(ModleProperty.TYPE_PIN_SP + pinorder);
+                    sppinmpcModleProperty.setPintype(ModleProperty.TYPE_PIN_SP);
+                    sppinmpcModleProperty.setModlepropertyclazz(ModleProperty.MODLEPROPERTYCLAZZ_MPC);
+                    sppinmpcModleProperty.setOpcTagName(jsonmodlepropertyinfo.getString("spmodleOpcTagName"));//spmodleOpcTag
+                    sppinmpcModleProperty.setModleOpcTag(jsonmodlepropertyinfo.getString("spmodleOpcTag"));
+
+                    String spresourcemodleId = jsonmodlepropertyinfo.getString("spresourcemodleId");
+                    String spresourcemodlepinsId = jsonmodlepropertyinfo.getString("spresourcemodlepinsId");
+                    String sppincontantvalue = jsonmodlepropertyinfo.getString("sppincontantvalue");
+                    if (Tool.isNoneString(spresourcemodleId) || Tool.isNoneString(spresourcemodlepinsId)) {
+                        if (Tool.isNoneString(sppincontantvalue)) {
+                            throw new RuntimeException("pvdown pin data resource is none!");
+                        } else {
+                            JSONObject resource = new JSONObject();
+                            resource.put("resource", ModleProperty.SOURCE_TYPE_CONSTANT);
+                            resource.put("value", Double.parseDouble(sppincontantvalue));
+                            sppinmpcModleProperty.setResource(resource);
+                            sppinmpcModleProperty.setOpcTagName("");
+                        }
+                    } else {
+                        JSONObject resource = new JSONObject();
+                        resource.put("resource", ModleProperty.SOURCE_TYPE_MODLE);
+                        resource.put("modleId", Integer.parseInt(spresourcemodleId));
+                        resource.put("modlepinsId", Integer.parseInt(spresourcemodlepinsId));
+                        sppinmpcModleProperty.setResource(resource);
+                    }
+                    count = projectOperaterImp.insertmpcmodlepvrelationpropertybusiness(pvpinmpcModleProperty, pvuppinmpcModleProperty, pvdownpinmpcModleProperty, sppinmpcModleProperty);
+                    break;
+                }
+                case ModleProperty.TYPE_PIN_MV: {
+
+                    MPCModleProperty mvpinmpcModleProperty = new MPCModleProperty();
+                    mvpinmpcModleProperty.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
+                    mvpinmpcModleProperty.setModlePinName(jsonmodlepropertyinfo.getString("mvmodlePinName"));
+                    mvpinmpcModleProperty.setPindir(ModleProperty.PINDIRINPUT);
+                    mvpinmpcModleProperty.setPintype(ModleProperty.TYPE_PIN_MV);
+                    mvpinmpcModleProperty.setModlepropertyclazz(ModleProperty.MODLEPROPERTYCLAZZ_MPC);
+                    mvpinmpcModleProperty.setOpcTagName(jsonmodlepropertyinfo.getString("mvmodleOpcTagName"));
+                    mvpinmpcModleProperty.setModleOpcTag(jsonmodlepropertyinfo.getString("mvmodleOpcTag"));
+                    String mvresourcemodleId = jsonmodlepropertyinfo.getString("mvresourcemodleId");
+                    String mvresourcemodlepinsId = jsonmodlepropertyinfo.getString("mvresourcemodlepinsId");
+                    String mvpincontantvalue = jsonmodlepropertyinfo.getString("mvpincontantvalue");
+                    if (Tool.isNoneString(mvresourcemodleId) || Tool.isNoneString(mvresourcemodlepinsId)) {
+                        if (Tool.isNoneString(mvpincontantvalue)) {
+                            throw new RuntimeException("mv pin data resource is none!");
+                        } else {
+                            JSONObject resource = new JSONObject();
+                            resource.put("resource", ModleProperty.SOURCE_TYPE_CONSTANT);
+                            resource.put("value", Double.parseDouble(mvpincontantvalue));
+                            mvpinmpcModleProperty.setResource(resource);
+                            mvpinmpcModleProperty.setOpcTagName("");
+                        }
+                    } else {
+                        JSONObject resource = new JSONObject();
+
+                        resource.put("resource", ModleProperty.SOURCE_TYPE_MODLE);
+                        resource.put("modleId", Integer.parseInt(mvresourcemodleId));
+                        resource.put("modlepinsId", Integer.parseInt(mvresourcemodlepinsId));
+                        mvpinmpcModleProperty.setResource(resource);
+                    }
+
+                    mvpinmpcModleProperty.setR(jsonmodlepropertyinfo.getDouble("R"));
+                    mvpinmpcModleProperty.setDmvHigh(jsonmodlepropertyinfo.getDouble("dmvHigh"));
+
+                    mvpinmpcModleProperty.setDmvLow(jsonmodlepropertyinfo.getDouble("dmvLow"));
+
+
+                    int pinorder = 0;
+                    Matcher pvmatch = mvpattern.matcher(jsonmodlepropertyinfo.getString("mvmodlePinName"));
+                    if (pvmatch.find()) {
+                        pinorder = Integer.parseInt(pvmatch.group(2));
+                    } else {
+                        throw new RuntimeException("can't match pin order");
+                    }
+
+
+                    MPCModleProperty mvuppinmpcModleProperty = new MPCModleProperty();
+                    mvuppinmpcModleProperty.setPindir(ModleProperty.PINDIRINPUT);
+                    mvuppinmpcModleProperty.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
+                    mvuppinmpcModleProperty.setModlePinName(ModleProperty.TYPE_PIN_MVUP + pinorder);
+                    mvuppinmpcModleProperty.setPintype(ModleProperty.TYPE_PIN_MVUP);
+                    mvuppinmpcModleProperty.setModlepropertyclazz(ModleProperty.MODLEPROPERTYCLAZZ_MPC);
+
+                    mvuppinmpcModleProperty.setOpcTagName(jsonmodlepropertyinfo.getString("mvupmodleOpcTagName"));//spmodleOpcTag
+                    mvuppinmpcModleProperty.setModleOpcTag(jsonmodlepropertyinfo.getString("mvupmodleOpcTag"));
+
+                    String mvupresourcemodleId = jsonmodlepropertyinfo.getString("mvupresourcemodleId");
+                    String mvupresourcemodlepinsId = jsonmodlepropertyinfo.getString("mvupresourcemodlepinsId");
+                    String mvuppincontantvalue = jsonmodlepropertyinfo.getString("mvuppincontantvalue");
+                    if (Tool.isNoneString(mvupresourcemodleId) || Tool.isNoneString(mvupresourcemodlepinsId)) {
+                        if (Tool.isNoneString(mvuppincontantvalue)) {
+                            throw new RuntimeException("mvup pin data resource is none!");
+                        } else {
+                            JSONObject resource = new JSONObject();
+                            resource.put("resource", ModleProperty.SOURCE_TYPE_CONSTANT);
+                            resource.put("value", Double.parseDouble(mvuppincontantvalue));
+                            mvuppinmpcModleProperty.setResource(resource);
+                            mvuppinmpcModleProperty.setOpcTagName("");
+                        }
+                    } else {
+                        JSONObject resource = new JSONObject();
+                        resource.put("resource", ModleProperty.SOURCE_TYPE_MODLE);
+                        resource.put("modleId", Integer.parseInt(mvupresourcemodleId));
+                        resource.put("modlepinsId", Integer.parseInt(mvupresourcemodlepinsId));
+                        mvuppinmpcModleProperty.setResource(resource);
+                    }
+
+
+                    MPCModleProperty mvdownpinmpcModleProperty = new MPCModleProperty();
+                    mvdownpinmpcModleProperty.setPindir(ModleProperty.PINDIRINPUT);
+                    mvdownpinmpcModleProperty.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
+                    mvdownpinmpcModleProperty.setModlePinName(ModleProperty.TYPE_PIN_MVDOWN + pinorder);
+                    mvdownpinmpcModleProperty.setPintype(ModleProperty.TYPE_PIN_MVDOWN);
+                    mvdownpinmpcModleProperty.setModlepropertyclazz(ModleProperty.MODLEPROPERTYCLAZZ_MPC);
+                    mvdownpinmpcModleProperty.setOpcTagName(jsonmodlepropertyinfo.getString("mvdownmodleOpcTagName"));//spmodleOpcTag
+                    mvdownpinmpcModleProperty.setModleOpcTag(jsonmodlepropertyinfo.getString("mvdownmodleOpcTag"));
+
+                    String mvdownresourcemodleId = jsonmodlepropertyinfo.getString("mvdownresourcemodleId");
+                    String mvdownresourcemodlepinsId = jsonmodlepropertyinfo.getString("mvdownresourcemodlepinsId");
+                    String mvdownpincontantvalue = jsonmodlepropertyinfo.getString("mvdownpincontantvalue");
+                    if (Tool.isNoneString(mvdownresourcemodleId) || Tool.isNoneString(mvdownresourcemodlepinsId)) {
+                        if (Tool.isNoneString(mvdownpincontantvalue)) {
+                            throw new RuntimeException("mvdown pin data resource is none!");
+                        } else {
+                            JSONObject resource = new JSONObject();
+                            resource.put("resource", ModleProperty.SOURCE_TYPE_CONSTANT);
+                            resource.put("value", Double.parseDouble(mvdownpincontantvalue));
+                            mvdownpinmpcModleProperty.setResource(resource);
+                            mvdownpinmpcModleProperty.setOpcTagName("");
+                        }
+                    } else {
+                        JSONObject resource = new JSONObject();
+                        resource.put("resource", ModleProperty.SOURCE_TYPE_MODLE);
+                        resource.put("modleId", Integer.parseInt(mvdownresourcemodleId));
+                        resource.put("modlepinsId", Integer.parseInt(mvdownresourcemodlepinsId));
+                        mvdownpinmpcModleProperty.setResource(resource);
+                    }
+
+
+                    MPCModleProperty mvfbpinmpcModleProperty = new MPCModleProperty();
+                    mvfbpinmpcModleProperty.setPindir(ModleProperty.PINDIRINPUT);
+                    mvfbpinmpcModleProperty.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
+                    mvfbpinmpcModleProperty.setModlePinName(ModleProperty.TYPE_PIN_MVFB + pinorder);
+                    mvfbpinmpcModleProperty.setPintype(ModleProperty.TYPE_PIN_MVFB);
+                    mvfbpinmpcModleProperty.setModlepropertyclazz(ModleProperty.MODLEPROPERTYCLAZZ_MPC);
+                    mvfbpinmpcModleProperty.setOpcTagName(jsonmodlepropertyinfo.getString("mvfbmodleOpcTagName"));//mvfbmodleOpcTag
+                    mvfbpinmpcModleProperty.setModleOpcTag(jsonmodlepropertyinfo.getString("mvfbmodleOpcTag"));
+
+                    String mvfbresourcemodleId = jsonmodlepropertyinfo.getString("mvfbresourcemodleId");
+                    String mvfbresourcemodlepinsId = jsonmodlepropertyinfo.getString("mvfbresourcemodlepinsId");
+                    String mvfbpincontantvalue = jsonmodlepropertyinfo.getString("mvfbpincontantvalue");
+                    if (Tool.isNoneString(mvfbresourcemodleId) || Tool.isNoneString(mvfbresourcemodlepinsId)) {
+                        if (Tool.isNoneString(mvfbpincontantvalue)) {
+                            throw new RuntimeException("mvfbdown pin data resource is none!");
+                        } else {
+                            JSONObject resource = new JSONObject();
+                            resource.put("resource", ModleProperty.SOURCE_TYPE_CONSTANT);
+                            resource.put("value", Double.parseDouble(mvfbpincontantvalue));
+                            mvfbpinmpcModleProperty.setResource(resource);
+                            mvfbpinmpcModleProperty.setOpcTagName("");
+                        }
+                    } else {
+                        JSONObject resource = new JSONObject();
+                        resource.put("resource", ModleProperty.SOURCE_TYPE_MODLE);
+                        resource.put("modleId", Integer.parseInt(mvfbresourcemodleId));
+                        resource.put("modlepinsId", Integer.parseInt(mvfbresourcemodlepinsId));
+                        mvfbpinmpcModleProperty.setResource(resource);
+                    }
+                    count = projectOperaterImp.insertmpcmodlepvrelationpropertybusiness(mvpinmpcModleProperty, mvuppinmpcModleProperty, mvdownpinmpcModleProperty, mvfbpinmpcModleProperty);
+                    break;
+                }
+                case ModleProperty.TYPE_PIN_FF: {
+
+                    MPCModleProperty ffpinmpcModleProperty = new MPCModleProperty();
+                    ffpinmpcModleProperty.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
+                    ffpinmpcModleProperty.setModlePinName(jsonmodlepropertyinfo.getString("ffmodlePinName"));
+                    ffpinmpcModleProperty.setPindir(ModleProperty.PINDIRINPUT);
+                    ffpinmpcModleProperty.setPintype(ModleProperty.TYPE_PIN_FF);
+                    ffpinmpcModleProperty.setModlepropertyclazz(ModleProperty.MODLEPROPERTYCLAZZ_MPC);
+                    ffpinmpcModleProperty.setOpcTagName(jsonmodlepropertyinfo.getString("ffmodleOpcTagName"));
+                    ffpinmpcModleProperty.setModleOpcTag(jsonmodlepropertyinfo.getString("ffmodleOpcTag"));
+                    String ffresourcemodleId = jsonmodlepropertyinfo.getString("ffresourcemodleId");
+                    String ffresourcemodlepinsId = jsonmodlepropertyinfo.getString("ffresourcemodlepinsId");
+                    String ffpincontantvalue = jsonmodlepropertyinfo.getString("ffpincontantvalue");
+                    if (Tool.isNoneString(ffresourcemodleId) || Tool.isNoneString(ffresourcemodlepinsId)) {
+                        if (Tool.isNoneString(ffpincontantvalue)) {
+                            throw new RuntimeException("ff pin data resource is none!");
+                        } else {
+                            JSONObject resource = new JSONObject();
+                            resource.put("resource", ModleProperty.SOURCE_TYPE_CONSTANT);
+                            resource.put("value", Double.parseDouble(ffpincontantvalue));
+                            ffpinmpcModleProperty.setResource(resource);
+                            ffpinmpcModleProperty.setOpcTagName("");
+                        }
+                    } else {
+                        JSONObject resource = new JSONObject();
+
+                        resource.put("resource", ModleProperty.SOURCE_TYPE_MODLE);
+                        resource.put("modleId", Integer.parseInt(ffresourcemodleId));
+                        resource.put("modlepinsId", Integer.parseInt(ffresourcemodlepinsId));
+                        ffpinmpcModleProperty.setResource(resource);
+                    }
+
+
+                    int pinorder = 0;
+                    Matcher pvmatch = ffpattern.matcher(jsonmodlepropertyinfo.getString("ffmodlePinName"));
+                    if (pvmatch.find()) {
+                        pinorder = Integer.parseInt(pvmatch.group(2));
+                    } else {
+                        throw new RuntimeException("can't match pin order");
+                    }
+
+
+                    MPCModleProperty ffuppinmpcModleProperty = new MPCModleProperty();
+                    ffuppinmpcModleProperty.setPindir(ModleProperty.PINDIRINPUT);
+                    ffuppinmpcModleProperty.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
+                    ffuppinmpcModleProperty.setModlePinName(ModleProperty.TYPE_PIN_FFUP + pinorder);
+                    ffuppinmpcModleProperty.setPintype(ModleProperty.TYPE_PIN_FFUP);
+                    ffuppinmpcModleProperty.setModlepropertyclazz(ModleProperty.MODLEPROPERTYCLAZZ_MPC);
+
+                    ffuppinmpcModleProperty.setOpcTagName(jsonmodlepropertyinfo.getString("ffupmodleOpcTagName"));//spmodleOpcTag
+                    ffuppinmpcModleProperty.setModleOpcTag(jsonmodlepropertyinfo.getString("ffupmodleOpcTag"));
+
+                    String mvupresourcemodleId = jsonmodlepropertyinfo.getString("ffupresourcemodleId");
+                    String mvupresourcemodlepinsId = jsonmodlepropertyinfo.getString("ffupresourcemodlepinsId");
+                    String mvuppincontantvalue = jsonmodlepropertyinfo.getString("ffuppincontantvalue");
+                    if (Tool.isNoneString(mvupresourcemodleId) || Tool.isNoneString(mvupresourcemodlepinsId)) {
+                        if (Tool.isNoneString(mvuppincontantvalue)) {
+                            throw new RuntimeException("ffup pin data resource is none!");
+                        } else {
+                            JSONObject resource = new JSONObject();
+                            resource.put("resource", ModleProperty.SOURCE_TYPE_CONSTANT);
+                            resource.put("value", Double.parseDouble(mvuppincontantvalue));
+                            ffuppinmpcModleProperty.setResource(resource);
+                            ffuppinmpcModleProperty.setOpcTagName("");
+                        }
+                    } else {
+                        JSONObject resource = new JSONObject();
+                        resource.put("resource", ModleProperty.SOURCE_TYPE_MODLE);
+                        resource.put("modleId", Integer.parseInt(mvupresourcemodleId));
+                        resource.put("modlepinsId", Integer.parseInt(mvupresourcemodlepinsId));
+                        ffuppinmpcModleProperty.setResource(resource);
+                    }
+
+
+                    MPCModleProperty ffdownpinmpcModleProperty = new MPCModleProperty();
+                    ffdownpinmpcModleProperty.setPindir(ModleProperty.PINDIRINPUT);
+                    ffdownpinmpcModleProperty.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
+                    ffdownpinmpcModleProperty.setModlePinName(ModleProperty.TYPE_PIN_FFDOWN + pinorder);
+                    ffdownpinmpcModleProperty.setPintype(ModleProperty.TYPE_PIN_FFDOWN);
+                    ffdownpinmpcModleProperty.setModlepropertyclazz(ModleProperty.MODLEPROPERTYCLAZZ_MPC);
+                    ffdownpinmpcModleProperty.setOpcTagName(jsonmodlepropertyinfo.getString("ffdownmodleOpcTagName"));//spmodleOpcTag
+                    ffdownpinmpcModleProperty.setModleOpcTag(jsonmodlepropertyinfo.getString("ffdownmodleOpcTag"));
+
+                    String mvdownresourcemodleId = jsonmodlepropertyinfo.getString("ffdownresourcemodleId");
+                    String mvdownresourcemodlepinsId = jsonmodlepropertyinfo.getString("ffdownresourcemodlepinsId");
+                    String mvdownpincontantvalue = jsonmodlepropertyinfo.getString("ffdownpincontantvalue");
+                    if (Tool.isNoneString(mvdownresourcemodleId) || Tool.isNoneString(mvdownresourcemodlepinsId)) {
+                        if (Tool.isNoneString(mvdownpincontantvalue)) {
+                            throw new RuntimeException("ffdown pin data resource is none!");
+                        } else {
+                            JSONObject resource = new JSONObject();
+                            resource.put("resource", ModleProperty.SOURCE_TYPE_CONSTANT);
+                            resource.put("value", Double.parseDouble(mvdownpincontantvalue));
+                            ffdownpinmpcModleProperty.setResource(resource);
+                            ffdownpinmpcModleProperty.setOpcTagName("");
+                        }
+                    } else {
+                        JSONObject resource = new JSONObject();
+                        resource.put("resource", ModleProperty.SOURCE_TYPE_MODLE);
+                        resource.put("modleId", Integer.parseInt(mvdownresourcemodleId));
+                        resource.put("modlepinsId", Integer.parseInt(mvdownresourcemodlepinsId));
+                        ffdownpinmpcModleProperty.setResource(resource);
+                    }
+                    count = projectOperaterImp.insertmpcmodlepvrelationpropertybusiness(ffpinmpcModleProperty, ffuppinmpcModleProperty, ffdownpinmpcModleProperty);
+                    break;
+                }
+                default: {
+                }
+
+            }
+
+            result.put("msg", "success");
+            result.put("count", count);
+
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            result.put("msg", "error");
+        }
+        return result.toJSONString();
+    }
+
+
+    @RequestMapping("/creatempcmodlerespon")
+    @ResponseBody
+    public String creatempcmodlerespon(@RequestParam("responcontext") String responcontext) {
+        JSONObject modlejsonObject = JSONObject.parseObject(responcontext);
+        JSONObject result = new JSONObject();
+
+        int modleid;
+        String responid;
+        String inputpinName;
+        String outputpinName;
+        float K;
+        float T;
+        float Tau;
+        float effectRatio;
+        ResponTimeSerise respontimeserise;
+        JSONObject jsonres;
+
+        try {
+            modleid = modlejsonObject.getInteger("refrencemodleId");
+//            responid = modlejsonObject.getString("responid").trim();
+            inputpinName = modlejsonObject.getString("inputpinName").trim();
+            outputpinName = modlejsonObject.getString("outputpinName").trim();
+            K = modlejsonObject.getFloat("K");
+            T = modlejsonObject.getFloat("T");
+            Tau = modlejsonObject.getFloat("Tau");
+            effectRatio = ((modlejsonObject.getString("effectRatio").equals("")) || (modlejsonObject.getString("effectRatio") == null)) ? 1f : modlejsonObject.getFloat("effectRatio");
+            respontimeserise = new ResponTimeSerise();
+
+            respontimeserise.setInputPins(inputpinName);
+            respontimeserise.setOutputPins(outputpinName);
+            respontimeserise.setRefrencemodleId(modleid);
+//            respontimeserise.setModletagId(responid.equals("") ? -1 : Integer.valueOf(responid));
+            jsonres = new JSONObject();
+            jsonres.put("k", K);
+            jsonres.put("t", T);
+            jsonres.put("tao", Tau);
+            respontimeserise.setStepRespJson(jsonres);
+            respontimeserise.setEffectRatio(effectRatio);
+
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            result.put("msg", "error");
+            return result.toJSONString();
+        }
+
+        try {
+
+            projectOperaterImp.insertResponTimeSerise(respontimeserise);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            result.put("msg", "error");
+            return result.toJSONString();
+        }
+
+        result.put("msg", "success");
         return result.toJSONString();
     }
 
@@ -1316,8 +2372,9 @@ public class ProjectEdit {
                 }
 
                 case Modle.MODLETYPE_OUTPUT: {
-
-                    break;
+                    modelAndView.setViewName("outputmodleedit");
+                    modelAndView.addObject("outputmodle", (OUTModle) modle);
+                    return modelAndView;
                 }
                 case Modle.MODLETYPE_FILTER: {
 
@@ -1333,8 +2390,10 @@ public class ProjectEdit {
                     return modelAndView;
                 }
                 case Modle.MODLETYPE_MPC: {
-
-                    break;
+                    MPCModle mpcModle = (MPCModle) modle;
+                    modelAndView.setViewName("mpcmodleedit");
+                    modelAndView.addObject("mpcmodle", mpcModle);
+                    return modelAndView;
                 }
                 case Modle.MODLETYPE_PID: {
                     PIDModle pidModle = (PIDModle) modle;
@@ -1390,7 +2449,7 @@ public class ProjectEdit {
                         for (int index = 0; index < jsonpoints.getJSONArray("data").size(); index++) {
                             BaseModlePropertyImp basemodleproperty = new BaseModlePropertyImp();
                             basemodleproperty.setModleOpcTag(jsonpoints.getJSONArray("data").getJSONObject(index).getString("tag"));
-                            basemodleproperty.setOpcTagName(jsonpoints.getJSONArray("data").getJSONObject(index).getString("tagname"));
+                            basemodleproperty.setOpcTagName(Tool.isNoneString(jsonpoints.getJSONArray("data").getJSONObject(index).getString("tagname")) ? jsonpoints.getJSONArray("data").getJSONObject(index).getString("tag") : jsonpoints.getJSONArray("data").getJSONObject(index).getString("tagname"));
                             baseModlePropertyImpList.add(basemodleproperty);
                         }
                     }
@@ -1401,7 +2460,33 @@ public class ProjectEdit {
                 case Modle.MODLETYPE_OUTPUT: {
 
 
-                    break;
+                    modelAndView.setViewName("outmodlepropertyaddinput");
+                    modelAndView.addObject("modleId", modleId);
+                    modelAndView.addObject("modletype", modletype);
+                    modelAndView.addObject("pindir", pindir);
+                    String pointinfo = HttpUtils.PostData(oceandir + "/pointoperate/getalpoints", null);
+                    JSONObject jsonpoints = new JSONObject();
+                    if (pointinfo != null) {
+                        jsonpoints = JSONObject.parseObject(pointinfo);
+                    }
+                    List<BaseModlePropertyImp> baseModlePropertyImpList = new ArrayList<>();
+                    if (jsonpoints.getString("msg").equals("success")) {
+                        for (int index = 0; index < jsonpoints.getJSONArray("data").size(); index++) {
+                            //todo 这里要判断筛选下只有输出属性的点位
+                            BaseModlePropertyImp basemodleproperty = new BaseModlePropertyImp();
+                            basemodleproperty.setModleOpcTag(jsonpoints.getJSONArray("data").getJSONObject(index).getString("tag"));
+                            basemodleproperty.setOpcTagName(Tool.isNoneString(jsonpoints.getJSONArray("data").getJSONObject(index).getString("tagname")) ? jsonpoints.getJSONArray("data").getJSONObject(index).getString("tag") : jsonpoints.getJSONArray("data").getJSONObject(index).getString("tagname"));
+                            baseModlePropertyImpList.add(basemodleproperty);
+                        }
+                    }
+                    modelAndView.addObject("outpinmappings", baseModlePropertyImpList);
+
+
+                    List<BaseModlePropertyImp> points = projectOperaterImp.findparentmodleboutputpinsbusiness(modleId);
+
+                    modelAndView.addObject("points", points);
+
+                    return modelAndView;
                 }
                 case Modle.MODLETYPE_FILTER: {
 
@@ -1474,6 +2559,137 @@ public class ProjectEdit {
         return null;
     }
 
+
+    @RequestMapping("/viewaddmpcmodleproperty")
+    public ModelAndView viewaddmpcmodleproperty(@RequestParam("modleId") int modleId, @RequestParam("pintype") String pintype) {
+        ModelAndView modelAndView = new ModelAndView();
+        try {
+//            JSONObject jsonproperyinfo = JSONObject.parseObject(properyinfo);
+            switch (pintype) {
+                case ModleProperty.TYPE_PIN_PV: {
+                    modelAndView.setViewName("mpcmodleaddpvpin");
+                    modelAndView.addObject("modleId", modleId);
+                    modelAndView.addObject("pintype", pintype);
+
+                    //未使用的pv引脚名称
+                    List<MPCModleProperty> mpcModlePropertyList = projectOperaterImp.findMPCModlePropertyByModleid(modleId);
+                    List<MPCModleProperty> usedpvpin = Tool.getspecialpintypeBympc(ModleProperty.TYPE_PIN_PV, mpcModlePropertyList);
+                    modelAndView.addObject("unuserpinscope", Tool.getunUserPinScope(pvpattern, usedpvpin, mpcpinnumber));
+                    ;
+
+                    //pv数据来源
+                    List<BaseModlePropertyImp> points = projectOperaterImp.findparentmodleboutputpinsbusiness(modleId);
+                    modelAndView.addObject("points", points);
+                    return modelAndView;
+                }
+                case ModleProperty.TYPE_PIN_MV: {
+                    modelAndView.setViewName("mpcmodleaddmvpin");
+                    modelAndView.addObject("modleId", modleId);
+                    modelAndView.addObject("pintype", pintype);
+
+                    //未使用的pv引脚名称
+                    List<MPCModleProperty> mpcModlePropertyList = projectOperaterImp.findMPCModlePropertyByModleid(modleId);
+                    List<MPCModleProperty> usedpvpin = Tool.getspecialpintypeBympc(ModleProperty.TYPE_PIN_MV, mpcModlePropertyList);
+                    modelAndView.addObject("unuserpinscope", Tool.getunUserPinScope(mvpattern, usedpvpin, mpcpinnumber));
+                    ;
+
+                    //pv数据来源
+                    List<BaseModlePropertyImp> points = projectOperaterImp.findparentmodleboutputpinsbusiness(modleId);
+                    modelAndView.addObject("points", points);
+                    return modelAndView;
+                }
+
+                case ModleProperty.TYPE_PIN_FF: {
+                    modelAndView.setViewName("mpcmodleaddffpin");
+                    modelAndView.addObject("modleId", modleId);
+                    modelAndView.addObject("pintype", pintype);
+
+                    //未使用的pv引脚名称
+                    List<MPCModleProperty> mpcModlePropertyList = projectOperaterImp.findMPCModlePropertyByModleid(modleId);
+                    List<MPCModleProperty> usedpvpin = Tool.getspecialpintypeBympc(ModleProperty.TYPE_PIN_FF, mpcModlePropertyList);
+                    modelAndView.addObject("unuserpinscope", Tool.getunUserPinScope(ffpattern, usedpvpin, mpcpinnumber));
+                    ;
+
+                    //pv数据来源
+                    List<BaseModlePropertyImp> points = projectOperaterImp.findparentmodleboutputpinsbusiness(modleId);
+                    modelAndView.addObject("points", points);
+                    return modelAndView;
+                }
+
+                default: {
+
+                    break;
+                }
+
+            }
+
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+        return null;
+    }
+
+
+    @RequestMapping("/viewaddmpcmodlerespon")
+    public ModelAndView viewaddmpcmodlerespon(@RequestParam("modleId") int modleId) {
+
+        /**
+         * 1、选择出已经使用mv ff引脚
+         * 2、
+         * */
+        List<MPCModleProperty> userinputpinscope = new ArrayList<>();
+
+        List<MPCModleProperty> usemvpinscope = new ArrayList<>();
+        List<MPCModleProperty> useffpinscope = new ArrayList<>();
+        List<MPCModleProperty> usepvpinscope = new ArrayList<>();
+
+
+        List<MPCModleProperty> useroutputpinscope = new ArrayList<>();
+
+
+        try {
+
+            List<MPCModleProperty> mpcModlePropertyList = projectOperaterImp.findMPCModlePropertyByModleid(modleId);
+
+            for (MPCModleProperty mpcModleProperty : mpcModlePropertyList) {
+
+                switch (mpcModleProperty.getPintype()) {
+                    case ModleProperty.TYPE_PIN_FF: {
+                        useffpinscope.add(mpcModleProperty);
+                        break;
+                    }
+                    case ModleProperty.TYPE_PIN_MV: {
+                        usemvpinscope.add(mpcModleProperty);
+                        break;
+                    }
+                    case ModleProperty.TYPE_PIN_PV: {
+                        usepvpinscope.add(mpcModleProperty);
+                        break;
+                    }
+                }
+            }
+
+            userinputpinscope.addAll(usemvpinscope);
+            userinputpinscope.addAll(useffpinscope);
+
+            useroutputpinscope = usepvpinscope;// modleDBServe.pinsbypintype(modleid, ModlePin.TYPE_PIN_PV);
+
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+
+
+        ModelAndView view = new ModelAndView();
+        view.setViewName("mpcmodleaddrespon");
+        view.addObject("modleId", modleId);
+
+        view.addObject("userinputpinscope", userinputpinscope);
+        view.addObject("useroutputpinscope", useroutputpinscope);
+        return view;
+
+    }
+
+
     @RequestMapping("/viewupdatemodleproperty")
     public ModelAndView viewupdatemodleproperty(@RequestParam("modletype") String modletype, @RequestParam("modlepinsId") int modlepinsId) {
         ModelAndView modelAndView = new ModelAndView();
@@ -1502,8 +2718,40 @@ public class ProjectEdit {
                 }
 
                 case Modle.MODLETYPE_OUTPUT: {
+                    BaseModlePropertyImp inputbaseModlePropertyImp = projectOperaterImp.findBaseModlePropertyByid(modlepinsId);
+                    List<BaseModlePropertyImp> outputmodlepropertyImpList = projectOperaterImp.findBaseModlePropertyByModleid(inputbaseModlePropertyImp.getRefmodleId());
+                    BaseModlePropertyImp outputbaseModlePropertyImp = null;
+                    for (BaseModlePropertyImp baseModleProperty : outputmodlepropertyImpList) {
+                        if (baseModleProperty.getPindir().equals(ModleProperty.PINDIROUTPUT)) {
+                            if (baseModleProperty.getResource().getInteger("modlepinsId") == inputbaseModlePropertyImp.getModlepinsId()) {
+                                outputbaseModlePropertyImp = baseModleProperty;
+                                break;
+                            }
 
-                    break;
+                        }
+                    }
+                    modelAndView.setViewName("outmodlepropertyupdateinput");
+                    modelAndView.addObject("modletype", modletype);
+                    modelAndView.addObject("inputproperty", inputbaseModlePropertyImp);
+                    modelAndView.addObject("outproperty", outputbaseModlePropertyImp);
+                    String pointinfo = HttpUtils.PostData(oceandir + "/pointoperate/getalpoints", null);
+                    JSONObject jsonpoints = JSONObject.parseObject(pointinfo);
+                    List<BaseModlePropertyImp> baseModlePropertyImpList = new ArrayList<>();
+                    if (jsonpoints.getString("msg").equals("success")) {
+                        for (int index = 0; index < jsonpoints.getJSONArray("data").size(); index++) {
+                            BaseModlePropertyImp basemodleproperty = new BaseModlePropertyImp();
+                            basemodleproperty.setModleOpcTag(jsonpoints.getJSONArray("data").getJSONObject(index).getString("tag"));
+                            basemodleproperty.setOpcTagName(Tool.isNoneString(jsonpoints.getJSONArray("data").getJSONObject(index).getString("tagname")) ? jsonpoints.getJSONArray("data").getJSONObject(index).getString("tag") : jsonpoints.getJSONArray("data").getJSONObject(index).getString("tagname"));
+                            baseModlePropertyImpList.add(basemodleproperty);
+                        }
+                    }
+                    modelAndView.addObject("outpinmappings", baseModlePropertyImpList);
+
+
+                    List<BaseModlePropertyImp> points = projectOperaterImp.findparentmodleboutputpinsbusiness(inputbaseModlePropertyImp.getRefmodleId());
+
+                    modelAndView.addObject("points", points);
+                    return modelAndView;
                 }
                 case Modle.MODLETYPE_FILTER: {
                     BaseModlePropertyImp baseModlePropertyImp = projectOperaterImp.findBaseModlePropertyByid(modlepinsId);
@@ -1546,9 +2794,188 @@ public class ProjectEdit {
                     modelAndView.setViewName("pidmodlepropertyupdateoutput");
                     modelAndView.addObject("modletype", modletype);
                     modelAndView.addObject("pidmodle", baseModlePropertyImp);
-
                     return modelAndView;
                 }
+                default: {
+
+                    break;
+                }
+
+            }
+
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+        return null;
+    }
+
+    @RequestMapping("/viewupdatempcmodleproperty")
+    public ModelAndView viewupdatempcmodleproperty(@RequestParam("modlepinsId") int modlepinsId, @RequestParam("pintype") String pintype) {
+        ModelAndView modelAndView = new ModelAndView();
+        try {
+//            JSONObject jsonproperyinfo = JSONObject.parseObject(properyinfo);
+            switch (pintype) {
+                case ModleProperty.TYPE_PIN_PV: {
+                    modelAndView.setViewName("mpcmodleupdatepvpin");
+
+                    MPCModleProperty pv = projectOperaterImp.findMPCModlePropertyByid(modlepinsId);
+                    MPCModle mpcModle = (MPCModle) projectOperaterImp.findModleByid(pv.getRefmodleId());
+                    MPCModleProperty pvup = null;
+                    MPCModleProperty pvdown = null;
+                    MPCModleProperty sp = null;
+
+                    int pinorder = 0;
+                    Matcher pvmatch = pvpattern.matcher(pv.getModlePinName());
+                    if (pvmatch.find()) {
+                        pinorder = Integer.parseInt(pvmatch.group(2));
+                    } else {
+                        throw new RuntimeException("can't match pin order");
+                    }
+
+                    for (ModleProperty modleProperty : mpcModle.getPropertyImpList()) {
+                        MPCModleProperty mpcproperty = (MPCModleProperty) modleProperty;
+                        if (mpcproperty.getModlePinName().equals(ModleProperty.TYPE_PIN_PVUP + pinorder)) {
+                            pvup = mpcproperty;
+                            continue;
+                        }
+
+                        if (mpcproperty.getModlePinName().equals(ModleProperty.TYPE_PIN_PVDOWN + pinorder)) {
+
+                            pvdown = mpcproperty;
+                            continue;
+                        }
+
+                        if (mpcproperty.getModlePinName().equals(ModleProperty.TYPE_PIN_SP + pinorder)) {
+                            sp = mpcproperty;
+                            continue;
+                        }
+
+                    }
+
+                    modelAndView.addObject("pv", pv);
+                    modelAndView.addObject("pvup", pvup);
+                    modelAndView.addObject("pvdown", pvdown);
+                    modelAndView.addObject("sp", sp);
+
+                    modelAndView.addObject("pintype", pintype);
+
+                    //未使用的pv引脚名称
+                    List<MPCModleProperty> mpcModlePropertyList = projectOperaterImp.findMPCModlePropertyByModleid(pv.getRefmodleId());
+                    List<MPCModleProperty> usedpvpin = Tool.getspecialpintypeBympc(ModleProperty.TYPE_PIN_PV, mpcModlePropertyList);
+                    List<Integer> unuserpinscope = Tool.getunUserPinScope(pvpattern, usedpvpin, mpcpinnumber);
+                    unuserpinscope.add(0, pinorder);
+                    modelAndView.addObject("unuserpinscope", unuserpinscope);
+                    modelAndView.addObject("pinorder", pinorder);
+                    //pv数据来源
+                    List<BaseModlePropertyImp> points = projectOperaterImp.findparentmodleboutputpinsbusiness(pv.getRefmodleId());
+                    modelAndView.addObject("points", points);
+                    return modelAndView;
+                }
+                case ModleProperty.TYPE_PIN_MV: {
+                    modelAndView.setViewName("mpcmodleupdatemvpin");
+                    MPCModleProperty mv = projectOperaterImp.findMPCModlePropertyByid(modlepinsId);
+                    MPCModle mpcModle = (MPCModle) projectOperaterImp.findModleByid(mv.getRefmodleId());
+                    MPCModleProperty mvup = null;
+                    MPCModleProperty mvdown = null;
+                    MPCModleProperty mvfb = null;
+
+                    int pinorder = 0;
+                    Matcher pvmatch = mvpattern.matcher(mv.getModlePinName());
+                    if (pvmatch.find()) {
+                        pinorder = Integer.parseInt(pvmatch.group(2));
+                    } else {
+                        throw new RuntimeException("can't match pin order");
+                    }
+
+                    for (ModleProperty modleProperty : mpcModle.getPropertyImpList()) {
+                        MPCModleProperty mpcproperty = (MPCModleProperty) modleProperty;
+                        if (mpcproperty.getModlePinName().equals(ModleProperty.TYPE_PIN_MVUP + pinorder)) {
+                            mvup = mpcproperty;
+                            continue;
+                        }
+
+                        if (mpcproperty.getModlePinName().equals(ModleProperty.TYPE_PIN_MVDOWN + pinorder)) {
+
+                            mvdown = mpcproperty;
+                            continue;
+                        }
+
+                        if (mpcproperty.getModlePinName().equals(ModleProperty.TYPE_PIN_MVFB + pinorder)) {
+                            mvfb = mpcproperty;
+                            continue;
+                        }
+
+                    }
+
+                    modelAndView.addObject("mv", mv);
+                    modelAndView.addObject("mvup", mvup);
+                    modelAndView.addObject("mvdown", mvdown);
+                    modelAndView.addObject("mvfb", mvfb);
+
+                    modelAndView.addObject("pintype", pintype);
+
+                    //未使用的pv引脚名称
+                    List<MPCModleProperty> mpcModlePropertyList = projectOperaterImp.findMPCModlePropertyByModleid(mv.getRefmodleId());
+                    List<MPCModleProperty> usedmvpin = Tool.getspecialpintypeBympc(ModleProperty.TYPE_PIN_MV, mpcModlePropertyList);
+                    List<Integer> unuserpinscope = Tool.getunUserPinScope(mvpattern, usedmvpin, mpcpinnumber);
+                    unuserpinscope.add(0, pinorder);
+                    modelAndView.addObject("unuserpinscope", unuserpinscope);
+                    modelAndView.addObject("pinorder", pinorder);
+                    //pv数据来源
+                    List<BaseModlePropertyImp> points = projectOperaterImp.findparentmodleboutputpinsbusiness(mv.getRefmodleId());
+                    modelAndView.addObject("points", points);
+                    return modelAndView;
+                }
+                case ModleProperty.TYPE_PIN_FF: {
+                    modelAndView.setViewName("mpcmodleupdateffpin");
+                    MPCModleProperty ff = projectOperaterImp.findMPCModlePropertyByid(modlepinsId);
+                    MPCModle mpcModle = (MPCModle) projectOperaterImp.findModleByid(ff.getRefmodleId());
+                    MPCModleProperty ffup = null;
+                    MPCModleProperty ffdown = null;
+//                    MPCModleProperty fb=null;
+
+                    int pinorder = 0;
+                    Matcher pvmatch = ffpattern.matcher(ff.getModlePinName());
+                    if (pvmatch.find()) {
+                        pinorder = Integer.parseInt(pvmatch.group(2));
+                    } else {
+                        throw new RuntimeException("can't match pin order");
+                    }
+
+                    for (ModleProperty modleProperty : mpcModle.getPropertyImpList()) {
+                        MPCModleProperty mpcproperty = (MPCModleProperty) modleProperty;
+                        if (mpcproperty.getModlePinName().equals(ModleProperty.TYPE_PIN_FFUP + pinorder)) {
+                            ffup = mpcproperty;
+                            continue;
+                        }
+
+                        if (mpcproperty.getModlePinName().equals(ModleProperty.TYPE_PIN_FFDOWN + pinorder)) {
+
+                            ffdown = mpcproperty;
+                            continue;
+                        }
+
+                    }
+
+                    modelAndView.addObject("ff", ff);
+                    modelAndView.addObject("ffup", ffup);
+                    modelAndView.addObject("ffdown", ffdown);
+
+                    modelAndView.addObject("pintype", pintype);
+
+                    //未使用的pv引脚名称
+                    List<MPCModleProperty> mpcModlePropertyList = projectOperaterImp.findMPCModlePropertyByModleid(ff.getRefmodleId());
+                    List<MPCModleProperty> usedmvpin = Tool.getspecialpintypeBympc(ModleProperty.TYPE_PIN_FF, mpcModlePropertyList);
+                    List<Integer> unuserpinscope = Tool.getunUserPinScope(ffpattern, usedmvpin, mpcpinnumber);
+                    unuserpinscope.add(0, pinorder);
+                    modelAndView.addObject("unuserpinscope", unuserpinscope);
+                    modelAndView.addObject("pinorder", pinorder);
+                    //pv数据来源
+                    List<BaseModlePropertyImp> points = projectOperaterImp.findparentmodleboutputpinsbusiness(ff.getRefmodleId());
+                    modelAndView.addObject("points", points);
+                    return modelAndView;
+                }
+
                 default: {
 
                     break;
@@ -1584,7 +3011,7 @@ public class ProjectEdit {
                 resource.put("value", Double.parseDouble(properyconstant));
                 kpbasemodleproperty.setResource(resource);
                 kpbasemodleproperty.setModleOpcTag("" + Double.parseDouble(properyconstant));
-                kpbasemodleproperty.setOpcTagName(null);
+                kpbasemodleproperty.setOpcTagName(opcTagName.equals("请选择") ? "" : opcTagName);
             }
 
         } else {

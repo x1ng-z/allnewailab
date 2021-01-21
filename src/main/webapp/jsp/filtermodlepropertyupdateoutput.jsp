@@ -58,12 +58,21 @@
 
         <div class="layui-form-item">
             <div class="layui-inline">
+                <label class="layui-form-label">引脚名称</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="modlePinName"  lay-verify="required" autocomplete="off" class="layui-input"
+                           value="${baseModlePropertyImp.modlePinName}" id="modlePinNameid">
+                </div>
+            </div>
+
+            <div class="layui-inline">
                 <label class="layui-form-label"></label>
                 <div class="layui-input-inline">
-                    <select name="modlePinName" lay-verify="required"  lay-search="">
+                    <select name="modleOpcTag" lay-verify="required"  lay-search="" lay-filter="selectopctag">
+                        <option value="">请选择</option>
                         <c:forEach items="${points}" var="point" varStatus="Count">
                             <c:choose>
-                                <c:when test="${point.modlePinName==baseModlePropertyImp.modlePinName}">
+                                <c:when test="${point.modlepinsId==baseModlePropertyImp.resource.getInteger('modlepinsId')}">
                                     <option value="${point.modlePinName}"  selected>${point.opcTagName}</option>
                                 </c:when>
                                 <c:otherwise>
@@ -113,12 +122,20 @@
                 let partcontex=data.field;
 
                 partcontex['opcTagName']= $('select').find("option:selected").html();
+                partcontex['resourcemodleId']= $('select').find("option:selected").attr("resourcemodleId");
+                partcontex['resourcemodlepinsId']= $('select').find("option:selected").attr("resourcemodlepinsId");
                 console.log(partcontex);
                 if(api.addmodleproperties(url,partcontex,layer)){
                     let thiswindon = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
                     parent.layer.close(thiswindon); //再执行关闭
                 }
                 return false;
+            });
+
+            form.on('select(selectopctag)', function (data) {
+                if(data.value!=''){
+                    $("#modlePinNameid").val(data.value);
+                }
             });
 
 

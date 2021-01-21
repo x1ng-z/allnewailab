@@ -4,8 +4,11 @@
 def main(input_data, context):
     IN1 = input_data["IN1"] or None
     OUT1 = {
-        "keyName1":0,
-       "keyName2":0
+        "dataKey":{
+            "value": 0,
+            "keyName":"keyName",
+            "quality":192
+        }
     }
     return OUT1
 ### customer code end

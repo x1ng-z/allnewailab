@@ -18,7 +18,7 @@ public class BaseModlePropertyImp implements ModleProperty {
     private String modlePinName;
     private String opcTagName;//中文注释
     private JSONObject resource;
-    private int pinEnable;
+    private int pinEnable=1;
     private Instant updateTime;
     private String pindir;//引脚方向//in/out?
     private String modlepropertyclazz;//引脚类型 base/mpc?

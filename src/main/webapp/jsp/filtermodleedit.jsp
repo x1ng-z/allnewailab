@@ -66,6 +66,7 @@
             <label class="layui-form-label">滤波方法</label>
             <div class="layui-input-inline">
                 <select name="filtermethod" lay-verify="required" lay-filter="selectmethod">
+                    <option value="">请选择</option>
                     <c:choose>
                         <c:when test="${filtermodle.filter.filtermethod=='mvav'}">
                             <option value="mvav" selected>移动平均</option>
@@ -96,7 +97,7 @@
         <c:choose>
             <c:when test="${filtermodle.filter.filtermethod=='mvav'}">
                 <div class="layui-inline" id="changefiltercof">
-                    <label class="layui-form-label">滤波窗口时间(大于0)</label>
+                    <label class="layui-form-label">滤波采样点个数(大于0)</label>
                     <div class="layui-input-inline">
                         <input type="number" name="filtercapacity" value="${filtermodle.filter.filtercapacity}" lay-verify="required" onmousewheel=scrollFunc()
                                autocomplete="off" class="layui-input">
@@ -219,7 +220,7 @@
                     case 'mvav': {
                         $('#filtercontext').find('#changefiltercof').remove();
                         let mvavinputcontext = $(' <div class="layui-inline" id="changefiltercof">' +
-                            '      <label class="layui-form-label">滤波窗口时间(大于0)</label>' +
+                            '      <label class="layui-form-label">滤波窗口采样点个数(大于0)</label>' +
                             '      <div class="layui-input-inline">' +
                             '        <input type="number" name="filtercapacity"  lay-verify="required" onmousewheel=scrollFunc() autocomplete="off" class="layui-input">' +
                             '      </div>' +

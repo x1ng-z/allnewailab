@@ -11,7 +11,7 @@ import com.alibaba.fastjson.JSONObject;
 public class ResponTimeSerise {
     private int modleresponId;//模型
     private int refrencemodleId;//模型id
-    private String stepRespJson;//响应的json
+    private JSONObject stepRespJson;//响应的json
     private String inputPins;//引脚名称ff mv
     private String outputPins;//引脚名称pv
     private float effectRatio;//作用比例
@@ -20,12 +20,12 @@ public class ResponTimeSerise {
      *  * controlAPCOutCycle = 0;//控制输出间隔周期
      * 二阶时序*/
     public Double[] responTwoTimeSeries(Integer timeserise_N , Integer controlAPCOutCycle) {
-        String json = stepRespJson;
-        if (json == null || json.trim().equals("")) {
+        JSONObject json = stepRespJson;
+        if (json == null || json.toJSONString().trim().equals("")) {
             return null;
         }
 
-        JSONObject json_test = JSON.parseObject(json);
+        JSONObject json_test = stepRespJson;//JSON.parseObject(json);
 
         Double[] respon = new Double[timeserise_N];
         //float delta=1f;
@@ -54,11 +54,11 @@ public class ResponTimeSerise {
      * controlAPCOutCycle = 0;//控制输出间隔周期
      * */
     public double[] responOneTimeSeries(int timeserise_N, int controlAPCOutCycle) {
-        String json = stepRespJson;
-        if (json == null || json.trim().equals("")) {
+        JSONObject json = stepRespJson;
+        if (json == null || json.toJSONString().trim().equals("")) {
             return null;
         }
-        JSONObject jsonmodlerespon = JSON.parseObject(json);
+        JSONObject jsonmodlerespon = stepRespJson;//JSON.parseObject(json);
         double[] respon = new double[timeserise_N];
         /**
          * 原先是从0开始的到timeserise_N，但是我们要的事从k+1到 N+1
@@ -90,11 +90,11 @@ public class ResponTimeSerise {
         this.refrencemodleId = refrencemodleId;
     }
 
-    public String getStepRespJson() {
+    public JSONObject getStepRespJson() {
         return stepRespJson;
     }
 
-    public void setStepRespJson(String stepRespJson) {
+    public void setStepRespJson(JSONObject stepRespJson) {
         this.stepRespJson = stepRespJson;
     }
 
