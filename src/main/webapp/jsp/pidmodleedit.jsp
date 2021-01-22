@@ -107,8 +107,8 @@
         <div class="layui-inline">
             <label class="layui-form-label">参数:P</label>
             <div class="layui-input-inline">
-<%--                lay-verify="number"--%>
-                <input type="number" name="kp"  autocomplete="off" class="layui-input"
+                <%--                lay-verify="number"--%>
+                <input type="number" name="kp" autocomplete="off" class="layui-input"
                        value="${kp.resource.getDouble("value")}" placeholder="请输入P常量值" id="kpconstantid">
             </div>
         </div>
@@ -116,7 +116,7 @@
         <div class="layui-inline">
             <label class="layui-form-label">参数:P映射</label>
             <div class="layui-input-inline">
-                <select name="kpmodleOpcTag"  lay-search="" id="kpselect" lay-filter="kpselect">
+                <select name="kpmodleOpcTag" lay-search="" id="kpselect" lay-filter="kpselect">
                     <option value="">请选择</option>
                     <c:forEach items="${points}" var="point" varStatus="Count">
                         <c:choose>
@@ -142,7 +142,7 @@
         <div class="layui-inline">
             <label class="layui-form-label">参数:I</label>
             <div class="layui-input-inline">
-                <input type="number" name="ki"  autocomplete="off" class="layui-input"
+                <input type="number" name="ki" autocomplete="off" class="layui-input"
                        value="${ki.resource.getDouble("value")}" placeholder="请输入I常量值" id="kiconstantid">
             </div>
         </div>
@@ -150,7 +150,7 @@
         <div class="layui-inline">
             <label class="layui-form-label">参数:I映射</label>
             <div class="layui-input-inline">
-                <select name="kimodleOpcTag"  lay-search="" id="kiselect" lay-filter="kiselect">
+                <select name="kimodleOpcTag" lay-search="" id="kiselect" lay-filter="kiselect">
                     <option value="">请选择</option>
                     <c:forEach items="${points}" var="point" varStatus="Count">
                         <c:choose>
@@ -176,15 +176,16 @@
         <div class="layui-inline">
             <label class="layui-form-label">参数:D</label>
             <div class="layui-input-inline">
-                <input type="number" name="kd"  autocomplete="off" class="layui-input"
-                       value="${kd.resource.getDouble("value")}" placeholder="请输入D常量值" id="kdconstantid" lay-filter="kdconstantid">
+                <input type="number" name="kd" autocomplete="off" class="layui-input"
+                       value="${kd.resource.getDouble("value")}" placeholder="请输入D常量值" id="kdconstantid"
+                       lay-filter="kdconstantid">
             </div>
         </div>
 
         <div class="layui-inline">
             <label class="layui-form-label">参数:D映射</label>
             <div class="layui-input-inline">
-                <select name="kdmodleOpcTag"  lay-search="" id="kdselect" lay-filter="kdselect">
+                <select name="kdmodleOpcTag" lay-search="" id="kdselect" lay-filter="kdselect">
                     <option value="">请选择</option>
                     <c:forEach items="${points}" var="point" varStatus="Count">
                         <c:choose>
@@ -217,7 +218,7 @@
         <div class="layui-inline">
             <label class="layui-form-label">PV映射</label>
             <div class="layui-input-inline">
-                <select name="pvmodleOpcTag"  lay-search="" id="pvselect" lay-filter="pvselect">
+                <select name="pvmodleOpcTag" lay-search="" id="pvselect" lay-filter="pvselect">
                     <option value="">请选择</option>
                     <c:forEach items="${points}" var="point" varStatus="Count">
 
@@ -244,14 +245,14 @@
         <div class="layui-inline">
             <label class="layui-form-label">SP</label>
             <div class="layui-input-inline">
-                <input type="number" name="sp"  autocomplete="off" class="layui-input"
+                <input type="number" name="sp" autocomplete="off" class="layui-input"
                        value="${sp.resource.getDouble("value")}" placeholder="请输入SP常量值" id="spconstantid">
             </div>
         </div>
         <div class="layui-inline">
             <label class="layui-form-label">SP映射</label>
             <div class="layui-input-inline">
-                <select name="spmodleOpcTag"  lay-search="" id="spselect" lay-filter="spselect">
+                <select name="spmodleOpcTag" lay-search="" id="spselect" lay-filter="spselect">
                     <option value="">请选择</option>
                     <c:forEach items="${points}" var="point" varStatus="Count">
 
@@ -284,7 +285,7 @@
         <div class="layui-inline">
             <label class="layui-form-label">MV映射</label>
             <div class="layui-input-inline">
-                <select name="mvmodleOpcTag"  lay-search="" id="mvselect" lay-filter="mvselect">
+                <select name="mvmodleOpcTag" lay-search="" id="mvselect" lay-filter="mvselect">
                     <option value="">请选择</option>
                     <c:forEach items="${points}" var="point" varStatus="Count">
                         <c:choose>
@@ -310,16 +311,121 @@
 
     <div class="layui-form-item">
         <div class="layui-inline">
+            <label class="layui-form-label">dmvHigh</label>
+            <div class="layui-input-inline">
+                <input type="number" name="dmvHigh" autocomplete="off" class="layui-input"
+                       lay-verify="required"
+                       placeholder="dmvHigh" value="${mv.dmvHigh}" onmousewheel='scrollFunc()'>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="layui-form-item">
+        <div class="layui-inline">
+            <label class="layui-form-label">dmvLow</label>
+            <div class="layui-input-inline">
+                <input type="number" name="dmvLow" autocomplete="off" class="layui-input"
+                       lay-verify="required"
+                       placeholder="dmvLow" value="${mv.dmvLow}" onmousewheel='scrollFunc()'>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="layui-form-item">
+
+        <input type="text" name="mvuppinid" autocomplete="off" class="layui-input" value="${mvup.modlepinsId}"
+               style="visibility: hidden;width: 0px;height: 0px;z-index: -99;">
+
+        <div class="layui-inline">
+            <label class="layui-form-label">MV上限值</label>
+            <div class="layui-input-inline">
+                <input type="number" name="mvuppincontantvalue" autocomplete="off" class="layui-input"
+                       value="${mvup.resource.getDouble("value")}" id="mvuppincontantvalueid"
+                       onmousewheel='scrollFunc()'>
+            </div>
+        </div>
+
+        <div class="layui-inline">
+            <label class="layui-form-label">MV上限数据绑定</label>
+            <div class="layui-input-inline">
+                <select name="mvupmodleOpcTag" lay-search=""
+                        lay-filter="selectmvupopctag" id="selectmvupopctag">
+                    <option value="">请选择</option>
+                    <c:forEach items="${points}" var="point" varStatus="Count">
+                        <c:choose>
+                            <c:when test="${point.modlepinsId==mvup.resource.getInteger('modlepinsId')}">
+                                <option value="${point.modlePinName}"
+                                        mvupresourcemodleId="${point.refmodleId}"
+                                        mvupresourcemodlepinsId="${point.modlepinsId}"
+                                        selected>${point.opcTagName}</option>
+                            </c:when>
+                            <c:otherwise>
+                                <option value="${point.modlePinName}"
+                                        mvupresourcemodleId="${point.refmodleId}"
+                                        mvupresourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>
+                            </c:otherwise>
+                        </c:choose>
+                    </c:forEach>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+
+        <input type="text" name="mvdownpinid" autocomplete="off" class="layui-input" value="${mvdown.modlepinsId}"
+               style="visibility: hidden;width: 0px;height: 0px;z-index: -99;">
+
+        <div class="layui-inline">
+            <label class="layui-form-label">MV下限值</label>
+            <div class="layui-input-inline">
+                <input type="number" name="mvdownpincontantvalue" autocomplete="off" class="layui-input"
+                       value="${mvdown.resource.getDouble("value")}" id="mvdownpincontantvalueid"
+                       onmousewheel='scrollFunc()'>
+            </div>
+        </div>
+
+        <div class="layui-inline">
+            <label class="layui-form-label">MV下限数据绑定</label>
+            <div class="layui-input-inline">
+                <select name="mvdownmodleOpcTag" lay-search=""
+                        lay-filter="selectmvdownopctag" id="selectmvdownopctag">
+                    <option value="">请选择</option>
+                    <c:forEach items="${points}" var="point" varStatus="Count">
+                        <c:choose>
+                            <c:when test="${point.modlepinsId==mvdown.resource.getInteger('modlepinsId')}">
+                                <option value="${point.modlePinName}"
+                                        mvdownresourcemodleId="${point.refmodleId}"
+                                        mvdownresourcemodlepinsId="${point.modlepinsId}"
+                                        selected>${point.opcTagName}</option>
+                            </c:when>
+                            <c:otherwise>
+                                <option value="${point.modlePinName}"
+                                        mvdownresourcemodleId="${point.refmodleId}"
+                                        mvdownresourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>
+                            </c:otherwise>
+                        </c:choose>
+                    </c:forEach>
+                </select>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="layui-form-item">
+        <div class="layui-inline">
             <label class="layui-form-label">FF</label>
             <div class="layui-input-inline">
-                <input type="number" name="ff"  autocomplete="off" class="layui-input"
+                <input type="number" name="ff" autocomplete="off" class="layui-input"
                        value="" placeholder="请输入FF常量值" id="ffconstantid">
             </div>
         </div>
         <div class="layui-inline">
             <label class="layui-form-label">FF映射</label>
             <div class="layui-input-inline">
-                <select name="ffmodleOpcTag"  lay-search="" id="ffselect" lay-filter="ffselect">
+                <select name="ffmodleOpcTag" lay-search="" id="ffselect" lay-filter="ffselect">
                     <option value="">请选择</option>
                     <c:forEach items="${points}" var="point" varStatus="Count">
                         <c:choose>
@@ -401,6 +507,9 @@
                 ? $("#mvconstantid").removeAttr("disabled") : $("#mvconstantid").attr("disabled", true);
             ${ff.resource.getString("resource")=="constant"||ff.resource.getString("resource")!="modle"}
                 ? $("#ffconstantid").removeAttr("disabled") : $("#ffconstantid").attr("disabled", true);
+                ${mvup.resource.getString('resource')=='constant'||mvup.resource.getString('resource')!='modle'} ? $('#mvuppincontantvalueid').removeAttr('disabled') : $('#mvuppincontantvalueid').attr('disabled', true);
+                ${mvdown.resource.getString('resource')=='constant'||mvdown.resource.getString('resource')!='modle'} ? $('#mvdownpincontantvalueid').removeAttr('disabled') : $('#mvdownpincontantvalueid').attr('disabled', true);
+
 
             form.render(); //更新全部
             // form.render('select'); //刷新select选择框渲染
@@ -439,6 +548,15 @@
                 partcontex['mvresourcemodleId'] = $('#mvselect').find("option:selected").attr("mvresourcemodleId");
                 partcontex['mvresourcemodlepinsId'] = $('#mvselect').find("option:selected").attr("mvresourcemodlepinsId");
 
+                partcontex['mvupmodleOpcTagName'] = $('#selectmvupopctag').find("option:selected").html();
+                partcontex['mvupresourcemodleId'] = $('#selectmvupopctag').find("option:selected").attr("mvupresourcemodleId");
+                partcontex['mvupresourcemodlepinsId'] = $('#selectmvupopctag').find("option:selected").attr("mvupresourcemodlepinsId");
+
+
+                partcontex['mvdownmodleOpcTagName'] = $('#selectmvdownopctag').find("option:selected").html();
+                partcontex['mvdownresourcemodleId'] = $('#selectmvdownopctag').find("option:selected").attr("mvdownresourcemodleId");
+                partcontex['mvdownresourcemodlepinsId'] = $('#selectmvdownopctag').find("option:selected").attr("mvdownresourcemodlepinsId");
+
 
                 partcontex['ffopcTagName'] = $('#ffselect').find("option:selected").html();
                 partcontex['ffresourcemodleId'] = $('#ffselect').find("option:selected").attr("ffresourcemodleId");
@@ -454,7 +572,7 @@
 
 
             form.on('select(kpselect)', function (data) {
-                console.log('data.value',data.value );
+                console.log('data.value', data.value);
                 if (data.value == '') {
                     $('#kpconstantid').removeAttr('disabled');
                     // $('#modlePincontantvalueid').attr('value','');
@@ -530,6 +648,34 @@
                     element.render();
                 } else {
                     $('#mvconstantid').attr('disabled', true);
+                    form.render();
+                    element.render();
+                }
+            });
+
+
+            form.on('select(selectmvupopctag)', function (data) {
+                if (data.value == '') {
+                    $('#mvuppincontantvalueid').removeAttr('disabled');
+                    // $('#modlePincontantvalueid').attr('value','');
+                    form.render();
+                    element.render();
+                } else {
+                    $('#mvuppincontantvalueid').attr('disabled', true);
+                    form.render();
+                    element.render();
+                }
+            });
+
+
+            form.on('select(selectmvdownopctag)', function (data) {
+                if (data.value == '') {
+                    $('#mvdownpincontantvalueid').removeAttr('disabled');
+                    // $('#modlePincontantvalueid').attr('value','');
+                    form.render();
+                    element.render();
+                } else {
+                    $('#mvdownpincontantvalueid').attr('disabled', true);
                     form.render();
                     element.render();
                 }

@@ -31,7 +31,10 @@ ki（同上）
 kd（同上）
 pv（同上）
 sp（同上）
-mv（同上）
+mv（同上）由于含义dmvhigh/low 这个引脚的类型是mpcproperty的
 ff（同上）
+mvup
+mvdown
+
 # 延伸阅读
 

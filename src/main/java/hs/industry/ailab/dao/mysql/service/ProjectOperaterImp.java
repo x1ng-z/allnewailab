@@ -69,7 +69,7 @@ public class ProjectOperaterImp {
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED, transactionManager = "mysqlTransactionManager")
-    public Project findAllProject() {
+    public List<Project> findAllProject() {
         return projectOperate.findAllProject();
     }
 
@@ -371,6 +371,8 @@ public class ProjectOperaterImp {
         projectOperate.deleteModleByid(modleid);//删除模型
         projectOperate.deleteModleSightByModleid(modleid);//删除模型组态信息
         projectOperate.deleteBaseModlePropertyByMoldeid(modleid);//删除模型属性
+        projectOperate.deleteFilterByModleid(modleid);
+        projectOperate.deleteResponTimeSeriseByModleid(modleid);
 
 
     }
@@ -661,9 +663,21 @@ public class ProjectOperaterImp {
         count += projectOperate.updatePIDModle(pidModle);
         for (BaseModlePropertyImp baseModlePropertyImp : pidproperties) {
             if (baseModlePropertyImp.getModlepinsId() == -1) {
-                count += projectOperate.insertBaseModleProperty(baseModlePropertyImp);
+
+                if(baseModlePropertyImp instanceof MPCModleProperty) {
+                    count += projectOperate.insertMPCModleProperty((MPCModleProperty)baseModlePropertyImp);
+                }else
+                if(baseModlePropertyImp instanceof BaseModlePropertyImp){
+                    count += projectOperate.insertBaseModleProperty(baseModlePropertyImp);
+                }
+
             } else {
-                count += projectOperate.updateBaseModleProperty(baseModlePropertyImp);
+                if(baseModlePropertyImp instanceof MPCModleProperty){
+                    count += projectOperate.updateMPCModleProperty((MPCModleProperty)baseModlePropertyImp);
+                }else
+                if(baseModlePropertyImp instanceof BaseModlePropertyImp) {
+                    count += projectOperate.updateBaseModleProperty(baseModlePropertyImp);
+                }
             }
 
         }

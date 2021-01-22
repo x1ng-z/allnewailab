@@ -33,7 +33,7 @@ public interface ProjectOperate {
     int deleteProject(@Param("projectid")int projectid);
     int updateProject(@Param("project")Project project);
     Project findProjectById(@Param("projectid")int projectid);
-    Project findAllProject();
+    List<Project> findAllProject();
 
 
 
@@ -93,7 +93,7 @@ public interface ProjectOperate {
     int deleteResponTimeSeriseByid(@Param("modleresponId") int modleresponId);
     int deleteResponTimeSeriseByModleid(@Param("refrencemodleId") int refrencemodleId);
     int updateResponTimeSerise(@Param("responTimeSerise") ResponTimeSerise responTimeSerise);
-    ResponTimeSerise findResponTimeSeriseByid(@Param("modletagId") int modletagId);
+    ResponTimeSerise findResponTimeSeriseByid(@Param("modleresponId") int modleresponId);
     List<ResponTimeSerise> findResponTimeSeriseByModleid(@Param("refrencemodleId") int refrencemodleId);
 
 

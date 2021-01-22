@@ -314,7 +314,7 @@ function main() {
         contextMenu.show({
             left: ev.pageX - $("#side-buttons").width(),
             top: ev.pageY,
-        }, ev['currentTarget']['dataset']['id'], ev['currentTarget']['dataset']['projectid']);
+        }, ev['currentTarget']['dataset']['id'], ev['currentTarget']['dataset']['projectid'],undefined);
     });
 
     // 让退出节点可拖动

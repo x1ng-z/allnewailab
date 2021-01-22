@@ -217,6 +217,37 @@ var api = {
 
 
     /****/
+
+    updateproject:function (url,projectifno,layer) {
+
+        let deletemodleinfo;
+        $.ajax({
+            url: url + "?" + Math.random(),
+            async: false,
+            data: {
+                "projectifno":JSON.stringify(projectifno)+''
+            },
+            type: "POST",
+            success: function (result) {
+                console.log(result);
+                // layer.close(index);
+                let json = JSON.parse(result);
+                if (json['msg'] == "error") {
+                    layer.msg("修改失败！");
+                    deletemodleinfo=false;
+                } else {
+                    layer.msg("修改成功！");
+                    deletemodleinfo=true;
+                }
+            },
+            error:function (result) {
+                layer.msg("连接服务器异常！");
+                deletemodleinfo=false
+            }
+        });
+        return deletemodleinfo;
+
+    },
     updatemodle:function (url,modleinfo,layer) {
 
         let deletemodleinfo;

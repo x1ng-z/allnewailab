@@ -73,10 +73,10 @@
                         <c:forEach items="${points}" var="point" varStatus="Count">
                             <c:choose>
                                 <c:when test="${point.modlepinsId==baseModlePropertyImp.resource.getInteger('modlepinsId')}">
-                                    <option value="${point.modlePinName}"  selected>${point.opcTagName}</option>
+                                    <option value="${point.modlePinName}"  resourcemodleId="${point.refmodleId}" resourcemodlepinsId="${point.modlepinsId}" selected>${point.opcTagName}</option>
                                 </c:when>
                                 <c:otherwise>
-                                    <option value="${point.modlePinName}" >${point.opcTagName}</option>
+                                    <option value="${point.modlePinName}"  resourcemodleId="${point.refmodleId}" resourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>
                                 </c:otherwise>
                             </c:choose>
                         </c:forEach>

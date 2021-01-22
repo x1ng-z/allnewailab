@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -20,53 +19,47 @@ public class PySessionManager {
 
     //key nodeid
     private Map<Integer, PySession> modulepoolbynodeid =new ConcurrentHashMap<>();
-    //key tcp port
-    private Map<Integer, PySession> modulepoolbytcpport =new ConcurrentHashMap<>();
+    //ctx
+    private Map<ChannelHandlerContext, PySession> modulepoolbyctx =new ConcurrentHashMap<>();
     public void addSessionModule(int nodeid, ChannelHandlerContext ctx){
-        InetSocketAddress ipSocket = (InetSocketAddress) ctx.channel().remoteAddress();
-        String clientIp = ipSocket.getAddress().getHostAddress();
-        Integer port = ipSocket.getPort();
         if(!modulepoolbynodeid.containsKey(nodeid)){
             PySession session=new PySession();
             session.setCtx(ctx);
-            session.setTcpPort(port);
+            session.setModleid(nodeid);
             modulepoolbynodeid.put(nodeid,session);
-            modulepoolbytcpport.put(port,session);
+            modulepoolbyctx.put(ctx,session);
         }
 
     }
 
 
-    public void removeSessionModule(Integer nodeid, ChannelHandlerContext ctx){
-
+    public PySession removeSessionModule(Integer nodeid, ChannelHandlerContext ctx){
+        PySession session=null;
         if(ctx!=null){
-            InetSocketAddress ipSocket = (InetSocketAddress) ctx.channel().remoteAddress();
-            String clientIp = ipSocket.getAddress().getHostAddress();
-            Integer port = ipSocket.getPort();
-            PySession session=modulepoolbytcpport.remove(port);
+
+            session= modulepoolbyctx.remove(ctx);
             if(session!=null){
-                modulepoolbynodeid.remove(session.getNodeid());
+                modulepoolbynodeid.remove(session.getModleid());
             }else {
                 logger.warn("session is null");
             }
         }else if(nodeid!=null){
-            PySession session=modulepoolbynodeid.remove(nodeid);
+             session=modulepoolbynodeid.remove(nodeid);
             if(session!=null){
-                modulepoolbytcpport.remove(session.getTcpPort());
-                session.getCtx().close();
+                modulepoolbyctx.remove(session.getModleid());
             }else {
                 logger.warn("session is null");
             }
 
         }
-
+        return session;
     }
 
     public Map<Integer, PySession> getModulepoolbynodeid() {
         return modulepoolbynodeid;
     }
 
-    public Map<Integer, PySession> getModulepoolbytcpport() {
-        return modulepoolbytcpport;
+    public Map<ChannelHandlerContext, PySession> getModulepoolbyctx() {
+        return modulepoolbyctx;
     }
 }

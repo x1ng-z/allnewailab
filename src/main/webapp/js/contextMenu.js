@@ -15,8 +15,11 @@ var contextMenu = {
     menu_block_li_newmodleulli_customize: undefined,
     menu_block_li_newmodleulli_mpc: undefined,
     menu_block_li_newmodleulli_pid: undefined,
+    menu_block_li_projectparamsedit:undefined,
+    menu_block_li_projectrun:undefined,
+    menu_block_li_projectstop:undefined,
+    menu_modle_li_detail:undefined,
     init2: function (container) {
-
         /**初始化modle选项*/
         let menu_modle = $('<div class="imenu"></div>');
         menu_modle.attr("id", 'modle-right-menu-id');
@@ -55,6 +58,15 @@ var contextMenu = {
                 me.currentshowmenumodleid = undefined;
             }
         });
+
+
+        this.menu_modle_li_detail = $('<li class="imenu-item"><button class="imenu-button">运行详情</button></li>');
+        meny_modle_ul.append(this.menu_modle_li_detail);
+        //let me = this;
+        this.menu_modle_li_detail.bind("click", function (e) {
+            layermanager.viewmodledetail("/projectedit/viewempcmodlerundetail",me.menu_modle_li_detail.attr("modleid"),parent.layer);
+        });
+
 
 
         /**初始化空白页选项*/
@@ -237,6 +249,26 @@ var contextMenu = {
 
         });
 
+        this.menu_block_li_projectparamsedit= $('<li class="imenu-item"><button class="imenu-button"><i data-feather="link"></i>工程设置</button></li>');
+        menu_block_ul.append(this.menu_block_li_projectparamsedit);
+        this.menu_block_li_projectparamsedit.bind("click",function (e) {
+            layermanager.vieweditproject('/projectedit/vieweditprojectparam',me.menu_block_li_projectparamsedit.attr("projectid"),parent.layer);
+
+        });
+
+        this.menu_block_li_projectrun= $('<li class="imenu-item"><button class="imenu-button"><i data-feather="link"></i>运行</button></li>');
+        menu_block_ul.append(this.menu_block_li_projectrun);
+        this.menu_block_li_projectrun.bind("click",function (e) {
+            let result = api;
+        });
+
+        this.menu_block_li_projectstop= $('<li class="imenu-item"><button class="imenu-button"><i data-feather="link"></i>停止</button></li>');
+        menu_block_ul.append(this.menu_block_li_projectstop);
+        this.menu_block_li_projectstop.bind("click",function (e) {
+            let result = api;
+
+        });
+
 
         // menu_block.css("display", "none");
 
@@ -257,7 +289,7 @@ var contextMenu = {
         });
         return rightmenu;
     },
-    show: function (position, componentid, projectid) {
+    show: function (position, componentid, projectid,componettype) {
         // this.hide();
 
         if ((componentid == 'mainContainer')) {
@@ -284,7 +316,10 @@ var contextMenu = {
                 this.menu_block_li_newmodleulli_customize.attr("projectid", projectid);
                 this.menu_block_li_newmodleulli_mpc.attr("projectid", projectid);
                 this.menu_block_li_newmodleulli_pid.attr("projectid", projectid);
-                console.log(this.menu_block_li_newmodleulli_input);
+                this.menu_block_li_projectparamsedit.attr("projectid", projectid);
+                this.menu_block_li_projectrun.attr("projectid", projectid);
+                this.menu_block_li_projectstop.attr("projectid", projectid);
+                // console.log(this.menu_block_li_newmodleulli_input);
             }else{
                 return;
             }
@@ -305,8 +340,18 @@ var contextMenu = {
 
             this.menu_modle_li_delete.attr("modleid", componentid);
             this.menu_modle_li_delete.attr("projectid", projectid);
-            console.log("show modleid", this.menu_modle_li_delete.attr("modleid"));
-            console.log("show projectid", this.menu_modle_li_delete.attr("projectid"));
+
+            this.menu_modle_li_detail.attr("modleid", componentid);
+            this.menu_modle_li_detail.attr("projectid", projectid);
+
+            // console.log("show modleid", this.menu_modle_li_delete.attr("modleid"));
+            // console.log("show projectid", this.menu_modle_li_delete.attr("projectid"));
+            if(componettype!='mpc'){
+                this.menu_modle_li_detail.css({'visibility': 'hidden','width': '0px','height':'0px','z-index':'-99'});
+            }else {
+                this.menu_modle_li_detail.removeAttr("style");
+            }
+
 
         }
         this.clickleft = position.left;

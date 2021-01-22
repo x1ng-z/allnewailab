@@ -10,8 +10,7 @@ import io.netty.channel.ChannelHandlerContext;
 public class PySession {
    // private Module object;//apc module;
     private ChannelHandlerContext ctx;
-    private Integer tcpPort;
-    private int nodeid;
+    private int modleid;
 
 
     public ChannelHandlerContext getCtx() {
@@ -23,20 +22,11 @@ public class PySession {
     }
 
 
-
-    public Integer getTcpPort() {
-        return tcpPort;
+    public int getModleid() {
+        return modleid;
     }
 
-    public void setTcpPort(Integer tcpPort) {
-        this.tcpPort = tcpPort;
-    }
-
-    public int getNodeid() {
-        return nodeid;
-    }
-
-    public void setNodeid(int nodeid) {
-        this.nodeid = nodeid;
+    public void setModleid(int modleid) {
+        this.modleid = modleid;
     }
 }

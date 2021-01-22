@@ -136,7 +136,7 @@
         select * from modlepins where refmodleId=#{modleId}
     </select>
 
-    <select id="findModleRespon" resultType="hs.industry.ailab.entity.ResponTimeSerise">
+    <select id="findModleRespon" resultMap="mpcmodleresponResult">
         select * from modlerespon where refrencemodleId=#{modleId}
     </select>
 
@@ -488,7 +488,7 @@
         #{responTimeSerise.effectRatio})
     </insert>
     <!--    int deleteResponTimeSeriseByid(@Param("modleresponId") int modleresponId);-->
-    <delete id="deleteResponTimeSerise">
+    <delete id="deleteResponTimeSeriseByid">
         delete from modlerespon
         where modleresponId=#{modleresponId}
     </delete>
@@ -507,10 +507,10 @@
         effectRatio=#{responTimeSerise.effectRatio}
         where modleresponId=#{responTimeSerise.modleresponId}
     </update>
-    <!--    ResponTimeSerise findResponTimeSeriseByid(@Param("modletagId") int modletagId);-->
-    <select id="findResponTimeSeriseByid" resultType="hs.industry.ailab.entity.ResponTimeSerise">
+    <!--    ResponTimeSerise findResponTimeSeriseByid(@Param("modleresponId") int modleresponId);-->
+    <select id="findResponTimeSeriseByid" resultMap="mpcmodleresponResult">
         select * from modlerespon 
-        where modleresponId=#{modletagId}
+        where modleresponId=#{modleresponId}
     </select>
     <!--    ResponTimeSerise findResponTimeSeriseByModleid(@Param("refrencemodleId") int refrencemodleId);-->
     <select id="findResponTimeSeriseByModleid" resultMap="mpcmodleresponResult">

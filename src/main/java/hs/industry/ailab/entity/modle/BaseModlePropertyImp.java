@@ -11,6 +11,12 @@ import java.time.Instant;
  */
 public class BaseModlePropertyImp implements ModleProperty {
 
+    /**memory*/
+    private double value;
+
+
+
+
     /****db****/
     private int modlepinsId;
     private int refmodleId;
@@ -22,6 +28,7 @@ public class BaseModlePropertyImp implements ModleProperty {
     private Instant updateTime;
     private String pindir;//引脚方向//in/out?
     private String modlepropertyclazz;//引脚类型 base/mpc?
+
     /**********/
 
     public int getModlepinsId() {
@@ -104,6 +111,14 @@ public class BaseModlePropertyImp implements ModleProperty {
 
     public void setResource(JSONObject resource) {
         this.resource = resource;
+    }
+
+    public double getValue() {
+        return value;
+    }
+
+    public void setValue(double value) {
+        this.value = value;
     }
     /**************/
 

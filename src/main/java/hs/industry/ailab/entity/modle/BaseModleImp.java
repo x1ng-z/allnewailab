@@ -1,6 +1,8 @@
 package hs.industry.ailab.entity.modle;
 
+import com.alibaba.fastjson.JSONObject;
 import hs.industry.ailab.entity.ModleSight;
+import hs.industry.ailab.entity.Project;
 import hs.industry.ailab.entity.modle.Modle;
 
 /**
@@ -8,7 +10,7 @@ import hs.industry.ailab.entity.modle.Modle;
  * @version 1.0
  * @date 2021/1/8 16:46
  */
-public class BaseModleImp implements Modle {
+public abstract class BaseModleImp implements Modle {
 
     /***db***/
     private int modleId;//模型id主键
@@ -20,7 +22,17 @@ public class BaseModleImp implements Modle {
 
     private ModleSight modleSight;//模型视图
 
+    @Override
+    public abstract JSONObject inprocess(Project project) ;
 
+    @Override
+    public abstract JSONObject computeprocess(Project project) ;
+
+    @Override
+    public abstract  void outprocess(Project project,JSONObject outdata) ;
+
+    @Override
+    public abstract void init();
 
     public int getModleId() {
         return modleId;

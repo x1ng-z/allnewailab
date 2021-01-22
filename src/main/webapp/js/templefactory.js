@@ -14,7 +14,7 @@ var templefactory = {
             contextMenu.show({
                 left: ev.pageX-$("#side-buttons").width(),
                 top: ev.pageY
-            },ev['currentTarget']['dataset']["id"],ev['currentTarget']['dataset']["projectid"]);
+            },ev['currentTarget']['dataset']["id"],ev['currentTarget']['dataset']["projectid"],data.type);
         });
         let header=$('<div style="width: 150px"></div>');
         let modulenode=undefined;

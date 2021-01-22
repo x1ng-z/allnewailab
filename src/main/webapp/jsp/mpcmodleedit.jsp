@@ -461,14 +461,14 @@
             // console.log(obj)
             if (obj.event === 'del') {
                 if (confirm('确定删除吗？')) {
-                    if (api.deletmodlerespon('${pageContext.request.contextPath}/projectedit/deletemodleproperties', data['modleresponId'], layer)) {
+                    if (api.deletmodlerespon('${pageContext.request.contextPath}/projectedit/deletempcmodlerespon', data['modleresponId'], layer)) {
                         $("#bt_flush_pvtab", document).trigger('click');
                     }
                 }
             } else if (obj.event === 'edit') {
-                let url = '${pageContext.request.contextPath}/projectedit/viewupdatempcmodleproperty';
-                let modlepinsId = data['modlepinsId'];
-                layermanager.viewupdatempcmodlerespon(url, modlepinsId, layer, document);
+                let url = '${pageContext.request.contextPath}/projectedit/viewupdatempcmodlerespon';
+                let modleresponId = data['modleresponId'];
+                layermanager.viewupdatempcmodlerespon(url, modleresponId, layer, document);
             }
         });
 

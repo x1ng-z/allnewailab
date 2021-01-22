@@ -13,6 +13,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,6 +26,7 @@ import java.util.Map;
  * @date 2020/8/29 13:57
  * http，数据
  */
+
 
 public class HttpUtils {
     private static Logger logger = LoggerFactory.getLogger(HttpUtils.class);
