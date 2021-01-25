@@ -51,8 +51,8 @@ public class MsgDecoder_Inbound extends ChannelInboundHandlerAdapter {
         InetSocketAddress ipSocket = (InetSocketAddress) ctx.channel().remoteAddress();
         String clientIp = ipSocket.getAddress().getHostAddress();
         Integer port = ipSocket.getPort();
-        PySession pySession = sessionManager.removeSessionModule(null, ctx);
-        logger.info("come out" + clientIp + ":" + port + " modleid=" + pySession.getModleid());
+        PySession pySession = sessionManager.removeSessionModule( ctx);
+        logger.info("come out" + clientIp + ":" + port + " modleid=" + pySession.getModleid()+" scriptName="+pySession.getScriptName());
     }
 
     @Override
@@ -86,7 +86,7 @@ public class MsgDecoder_Inbound extends ChannelInboundHandlerAdapter {
                         if (CommandImp.HEART.valid(bytes)) {
                             JSONObject heartmsg = CommandImp.HEART.analye(bytes);
                             logger.info(heartmsg.toJSONString());
-                            sessionManager.addSessionModule(modleid, ctx);
+                            sessionManager.addSessionModule(modleid, heartmsg.getString("scriptName"),ctx);
                         }
                         break;
                     }

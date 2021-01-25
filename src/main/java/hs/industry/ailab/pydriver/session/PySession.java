@@ -11,6 +11,7 @@ public class PySession {
    // private Module object;//apc module;
     private ChannelHandlerContext ctx;
     private int modleid;
+    private String scriptName;//不含.py
 
 
     public ChannelHandlerContext getCtx() {
@@ -28,5 +29,13 @@ public class PySession {
 
     public void setModleid(int modleid) {
         this.modleid = modleid;
+    }
+
+    public String getScriptName() {
+        return scriptName;
+    }
+
+    public void setScriptName(String scriptName) {
+        this.scriptName = scriptName;
     }
 }

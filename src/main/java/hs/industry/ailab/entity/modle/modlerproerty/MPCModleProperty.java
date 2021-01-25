@@ -2,6 +2,7 @@ package hs.industry.ailab.entity.modle.modlerproerty;
 
 import hs.industry.ailab.entity.modle.BaseModlePropertyImp;
 
+import java.time.Instant;
 import java.util.regex.Pattern;
 
 /**
@@ -11,6 +12,22 @@ import java.util.regex.Pattern;
  */
 public class MPCModleProperty extends BaseModlePropertyImp {
     Pattern pvenablepattern = Pattern.compile("(^pvenable\\d+$)");
+
+
+    /***memory**/
+    private MPCModleProperty dcsEnabePin;
+    private MPCModleProperty upLmt;//高限
+    private MPCModleProperty downLmt;//低限
+    private MPCModleProperty feedBack;//反馈
+
+    /**运行时钟，用于判断引脚是否进行run*/
+    private Instant runClock;
+    /**由于计算环境的变化，有些不在置信区间内的引脚需要移除控制，
+     * 改标识符是用于查看现在引脚是否参与控制
+     * */
+    private volatile boolean thisTimeParticipate=true;
+
+
 
     /******db*****/
     private double Q;
@@ -108,6 +125,55 @@ public class MPCModleProperty extends BaseModlePropertyImp {
     public void setTracoefmethod(String tracoefmethod) {
         this.tracoefmethod = tracoefmethod;
     }
+
+    public MPCModleProperty getDcsEnabePin() {
+        return dcsEnabePin;
+    }
+
+    public void setDcsEnabePin(MPCModleProperty dcsEnabePin) {
+        this.dcsEnabePin = dcsEnabePin;
+    }
+
+    public MPCModleProperty getUpLmt() {
+        return upLmt;
+    }
+
+    public void setUpLmt(MPCModleProperty upLmt) {
+        this.upLmt = upLmt;
+    }
+
+    public MPCModleProperty getDownLmt() {
+        return downLmt;
+    }
+
+    public void setDownLmt(MPCModleProperty downLmt) {
+        this.downLmt = downLmt;
+    }
+
+    public MPCModleProperty getFeedBack() {
+        return feedBack;
+    }
+
+    public void setFeedBack(MPCModleProperty feedBack) {
+        this.feedBack = feedBack;
+    }
+
+    public Instant getRunClock() {
+        return runClock;
+    }
+
+    public void setRunClock(Instant runClock) {
+        this.runClock = runClock;
+    }
+
+    public boolean isThisTimeParticipate() {
+        return thisTimeParticipate;
+    }
+
+    public void setThisTimeParticipate(boolean thisTimeParticipate) {
+        this.thisTimeParticipate = thisTimeParticipate;
+    }
+
     /*************/
 
 }

@@ -46,17 +46,24 @@ var contextMenu = {
         meny_modle_ul.append(this.menu_modle_li_delete);
         //let me = this;
         this.menu_modle_li_delete.bind("click", function (e) {
-            let parent=[];
-            let selectmodle=jsplumbinstance.getConnections({'target':me.menu_modle_li_delete.attr("modleid")+''});
-            for(let index=0;index<selectmodle.length;index++) {
-                parent.push(selectmodle[index].sourceId);
+
+            if (confirm('确定删除吗？')) {
+
+                let parent=[];
+                let selectmodle=jsplumbinstance.getConnections({'target':me.menu_modle_li_delete.attr("modleid")+''});
+                for(let index=0;index<selectmodle.length;index++) {
+                    parent.push(selectmodle[index].sourceId);
+                }
+                console.log('parent',parent);
+                let deletemodleinfo = api.deletemodle(me.menu_modle_li_delete.attr("modleid"), me.menu_modle_li_delete.attr("projectid"),parent);
+                if (deletemodleinfo) {
+                    jsplumbinstance.remove(me.currentshowmenumodleid);
+                    me.currentshowmenumodleid = undefined;
+                }
+
             }
-            console.log('parent',parent);
-            let deletemodleinfo = api.deletemodle(me.menu_modle_li_delete.attr("modleid"), me.menu_modle_li_delete.attr("projectid"),parent);
-            if (deletemodleinfo) {
-                jsplumbinstance.remove(me.currentshowmenumodleid);
-                me.currentshowmenumodleid = undefined;
-            }
+
+
         });
 
 

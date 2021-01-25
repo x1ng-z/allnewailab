@@ -27,7 +27,6 @@ import java.util.Map;
 public class OUTModle extends BaseModleImp {
     private Logger logger = LoggerFactory.getLogger(OUTModle.class);
 
-
     /**
      * memory
      */
@@ -35,6 +34,37 @@ public class OUTModle extends BaseModleImp {
     private String datasource;
     private Map<Integer, BaseModlePropertyImp> indexproperties;//key=modleid
 
+
+
+    public void toBeRealModle(String datasource){
+        this.datasource=datasource;
+    }
+
+    @Override
+    public void connect() {
+
+    }
+
+    @Override
+    public void reconnect() {
+
+    }
+
+    @Override
+    public void destory() {
+
+    }
+
+    @Override
+    public void docomputeprocess() {
+
+    }
+
+
+
+    /***
+     * 从上一个模块引脚输出的数据赋值给模块的输入引脚
+     * */
     @Override
     public JSONObject inprocess(Project project) {
 
@@ -84,10 +114,13 @@ public class OUTModle extends BaseModleImp {
     }
 
     @Override
-    public JSONObject computeprocess(Project project) {
+    public JSONObject computresulteprocess(Project project,JSONObject computedata) {
         return null;
     }
 
+
+
+    /**将本模块的输入引脚输出给本模块的输出引脚，并且将输出数据提交给ocean*/
     @Override
     public void outprocess(Project project, JSONObject outdata) {
 

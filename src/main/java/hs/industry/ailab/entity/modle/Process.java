@@ -8,10 +8,11 @@ import hs.industry.ailab.entity.Project;
  * @version 1.0
  * @date 2021/1/22 13:23
  */
-public interface Process  {
-    JSONObject inprocess(Project project);
+public interface Process   {
 
-    JSONObject computeprocess(Project project);
+    JSONObject inprocess(Project project);
+    void docomputeprocess();
+    JSONObject computresulteprocess(Project project,JSONObject computedata);
 
     void outprocess(Project project,JSONObject outdata);
 

@@ -15,7 +15,7 @@ public abstract class BaseModleImp implements Modle {
     /***db***/
     private int modleId;//模型id主键
     private String modleName;//模型名称
-    private int modleEnable;//模块使能，用于设置算法是否运行，算法是否运行
+    private int modleEnable=1;//模块使能，用于设置算法是否运行，算法是否运行
     private String modletype;
     private int refprojectid;
     /*****/
@@ -23,10 +23,19 @@ public abstract class BaseModleImp implements Modle {
     private ModleSight modleSight;//模型视图
 
     @Override
+    public abstract void connect();
+    @Override
+    public abstract void reconnect();
+    @Override
+    public abstract void destory() ;
+    @Override
+    public abstract void docomputeprocess() ;
+
+    @Override
     public abstract JSONObject inprocess(Project project) ;
 
     @Override
-    public abstract JSONObject computeprocess(Project project) ;
+    public abstract JSONObject computresulteprocess(Project project,JSONObject computedata) ;
 
     @Override
     public abstract  void outprocess(Project project,JSONObject outdata) ;

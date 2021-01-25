@@ -1,6 +1,5 @@
 package hs.industry.ailab.pydriver.pyproxyserve;
 
-import hs.industry.ailab.pydriver.session.PySessionManager;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;

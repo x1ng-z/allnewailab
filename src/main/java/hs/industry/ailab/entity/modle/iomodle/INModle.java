@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSONObject;
 import hs.industry.ailab.entity.Project;
 import hs.industry.ailab.entity.modle.BaseModleImp;
 import hs.industry.ailab.entity.modle.BaseModlePropertyImp;
-import hs.industry.ailab.entity.modle.Modle;
 import hs.industry.ailab.entity.modle.ModleProperty;
 import hs.industry.ailab.utils.httpclient.HttpUtils;
 import org.slf4j.Logger;
@@ -22,13 +21,39 @@ import java.util.Map;
 public class INModle extends BaseModleImp {
     private Logger logger = LoggerFactory.getLogger(INModle.class);
 
-
     /**
      * memery
      */
     private boolean iscomplete = false;
     private String datasource;
     private Map<Integer,BaseModlePropertyImp> indexproperties;//key=modleid
+
+
+
+    public void toBeRealModle(String datasource){
+        this.datasource=datasource;
+    }
+
+    @Override
+    public void connect() {
+
+    }
+
+    @Override
+    public void reconnect() {
+
+    }
+
+    @Override
+    public void destory() {
+
+    }
+
+    @Override
+    public void docomputeprocess() {
+
+    }
+
 
     @Override
     public JSONObject inprocess(Project project) {
@@ -44,10 +69,12 @@ public class INModle extends BaseModleImp {
     }
 
     @Override
-    public JSONObject computeprocess(Project project) {
+    public JSONObject computresulteprocess(Project project,JSONObject computedata) {
         return null;
     }
 
+
+    /***刚好inprocess处理后的数据幅值给输出引脚*/
     @Override
     public void outprocess(Project project, JSONObject outdata) {
         for (ModleProperty modleProperty : propertyImpList) {

@@ -17,49 +17,38 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PySessionManager {
     private Logger logger = LoggerFactory.getLogger(PySessionManager.class);
 
-    //key nodeid
-    private Map<Integer, PySession> modulepoolbynodeid =new ConcurrentHashMap<>();
-    //ctx
-    private Map<ChannelHandlerContext, PySession> modulepoolbyctx =new ConcurrentHashMap<>();
-    public void addSessionModule(int nodeid, ChannelHandlerContext ctx){
-        if(!modulepoolbynodeid.containsKey(nodeid)){
-            PySession session=new PySession();
+    private Map<ChannelHandlerContext, PySession> modulepool = new ConcurrentHashMap<>();
+
+    public synchronized void addSessionModule(int nodeid, String function, ChannelHandlerContext ctx) {
+        if (!modulepool.containsKey(ctx)) {
+            PySession session = new PySession();
             session.setCtx(ctx);
+            session.setScriptName(function);
             session.setModleid(nodeid);
-            modulepoolbynodeid.put(nodeid,session);
-            modulepoolbyctx.put(ctx,session);
+            modulepool.put(ctx, session);
         }
 
     }
 
 
-    public PySession removeSessionModule(Integer nodeid, ChannelHandlerContext ctx){
-        PySession session=null;
-        if(ctx!=null){
-
-            session= modulepoolbyctx.remove(ctx);
-            if(session!=null){
-                modulepoolbynodeid.remove(session.getModleid());
-            }else {
-                logger.warn("session is null");
-            }
-        }else if(nodeid!=null){
-             session=modulepoolbynodeid.remove(nodeid);
-            if(session!=null){
-                modulepoolbyctx.remove(session.getModleid());
-            }else {
-                logger.warn("session is null");
-            }
-
+    public synchronized PySession removeSessionModule(ChannelHandlerContext ctx) {
+        if (ctx != null) {
+            return modulepool.remove(ctx);
         }
-        return session;
+        return null;
     }
 
-    public Map<Integer, PySession> getModulepoolbynodeid() {
-        return modulepoolbynodeid;
+    public synchronized PySession getSpecialSession(int modleid, String scriptname){
+
+        for(PySession session:modulepool.values()){
+            if(session.getModleid()==modleid&&session.getScriptName().equals(scriptname)){
+                return session;
+            }
+        }
+        return null;
     }
 
-    public Map<ChannelHandlerContext, PySession> getModulepoolbyctx() {
-        return modulepoolbyctx;
+    public Map<ChannelHandlerContext, PySession> getModulepool() {
+        return modulepool;
     }
 }

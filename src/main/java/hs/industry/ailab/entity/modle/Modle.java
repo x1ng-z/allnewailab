@@ -1,5 +1,6 @@
 package hs.industry.ailab.entity.modle;
 
+import hs.industry.ailab.entity.Connector;
 import hs.industry.ailab.entity.ModleSight;
 
 import java.util.regex.Pattern;
@@ -9,7 +10,7 @@ import java.util.regex.Pattern;
  * @version 1.0
  * @date 2021/1/8 16:08
  */
-public interface Modle extends Process {
+public interface Modle extends Process, Connector {
     String MODLETYPE_INPUT = "input";
     String MODLETYPE_OUTPUT = "output";
     String MODLETYPE_FILTER = "filter";
