@@ -1,25 +1,25 @@
 var api = {
 
-    loadproject:function(projectid){
+    loadproject: function (projectid) {
         let projectresult;
         $.ajax({
             url: "/projectedit/findproject" + "?" + Math.random(),
             async: false,
             data: {
-                "projectid":projectid
+                "projectid": projectid
             },
             type: "POST",
             success: function (result) {
-                console.log(result);
+                // console.log(result);
                 // layer.close(index);
                 let json = JSON.parse(result);
                 if (json['msg'] == "error") {
                     layer.msg("加载失败！");
                     // return [];
                 } else {
-                    layer.msg("加载成功！");
-                    console.log( json['project'])
-                    projectresult= json['project']
+                    // layer.msg("加载成功！");
+                    console.log(json['project'])
+                    projectresult = json['project']
                     //layer.msg("加载成功！");
                     // location.href = '${pageContext.request.contextPath}/' + json['go'];
                     //newleft(json['modleName'],json['modleId'])
@@ -28,7 +28,7 @@ var api = {
                 //window.location.href("result")
                 // var json = JSON.parse(result);
             },
-            error:function (result) {
+            error: function (result) {
                 layer.msg("连接服务器异常！");
             }
         });
@@ -36,14 +36,50 @@ var api = {
         return projectresult;
 
     },
-    createmodle:function (position,modletype,projectid) {
+    projectstatus: function (projectid) {
+        let projectresult;
+        $.ajax({
+            url: "/projectedit/getprojectrunstatus" + "?" + Math.random(),
+            async: false,
+            data: {
+                "projectid": projectid
+            },
+            type: "POST",
+            success: function (result) {
+                // console.log(result);
+                // layer.close(index);
+                let json = JSON.parse(result);
+                if (json['msg'] == "error") {
+                    layer.msg("加载失败！");
+                    // return [];
+                } else {
+                    // layer.msg("加载成功！");
+                    console.log(json['project'])
+                    projectresult = json['project']
+                    //layer.msg("加载成功！");
+                    // location.href = '${pageContext.request.contextPath}/' + json['go'];
+                    //newleft(json['modleName'],json['modleId'])
+                    // parent.location.reload();
+                }
+                //window.location.href("result")
+                // var json = JSON.parse(result);
+            },
+            error: function (result) {
+                layer.msg("连接服务器异常！");
+            }
+        });
+
+        return projectresult;
+
+    },
+    createmodle: function (position, modletype, projectid) {
         let createmodleinfo;
-        console.log(JSON.stringify({'position':position,'modletype':modletype,'projectid':projectid})+'');
+        console.log(JSON.stringify({'position': position, 'modletype': modletype, 'projectid': projectid}) + '');
         $.ajax({
             url: "/projectedit/creatmodle" + "?" + Math.random(),
             async: false,
             data: {
-                "modleinfo":JSON.stringify({'position':position,'modletype':modletype,'projectid':projectid})+''
+                "modleinfo": JSON.stringify({'position': position, 'modletype': modletype, 'projectid': projectid}) + ''
             },
             type: "POST",
             success: function (result) {
@@ -54,10 +90,10 @@ var api = {
                     layer.msg("加载失败！");
                     // return [];
                 } else {
-                    layer.msg("加载成功！");
+                    // layer.msg("加载成功！");
                     // console.log( json['project'])
                     // projectresult= json['project']
-                    createmodleinfo=json;
+                    createmodleinfo = json;
                     //layer.msg("加载成功！");
                     // location.href = '${pageContext.request.contextPath}/' + json['go'];
                     //newleft(json['modleName'],json['modleId'])
@@ -66,21 +102,21 @@ var api = {
                 //window.location.href("result")
                 // var json = JSON.parse(result);
             },
-            error:function (result) {
+            error: function (result) {
                 layer.msg("连接服务器异常！");
             }
         });
         return createmodleinfo;
 
     },
-    deletemodle:function (modleid,projectid,parent) {
+    deletemodle: function (modleid, projectid, parent) {
         let deletemodleinfo;
         //console.log(JSON.stringify({'position':position,'modletype':modletype,'projectid':projectid})+'');
         $.ajax({
             url: "/projectedit/deletemodle" + "?" + Math.random(),
             async: false,
             data: {
-                "modleinfo":JSON.stringify({'modleid':modleid,'projectid':projectid,'parent':parent})+''
+                "modleinfo": JSON.stringify({'modleid': modleid, 'projectid': projectid, 'parent': parent}) + ''
             },
             type: "POST",
             success: function (result) {
@@ -89,13 +125,13 @@ var api = {
                 let json = JSON.parse(result);
                 if (json['msg'] == "error") {
                     layer.msg("模型删除失败！");
-                    deletemodleinfo=false;
+                    deletemodleinfo = false;
                     // return [];
                 } else {
-                    layer.msg("模型删除成功！");
+                    // layer.msg("模型删除成功！");
                     // console.log( json['project'])
                     // projectresult= json['project']
-                    deletemodleinfo=true;
+                    deletemodleinfo = true;
                     //layer.msg("加载成功！");
                     // location.href = '${pageContext.request.contextPath}/' + json['go'];
                     //newleft(json['modleName'],json['modleId'])
@@ -104,22 +140,22 @@ var api = {
                 //window.location.href("result")
                 // var json = JSON.parse(result);
             },
-            error:function (result) {
+            error: function (result) {
                 layer.msg("连接服务器异常！");
-                deletemodleinfo=false
+                deletemodleinfo = false
             }
         });
         return deletemodleinfo;
 
     },
-    createmodlechild:function (modleid,childid) {
-        let createmodleinfo=false;
-        console.log(JSON.stringify({'modleid':modleid,'childid':childid})+'');
+    createmodlechild: function (modleid, childid) {
+        let createmodleinfo = false;
+        console.log(JSON.stringify({'modleid': modleid, 'childid': childid}) + '');
         $.ajax({
             url: "/projectedit/createmodlechild" + "?" + Math.random(),
             async: false,
             data: {
-                "modlechildinfo":JSON.stringify({'modleid':modleid,'childid':childid})+''
+                "modlechildinfo": JSON.stringify({'modleid': modleid, 'childid': childid}) + ''
             },
             type: "POST",
             success: function (result) {
@@ -128,31 +164,31 @@ var api = {
                 let json = JSON.parse(result);
                 if (json['msg'] == "error") {
                     layer.msg("创建失败！");
-                    createmodleinfo=false;
+                    createmodleinfo = false;
                     // return [];
                 } else {
-                    layer.msg("创建成功！");
-                    createmodleinfo=true;
+                    // layer.msg("创建成功！");
+                    createmodleinfo = true;
                 }
                 //window.location.href("result")
                 // var json = JSON.parse(result);
             },
-            error:function (result) {
+            error: function (result) {
                 layer.msg("连接服务器异常！");
-                createmodleinfo=false;
+                createmodleinfo = false;
             }
         });
         return createmodleinfo;
 
     },
-    deletemodlechild:function (modleid,childid) {
+    deletemodlechild: function (modleid, childid) {
         let deletemodleinfo;
         //console.log(JSON.stringify({'position':position,'modletype':modletype,'projectid':projectid})+'');
         $.ajax({
             url: "http://127.0.0.1/projectedit/deletemodlechild" + "?" + Math.random(),
             async: false,
             data: {
-                "modlechildinfo":JSON.stringify({'modleid':modleid,'childid':childid})+''
+                "modlechildinfo": JSON.stringify({'modleid': modleid, 'childid': childid}) + ''
             },
             type: "POST",
             success: function (result) {
@@ -161,13 +197,13 @@ var api = {
                 let json = JSON.parse(result);
                 if (json['msg'] == "error") {
                     layer.msg("删除失败！");
-                    deletemodleinfo=false;
+                    deletemodleinfo = false;
                     // return [];
                 } else {
-                    layer.msg("删除成功！");
+                    // layer.msg("删除成功！");
                     // console.log( json['project'])
                     // projectresult= json['project']
-                    deletemodleinfo=true;
+                    deletemodleinfo = true;
                     //layer.msg("加载成功！");
                     // location.href = '${pageContext.request.contextPath}/' + json['go'];
                     //newleft(json['modleName'],json['modleId'])
@@ -176,22 +212,22 @@ var api = {
                 //window.location.href("result")
                 // var json = JSON.parse(result);
             },
-            error:function (result) {
+            error: function (result) {
                 layer.msg("连接服务器异常！");
-                deletemodleinfo=false
+                deletemodleinfo = false
             }
         });
         return deletemodleinfo;
 
     },
-    movemodle:function (modleid,poistion) {
+    movemodle: function (modleid, poistion) {
         let deletemodleinfo;
-        console.log(JSON.stringify({'modleid':modleid,'poistion':poistion})+'');
+        console.log(JSON.stringify({'modleid': modleid, 'poistion': poistion}) + '');
         $.ajax({
             url: "/projectedit/movemodle" + "?" + Math.random(),
             async: false,
             data: {
-                "modleifno":JSON.stringify({'modleid':modleid,'position':poistion})+''
+                "modleifno": JSON.stringify({'modleid': modleid, 'position': poistion}) + ''
             },
             type: "POST",
             success: function (result) {
@@ -200,15 +236,15 @@ var api = {
                 let json = JSON.parse(result);
                 if (json['msg'] == "error") {
                     // layer.msg("移动失败！");
-                    deletemodleinfo=false;
+                    deletemodleinfo = false;
                 } else {
                     // layer.msg("移动成功！");
-                    deletemodleinfo=true;
+                    deletemodleinfo = true;
                 }
             },
-            error:function (result) {
+            error: function (result) {
                 layer.msg("连接服务器异常！");
-                deletemodleinfo=false
+                deletemodleinfo = false
             }
         });
         return deletemodleinfo;
@@ -218,14 +254,14 @@ var api = {
 
     /****/
 
-    updateproject:function (url,projectifno,layer) {
+    updateproject: function (url, projectifno, layer) {
 
         let deletemodleinfo;
         $.ajax({
             url: url + "?" + Math.random(),
             async: false,
             data: {
-                "projectifno":JSON.stringify(projectifno)+''
+                "projectifno": JSON.stringify(projectifno) + ''
             },
             type: "POST",
             success: function (result) {
@@ -234,29 +270,29 @@ var api = {
                 let json = JSON.parse(result);
                 if (json['msg'] == "error") {
                     layer.msg("修改失败！");
-                    deletemodleinfo=false;
+                    deletemodleinfo = false;
                 } else {
-                    layer.msg("修改成功！");
-                    deletemodleinfo=true;
+                    // layer.msg("修改成功！");
+                    deletemodleinfo = true;
                 }
             },
-            error:function (result) {
+            error: function (result) {
                 layer.msg("连接服务器异常！");
-                deletemodleinfo=false
+                deletemodleinfo = false
             }
         });
         return deletemodleinfo;
 
     },
-    updatemodle:function (url,modleinfo,layer) {
+    updatemodle: function (url, modleinfo, layer) {
 
         let deletemodleinfo;
-        console.log(JSON.stringify(modleinfo)+'');
+        console.log(JSON.stringify(modleinfo) + '');
         $.ajax({
             url: url + "?" + Math.random(),
             async: false,
             data: {
-                "modleinfo":JSON.stringify(modleinfo)+''
+                "modleinfo": JSON.stringify(modleinfo) + ''
             },
             type: "POST",
             success: function (result) {
@@ -265,29 +301,29 @@ var api = {
                 let json = JSON.parse(result);
                 if (json['msg'] == "error") {
                     layer.msg("修改失败！");
-                    deletemodleinfo=false;
+                    deletemodleinfo = false;
                 } else {
-                    layer.msg("修改成功！");
-                    deletemodleinfo=true;
+                    // layer.msg("修改成功！");
+                    deletemodleinfo = true;
                 }
             },
-            error:function (result) {
+            error: function (result) {
                 layer.msg("连接服务器异常！");
-                deletemodleinfo=false
+                deletemodleinfo = false
             }
         });
         return deletemodleinfo;
 
     },
-    getmodleproperties:function (url,modleinfo,layer) {
+    getmodleproperties: function (url, modleinfo, layer) {
 
         let deletemodleinfo;
-        console.log(JSON.stringify(modleinfo)+'');
+        console.log(JSON.stringify(modleinfo) + '');
         $.ajax({
             url: url + "?" + Math.random(),
             async: false,
             data: {
-                "modleinfo":JSON.stringify(modleinfo)+''
+                "modleinfo": JSON.stringify(modleinfo) + ''
             },
             type: "POST",
             success: function (result) {
@@ -296,29 +332,29 @@ var api = {
                 let json = JSON.parse(result);
                 if (json['msg'] == "error") {
                     layer.msg("修改失败！");
-                    deletemodleinfo=false;
+                    deletemodleinfo = false;
                 } else {
-                    layer.msg("修改成功！");
-                    deletemodleinfo=true;
+                    // layer.msg("修改成功！");
+                    deletemodleinfo = true;
                 }
             },
-            error:function (result) {
+            error: function (result) {
                 layer.msg("连接服务器异常！");
-                deletemodleinfo=false
+                deletemodleinfo = false
             }
         });
         return deletemodleinfo;
 
     },
-    addmodleproperties:function (url,modlepropertyinfo,layer) {
+    addmodleproperties: function (url, modlepropertyinfo, layer) {
         let index = layer.msg('创建中，请稍候', {icon: 16, time: false, shade: 0.8});
         let deletemodleinfo;
-        console.log(JSON.stringify(modlepropertyinfo)+'');
+        console.log(JSON.stringify(modlepropertyinfo) + '');
         $.ajax({
             url: url + "?" + Math.random(),
             async: false,
             data: {
-                "modlepropertyinfo":JSON.stringify(modlepropertyinfo)+''
+                "modlepropertyinfo": JSON.stringify(modlepropertyinfo) + ''
             },
             type: "POST",
             success: function (result) {
@@ -328,23 +364,23 @@ var api = {
                 let json = JSON.parse(result);
                 if (json['msg'] == "error") {
                     layer.msg("添加失败！");
-                    deletemodleinfo=false;
+                    deletemodleinfo = false;
                 } else {
-                    layer.msg("添加成功！");
-                    deletemodleinfo=true;
+                    // layer.msg("添加成功！");
+                    deletemodleinfo = true;
                 }
             },
-            error:function (result) {
+            error: function (result) {
                 layer.close(index);
                 layer.msg("连接服务器异常！");
-                deletemodleinfo=false
+                deletemodleinfo = false
             }
         });
 
         return deletemodleinfo;
 
     },
-    addmodlerespon:function (url,responcontext,layer) {
+    addmodlerespon: function (url, responcontext, layer) {
         let index = layer.msg('创建中，请稍候', {icon: 16, time: false, shade: 0.8});
         let deletemodleinfo;
         // console.log(JSON.stringify(modlepropertyinfo)+'');
@@ -352,7 +388,7 @@ var api = {
             url: url + "?" + Math.random(),
             async: false,
             data: {
-                "responcontext":JSON.stringify(responcontext)+''
+                "responcontext": JSON.stringify(responcontext) + ''
             },
             type: "POST",
             success: function (result) {
@@ -362,30 +398,30 @@ var api = {
                 let json = JSON.parse(result);
                 if (json['msg'] == "error") {
                     layer.msg("添加失败！");
-                    deletemodleinfo=false;
+                    deletemodleinfo = false;
                 } else {
-                    layer.msg("添加成功！");
-                    deletemodleinfo=true;
+                    // layer.msg("添加成功！");
+                    deletemodleinfo = true;
                 }
             },
-            error:function (result) {
+            error: function (result) {
                 layer.close(index);
                 layer.msg("连接服务器异常！");
-                deletemodleinfo=false
+                deletemodleinfo = false
             }
         });
 
         return deletemodleinfo;
 
     },
-    deletmodleproperties:function (url,modlepropertyid,layer) {
+    deletmodleproperties: function (url, modlepropertyid, layer) {
         let index = layer.msg('删除，请稍候', {icon: 16, time: false, shade: 0.8});
         let deletemodleinfo;
         $.ajax({
             url: url + "?" + Math.random(),
             async: false,
             data: {
-                "modlepropertyid":modlepropertyid+''
+                "modlepropertyid": modlepropertyid + ''
             },
             type: "POST",
             success: function (result) {
@@ -395,30 +431,30 @@ var api = {
                 let json = JSON.parse(result);
                 if (json['msg'] == "error") {
                     layer.msg("删除失败！");
-                    deletemodleinfo=false;
+                    deletemodleinfo = false;
                 } else {
-                    layer.msg("删除成功！");
-                    deletemodleinfo=true;
+                    // layer.msg("删除成功！");
+                    deletemodleinfo = true;
                 }
             },
-            error:function (result) {
+            error: function (result) {
                 layer.close(index);
                 layer.msg("连接服务器异常！");
-                deletemodleinfo=false
+                deletemodleinfo = false
             }
         });
 
         return deletemodleinfo;
 
     },
-    deletmodlerespon:function (url,modleresponId,layer) {
+    deletmodlerespon: function (url, modleresponId, layer) {
         let index = layer.msg('删除，请稍候', {icon: 16, time: false, shade: 0.8});
         let deletemodleinfo;
         $.ajax({
             url: url + "?" + Math.random(),
             async: false,
             data: {
-                "modleresponId":modleresponId+''
+                "modleresponId": modleresponId + ''
             },
             type: "POST",
             success: function (result) {
@@ -428,31 +464,31 @@ var api = {
                 let json = JSON.parse(result);
                 if (json['msg'] == "error") {
                     layer.msg("删除失败！");
-                    deletemodleinfo=false;
+                    deletemodleinfo = false;
                 } else {
-                    layer.msg("删除成功！");
-                    deletemodleinfo=true;
+                    // layer.msg("删除成功！");
+                    deletemodleinfo = true;
                 }
             },
-            error:function (result) {
+            error: function (result) {
                 layer.close(index);
                 layer.msg("连接服务器异常！");
-                deletemodleinfo=false
+                deletemodleinfo = false
             }
         });
 
         return deletemodleinfo;
 
     },
-    updatemodleproperties:function (url,modlepropertyinfo,layer) {
+    updatemodleproperties: function (url, modlepropertyinfo, layer) {
         let index = layer.msg('修改中，请稍候', {icon: 16, time: false, shade: 0.8});
         let deletemodleinfo;
-        console.log(JSON.stringify(modlepropertyinfo)+'');
+        console.log(JSON.stringify(modlepropertyinfo) + '');
         $.ajax({
             url: url + "?" + Math.random(),
             async: false,
             data: {
-                "modlepropertyinfo":JSON.stringify(modlepropertyinfo)+''
+                "modlepropertyinfo": JSON.stringify(modlepropertyinfo) + ''
             },
             type: "POST",
             success: function (result) {
@@ -462,31 +498,31 @@ var api = {
                 let json = JSON.parse(result);
                 if (json['msg'] == "error") {
                     layer.msg("添加失败！");
-                    deletemodleinfo=false;
+                    deletemodleinfo = false;
                 } else {
-                    layer.msg("添加成功！");
-                    deletemodleinfo=true;
+                    // layer.msg("添加成功！");
+                    deletemodleinfo = true;
                 }
             },
-            error:function (result) {
+            error: function (result) {
                 layer.close(index);
                 layer.msg("连接服务器异常！");
-                deletemodleinfo=false
+                deletemodleinfo = false
             }
         });
 
         return deletemodleinfo;
 
     },
-    updatemodlerespon:function (url,modlepropertyinfo,layer) {
+    updatemodlerespon: function (url, modlepropertyinfo, layer) {
         let index = layer.msg('修改中，请稍候', {icon: 16, time: false, shade: 0.8});
         let deletemodleinfo;
-        console.log(JSON.stringify(modlepropertyinfo)+'');
+        console.log(JSON.stringify(modlepropertyinfo) + '');
         $.ajax({
             url: url + "?" + Math.random(),
             async: false,
             data: {
-                "modlepropertyinfo":JSON.stringify(modlepropertyinfo)+''
+                "modlepropertyinfo": JSON.stringify(modlepropertyinfo) + ''
             },
             type: "POST",
             success: function (result) {
@@ -496,31 +532,31 @@ var api = {
                 let json = JSON.parse(result);
                 if (json['msg'] == "error") {
                     layer.msg("添加失败！");
-                    deletemodleinfo=false;
+                    deletemodleinfo = false;
                 } else {
-                    layer.msg("添加成功！");
-                    deletemodleinfo=true;
+                    // layer.msg("添加成功！");
+                    deletemodleinfo = true;
                 }
             },
-            error:function (result) {
+            error: function (result) {
                 layer.close(index);
                 layer.msg("连接服务器异常！");
-                deletemodleinfo=false
+                deletemodleinfo = false
             }
         });
 
         return deletemodleinfo;
 
     },
-    addmpcmodleproperties:function (url,modlepropertyinfo,layer) {
+    addmpcmodleproperties: function (url, modlepropertyinfo, layer) {
         let index = layer.msg('创建中，请稍候', {icon: 16, time: false, shade: 0.8});
         let deletemodleinfo;
-        console.log(JSON.stringify(modlepropertyinfo)+'');
+        console.log(JSON.stringify(modlepropertyinfo) + '');
         $.ajax({
             url: url + "?" + Math.random(),
             async: false,
             data: {
-                "modlepropertyinfo":JSON.stringify(modlepropertyinfo)+''
+                "modlepropertyinfo": JSON.stringify(modlepropertyinfo) + ''
             },
             type: "POST",
             success: function (result) {
@@ -530,22 +566,112 @@ var api = {
                 let json = JSON.parse(result);
                 if (json['msg'] == "error") {
                     layer.msg("添加失败！");
-                    deletemodleinfo=false;
+                    deletemodleinfo = false;
                 } else {
-                    layer.msg("添加成功！");
-                    deletemodleinfo=true;
+                    // layer.msg("添加成功！");
+                    deletemodleinfo = true;
                 }
             },
-            error:function (result) {
+            error: function (result) {
                 layer.close(index);
                 layer.msg("连接服务器异常！");
-                deletemodleinfo=false
+                deletemodleinfo = false
             }
         });
 
         return deletemodleinfo;
 
     },
+    getmpcmodledetail: function (projectid, modleid,layer) {
+    let data=undefined;
+        $.ajax({
+            url: "/projectedit/getmpcmodeldetail/"+projectid+"/"+modleid + "?" + Math.random(),
+            async: false,
+            // data: {
+            //     "date": $('#sltdate').val(),
+            //     "time": $('#slttime').val(),
+            // },
+            type: "POST",
+            success: function (result) {
+                // console.log(result);
+
+                var json = JSON.parse(result);
+                data=json;
+            },
+            error: function (result) {
+                data=undefined;
+            }
+        });
+        return data;
+    },
+
+    runproject: function (url, projectid, layer) {
+        let index = layer.msg('运行中，请稍候', {icon: 16, time: false, shade: 0.8});
+        let deletemodleinfo;
+        $.ajax({
+            url: url + "?" + Math.random(),
+            async: false,
+            data: {
+                "projectid": projectid+ ''
+            },
+            type: "POST",
+            success: function (result) {
+                layer.close(index);
+                console.log(result);
+                // layer.close(index);
+                let json = JSON.parse(result);
+                if (json['msg'] == "error") {
+                    layer.msg("运行失败！");
+                    deletemodleinfo = false;
+                } else {
+                    // layer.msg("添加成功！");
+                    deletemodleinfo = true;
+                }
+            },
+            error: function (result) {
+                layer.close(index);
+                layer.msg("连接服务器异常！");
+                deletemodleinfo = false
+            }
+        });
+
+        return deletemodleinfo;
+
+    },
+
+    stopproject: function (url, projectid, layer) {
+        let index = layer.msg('运行中，请稍候', {icon: 16, time: false, shade: 0.8});
+        let deletemodleinfo;
+        $.ajax({
+            url: url + "?" + Math.random(),
+            async: false,
+            data: {
+                "projectid": projectid+ ''
+            },
+            type: "POST",
+            success: function (result) {
+                layer.close(index);
+                console.log(result);
+                // layer.close(index);
+                let json = JSON.parse(result);
+                if (json['msg'] == "error") {
+                    layer.msg("停止失败！");
+                    deletemodleinfo = false;
+                } else {
+                    // layer.msg("添加成功！");
+                    deletemodleinfo = true;
+                }
+            },
+            error: function (result) {
+                layer.close(index);
+                layer.msg("连接服务器异常！");
+                deletemodleinfo = false
+            }
+        });
+
+        return deletemodleinfo;
+
+    }
 
 
 }

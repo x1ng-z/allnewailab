@@ -33,13 +33,14 @@ public class MPCModle extends BaseModleImp {
     private Logger logger = LoggerFactory.getLogger(MPCModle.class);
     public static final String MSGTYPE_BUILD = "build";
     public static final String MSGTYPE_COMPUTE = "compute";
+    public static final Integer RUNSTYLEBYAUTO=0;//运行方式0-自动分配模式 1-手动分配模式
+    public static final Integer RUNSTYLEBYMANUL=1;//1-手动分配模式
 
     /**
      * memery
      */
     private boolean javabuildcomplet = false;//java控制模型是构建完成？
     private boolean pythonbuildcomplet = false;//python的控制模型是否构建完成
-    private boolean iscomputecomplete = false;//运算是否完成
     private String datasource;
     private Map<Integer, MPCModleProperty> indexproperties;//key=modleid
     private PySessionManager pySessionManager;
@@ -253,6 +254,19 @@ public class MPCModle extends BaseModleImp {
     public void connect() {
         mpcexecutepythonbridge.execute();
         simulateexecutePythonBridge.execute();
+//        PySession mpcpySession = pySessionManager.getSpecialSession(getModleId(), mpcscript);
+//        PySession simulatepySession = pySessionManager.getSpecialSession(getModleId(), simulatorscript);
+//        while (mpcpySession == null || simulatepySession == null) {
+////            logger.info("try");
+//            try {
+//                TimeUnit.MILLISECONDS.sleep(500);
+//            } catch (InterruptedException e) {
+//                logger.error(e.getMessage(),e);
+//            }
+//
+//
+//        }
+
 
     }
 
@@ -492,6 +506,8 @@ public class MPCModle extends BaseModleImp {
             //modle build completed
             //send compute parame
             try {
+                setModlerunlevel(BaseModleImp.RUNLEVEL_RUNNING);
+                simulatControlModle.setModlerunlevel(BaseModleImp.RUNLEVEL_RUNNING);
                 mpcpySession.getCtx().writeAndFlush(CommandImp.PARAM.build(getRealData().toJSONString().getBytes("utf-8"), getModleId()));
                 simulatepySession.getCtx().writeAndFlush(CommandImp.PARAM.build(simulatControlModle.getRealSimulateData().toJSONString().getBytes("utf-8"), getModleId()));
             } catch (UnsupportedEncodingException e) {
@@ -598,7 +614,7 @@ public class MPCModle extends BaseModleImp {
                 updateModleComputeResult(predictpvArray, funelupAnddownArray, dmvArray, eArray, dffArray);
 
                 JSONArray mvJson = modlestatus.getJSONArray("mv");//
-                if(runstyle==0){
+                if(runstyle.equals(RUNSTYLEBYAUTO)){
                     int index=0;
                     for(MPCModleProperty mpcModleProperty:categoryMVmodletag){
                         String outputpinname=mpcModleProperty.getModlePinName();
@@ -626,7 +642,7 @@ public class MPCModle extends BaseModleImp {
 
     @Override
     public void outprocess(Project project, JSONObject outdata) {
-
+        setModlerunlevel(BaseModleImp.RUNLEVEL_RUNCOMPLET);
     }
 
     @Override
@@ -1481,14 +1497,6 @@ public class MPCModle extends BaseModleImp {
         this.responTimeSeriseList = responTimeSeriseList;
     }
 
-
-    public boolean isIscomputecomplete() {
-        return iscomputecomplete;
-    }
-
-    public void setIscomputecomplete(boolean iscomputecomplete) {
-        this.iscomputecomplete = iscomputecomplete;
-    }
 
     public String getDatasource() {
         return datasource;

@@ -26,6 +26,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author zzx
@@ -38,7 +39,9 @@ public class FilterModle extends BaseModleImp {
     /**
      * memery
      */
-    private boolean iscomplete = false;
+//    private boolean javabuildcomplet = false;//java控制模型是构建完成？
+//    private boolean pythonbuildcomplet = false;//python的控制模型是否构建完成
+//    private boolean iscomputecomplete = false;//运算是否完成
     private String datasource;
     private Map<Integer, BaseModlePropertyImp> indexproperties;//key=modleid
     private PySessionManager pySessionManager;
@@ -60,6 +63,17 @@ public class FilterModle extends BaseModleImp {
     @Override
     public void connect() {
         executepythonbridge.execute();
+        PySession filterPySession = pySessionManager.getSpecialSession(getModleId(), filterscript);
+//        while (filterPySession == null) {
+////            logger.info("try");
+//            try {
+//                TimeUnit.MILLISECONDS.sleep(500);
+//            } catch (InterruptedException e) {
+//                logger.error(e.getMessage(),e);
+//            }
+//
+//
+//        }
 
     }
 
@@ -127,6 +141,7 @@ public class FilterModle extends BaseModleImp {
             scriptinputcontext.put("data", data);
 
             try {
+                setModlerunlevel(BaseModleImp.RUNLEVEL_RUNNING);
                 pySession.getCtx().writeAndFlush(CommandImp.PARAM.build(scriptinputcontext.toJSONString().getBytes("utf-8"), getModleId()));
             } catch (UnsupportedEncodingException e) {
                 logger.error(e.getMessage(), e);
@@ -194,19 +209,20 @@ public class FilterModle extends BaseModleImp {
         for (ModleProperty modleProperty : propertyImpList) {
             BaseModlePropertyImp baseModlePropertyImp = (BaseModlePropertyImp) modleProperty;
             if (baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIROUTPUT)) {
-                JSONObject conputeresult = computedata.getJSONObject(baseModlePropertyImp.getModlepinsId() + "");
+                JSONObject conputeresult = computedata.getJSONObject("data").getJSONObject(baseModlePropertyImp.getModlepinsId() + "");
                 if (conputeresult != null) {
                     baseModlePropertyImp.setValue(conputeresult.getDouble("value"));
                 }
             }
         }
+
         return null;
     }
 
     //不用做如何事情了 computresulteprocess已经将数据赋值给输出引脚了
     @Override
     public void outprocess(Project project, JSONObject outdata) {
-
+        setModlerunlevel(BaseModleImp.RUNLEVEL_RUNCOMPLET);
     }
 
     @Override
@@ -241,14 +257,6 @@ public class FilterModle extends BaseModleImp {
 
     public void setPropertyImpList(List<ModleProperty> propertyImpList) {
         this.propertyImpList = propertyImpList;
-    }
-
-    public boolean isIscomplete() {
-        return iscomplete;
-    }
-
-    public void setIscomplete(boolean iscomplete) {
-        this.iscomplete = iscomplete;
     }
 
     public String getDatasource() {
@@ -298,4 +306,13 @@ public class FilterModle extends BaseModleImp {
     public void setPyproxyexecute(String pyproxyexecute) {
         this.pyproxyexecute = pyproxyexecute;
     }
+
+//    @Override
+//    public boolean isIscomputecomplete() {
+//        return iscomputecomplete;
+//    }
+//
+//    public void setIscomputecomplete(boolean iscomputecomplete) {
+//        this.iscomputecomplete = iscomputecomplete;
+//    }
 }

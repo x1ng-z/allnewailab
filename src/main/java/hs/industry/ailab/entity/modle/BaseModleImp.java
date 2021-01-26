@@ -11,6 +11,18 @@ import hs.industry.ailab.entity.modle.Modle;
  * @date 2021/1/8 16:46
  */
 public abstract class BaseModleImp implements Modle {
+    public static final int RUNLEVEL_RUNNING=1;//正在运行中
+    public static final int RUNLEVEL_RUNCOMPLET=2;//运行完成
+    public static final int RUNLEVEL_INITE=3;//初始状态
+    public static final int RUNLEVEL_JAVAMODLEBUILDCOMPLET=5;//java模型构建完成状态
+    public static final int RUNLEVEL_PYTHONMODLEBUILDCOMPLET=4;//python模型构建状态
+
+
+    /**memory*/
+    private int modlerunlevel=RUNLEVEL_INITE;
+    private String errormsg;
+    private long errortimestamp;
+
 
     /***db***/
     private int modleId;//模型id主键
@@ -89,5 +101,29 @@ public abstract class BaseModleImp implements Modle {
 
     public void setModleSight(ModleSight modleSight) {
         this.modleSight = modleSight;
+    }
+
+    public int getModlerunlevel() {
+        return modlerunlevel;
+    }
+
+    public void setModlerunlevel(int modlerunlevel) {
+        this.modlerunlevel = modlerunlevel;
+    }
+
+    public String getErrormsg() {
+        return errormsg;
+    }
+
+    public void setErrormsg(String errormsg) {
+        this.errormsg = errormsg;
+    }
+
+    public long getErrortimestamp() {
+        return errortimestamp;
+    }
+
+    public void setErrortimestamp(long errortimestamp) {
+        this.errortimestamp = errortimestamp;
     }
 }

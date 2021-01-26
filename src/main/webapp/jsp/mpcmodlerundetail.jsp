@@ -5,22 +5,22 @@
 <head>
     <link rel="shortcut icon"
           href="../img/favicon.ico" type="image/x-icon"/>
-    <title>modlestatus</title>
+    <title>${modle.modleName}</title>
     <meta charset="utf-8">
     <script type="text/javascript" src="${pageContext.request.contextPath}/js/echarts.js"></script>
     <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
     <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
     <script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery-3.0.0.js"></script>
     <script type="text/javascript" src="${pageContext.request.contextPath}/js/layui/layui.js"></script>
-
+    <script type="text/javascript" src="${pageContext.request.contextPath}/js/contrlmodle/contrlmodle.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/layoutmanager.js"></script>
     <meta name="renderer" content="webkit">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/js/layui/css/layui.css" media="all">
-    <script src="/js/api.js"></script>
-    <script src="/js/layoutmanager.js"></script>
 </head>
-<body class="layui-layout-body" onload=" table_flush()">
+<body class="layui-layout-body">
 <%--<div id="container" style="height: 100%"></div>--%>
 <%----%>
 <div style="position: absolute;left: 0;top: 0;width: 100%;height:100%;overflow: auto;overflow-x: hidden">
@@ -28,47 +28,31 @@
     <fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
         <legend>${modle.modleName}</legend>
     </fieldset>
-    <div class="layui-fluid">
 
-        <div class="layui-row layui-col-space15"><%--layui-col-space15 列间距15--%>
+    <c:if test="${isrunable}">
+        <div class="layui-fluid">
 
-            <c:forEach var="pv" items="${enablePVPins}" varStatus="Count">
-                <%--                <c:choose>--%>
-                <%--                    <c:when test="${pv==1}">--%>
-                <div class="layui-col-md4">
-                    <div class="layui-card">
-                        <div class="layui-card-header">${pv.modlePinName}(${((pv.opcTagName==null)||pv.opcTagName.equals(""))?pv.modleOpcTag:pv.opcTagName})</div>
-                        <div class="layui-card-body">
-                            <div id="container${Count.count}" style="height:300px;"></div>
+            <div class="layui-row layui-col-space15"><%--layui-col-space15 列间距15--%>
+
+                <c:forEach var="pv" items="${enablePVPins}" varStatus="Count">
+                    <%--                <c:choose>--%>
+                    <%--                    <c:when test="${pv==1}">--%>
+                    <div class="layui-col-md4">
+                        <div class="layui-card">
+                            <div class="layui-card-header">${pv.modlePinName}(${((pv.opcTagName==null)||pv.opcTagName.equals(""))?pv.modleOpcTag:pv.opcTagName})</div>
+                            <div class="layui-card-body">
+                                <div id="container${Count.count}" style="height:300px;"></div>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <%--                    </c:when>--%>
+                    <%--                    </c:when>--%>
 
-                <%--                </c:choose>--%>
+                    <%--                </c:choose>--%>
 
-            </c:forEach>
+                </c:forEach>
+            </div>
         </div>
-
-        <%--        <c:choose>--%>
-        <%--            <c:when test="${modle.categoryPVmodletag.size()>4}">--%>
-        <%--                <div class="layui-row layui-col-space15">&lt;%&ndash;layui-col-space15 列间距15&ndash;%&gt;--%>
-        <%--                    <c:forEach var="pv" items="${modle.categoryPVmodletag}" begin="4" varStatus="Count">--%>
-        <%--                        <div class="layui-col-md4">--%>
-        <%--                            <div class="layui-card">--%>
-        <%--                                <div class="layui-card-header">${pv.modlePinName}(${pv.modleOpcTag})</div>--%>
-        <%--                                <div class="layui-card-body">--%>
-        <%--                                    <div id="container${Count.count+4}" pinname="${pv.modlePinName}"--%>
-        <%--                                         style="height:300px;"></div>--%>
-        <%--                                </div>--%>
-        <%--                            </div>--%>
-        <%--                        </div>--%>
-        <%--                    </c:forEach>--%>
-        <%--                </div>--%>
-        <%--            </c:when>--%>
-        <%--        </c:choose>--%>
-
-    </div>
+    </c:if>
 
     <div class="layui-form-item">
 
@@ -76,49 +60,69 @@
             <c:choose>
                 <c:when test="${modle.modleEnable eq 0}">
                     <button type="button"
-                            class="layui-btn layui-btn-primary layui-btn-danger"
+                            class="layui-btn layui-btn-primary"
                             id="modlestatus">${modle.modleName}</button>
                 </c:when>
                 <c:otherwise>
-                    <button type="button" class="layui-btn layui-btn-primary" id="modlestatus"
+                    <button type="button" class="layui-btn" id="modlestatus"
                     >${modle.modleName}</button>
                 </c:otherwise>
             </c:choose>
 
-            <a href="" class="layui-btn"
-               onclick="isdelete('${pageContext.request.contextPath}/modle/deleteModle.do?modleid=${modle.modleId}')">删除</a>
-            <a href="" class="layui-btn"
-               onclick="window.location.reload()">刷新</a>
+
+            <button type="button" class="layui-btn layui-btn-primary mytipbut" name="删除"
+                    onclick="deletecontrlmodle(mylayer,${modleid},'${pageContext.request.contextPath}/contrlmodle/deletemodle.do','${pageContext.request.contextPath}/contrlmodle/modlestatus/${modle.modleId}.do')">
+                <i class="layui-icon">&#xe640;</i>
+            </button>
+
+            <button type="button" class="layui-btn layui-btn-primary mytipbut" name="刷新"
+                    onclick="window.location.reload()">
+                <i class="layui-icon">&#xe669;</i>
+            </button>
+
             <c:choose>
                 <c:when test="${modle.simulatControlModle.issimulation==true}">
-                    <a href=""
-                       class="layui-btn "
-                       onclick="stopOrrun('${pageContext.request.contextPath}/modle/stopSimulateModle.do?modleid=${modle.modleId}','确定停止仿真？')">仿真</a>
+                    <button type="button" class="layui-btn  mytipbut" name="停止仿真"
+                            onclick="stopOrrun('${pageContext.request.contextPath}/contrlmodle/stopsimulatemodle.do?modleid=${modle.modleId}','确定停止仿真？')">
+                        <i class="layui-icon">&#xe628;</i>
+                    </button>
                 </c:when>
                 <c:otherwise>
-                    <a href=""
-                       class="layui-btn layui-btn-danger"
-                       onclick="stopOrrun('${pageContext.request.contextPath}/modle/runSimulateModle.do?modleid=${modle.modleId}','确定运行仿真？')">仿真</a>
+                    <button type="button" class="layui-btn layui-btn-primary  mytipbut" name="开始仿真"
+                            onclick="stopOrrun('${pageContext.request.contextPath}/contrlmodle/runsimulatemodle.do?modleid=${modle.modleId}','确定运行仿真？')">
+                        <i class="layui-icon">&#xe628;</i>
+                    </button>
                 </c:otherwise>
             </c:choose>
 
 
             <c:choose>
                 <c:when test="${modle.modleEnable eq 1}">
-                    <a href=""
-                       class="layui-btn"
-                       onclick="stopOrrun('${pageContext.request.contextPath}/modle/stopModle.do?modleid=${modle.modleId}','确定停止？')">停止</a>
+                    <button type="button" class="layui-btn  mytipbut" name="停止"
+                            onclick="stopOrrun('${pageContext.request.contextPath}/contrlmodle/stopmodle.do?modleid=${modle.modleId}','确定停止？')">
+                        <i class="layui-icon">&#xe682;</i>
+                    </button>
                 </c:when>
                 <c:otherwise>
-                    <a href=""
-                       class="layui-btn layui-btn-danger"
-                       onclick="stopOrrun('${pageContext.request.contextPath}/modle/runModle.do?modleid=${modle.modleId}','确定运行？')">运行</a>
+
+                    <button type="button" class="layui-btn layui-btn-primary mytipbut" name="运行"
+                            onclick="stopOrrun('${pageContext.request.contextPath}/contrlmodle/runmodle.do?modleid=${modle.modleId}','确定运行？')">
+                        <i class="layui-icon">&#xe682;</i>
+                    </button>
                 </c:otherwise>
             </c:choose>
 
-            <a href=""
-               class="layui-btn"
-               onclick="newTab('编辑${modle.modleName}','${pageContext.request.contextPath}/modle/modifymodle.do?modleid=${modle.modleId}')">编辑</a>
+            <button type="button" class="layui-btn layui-btn-primary mytipbut" name="结构"
+                    onclick="modifymodlestructwindows(mylayer,${modleid},'${pageContext.request.contextPath}')">
+                <i class="layui-icon">&#xe857;</i>
+            </button>
+
+            <button type="button" class="layui-btn layui-btn-primary mytipbut" name="编辑"
+                    onclick="newTabformodifycomtrlmodle('编辑${modle.modleName}','${pageContext.request.contextPath}/contrlmodle/modifymodle/${modle.modleId}.do')">
+                <i class="layui-icon">&#xe642;</i>
+            </button>
+
+
         </div>
 
     </div>
@@ -138,45 +142,53 @@
 </div>
 
 
-<script type="text/html" id="switchTpl1">
-    <%--    input 添加 就不能进行编辑 disabled--%>
-    <input type="checkbox" name="checkIO" value="{{d.checkIO}}" lay-skin="switch" lay-text="on|off"
-           lay-filter="icheckIO" {{ d.checkIO===undefined? '': (d.checkIO.split('_')[2]== '1' ? 'checked' : '') }}/>
-</script>
+<%--<script type="text/html" id="switchTpl1">--%>
+<%--    &lt;%&ndash;    input 添加 就不能进行编辑 disabled&ndash;%&gt;--%>
+<%--    <input type="checkbox" name="checkIO" value="{{d.checkIO}}" lay-skin="switch" lay-text="on|off"--%>
+<%--           lay-filter="icheckIO" {{ d.checkIO===undefined? '': (d.checkIO.split('_')[2]== '1' ? 'checked' : '') }}/>--%>
+<%--</script>--%>
 <script>
-    function isdelete(url) {
-        var r = confirm("确定删除?");
-        if (r == true) {
-            $.ajax({
-                url: url + "&" + Math.random(),
-                async: true,
-                type: "POST",
-                success: function (result) {
-                    // console.log(result);
-
-                }
-            });
-            parent.location.reload();
-        } else {
-
-        }
-    }
+    // function isdelete(url) {
+    //     var r = confirm("确定删除?");
+    //     if (r == true) {
+    //         $.ajax({
+    //             url: url + "&" + Math.random(),
+    //             async: true,
+    //             type: "POST",
+    //             success: function (result) {
+    //                 // console.log(result);
+    //                 $("#bt_flush_nav",parent.document).trigger("click")
+    //
+    //             }
+    //         });
+    //         //parent.location.reload();
+    //     } else {
+    //
+    //     }
+    // }
 
 
     function stopOrrun(url, msg) {
-        var r = confirm(msg);
-        if (r == true) {
+        mylayer.confirm(msg, function (index) {
+            let indexmsg = mylayer.msg('操作中，请稍候', {icon: 16, time: false, shade: 0.8});
+
             $.ajax({
-                url: url + "&" + Math.random(),
+                url: url,
                 async: true,
                 type: "POST",
                 success: function (result) {
-                    // console.log(result);
-
+                    let json = JSON.parse(result);
+                    if (json['msg'] == "error") {
+                        mylayer.msg("操作失败！");
+                        mylayer.close(indexmsg);
+                    } else {
+                        mylayer.msg("操作成功！");
+                        mylayer.close(indexmsg);
+                    }
+                    window.location.reload();
                 }
             });
-            window.location.reload();
-        }
+        });
     }
 
 
@@ -185,6 +197,7 @@
 <script>
     var table;
     var form;
+    var mylayer;
 
     let table_flush_t;
     let mychartSerise = [];//各个pv的图标的3条曲线
@@ -192,13 +205,12 @@
     let xData = [];
     let allchars = [];
 
-    // let table_width = $("#modlereadDatatab").width();
-    // console.log("table_width:",table_width)
 
-    layui.use('table', function () {
+    layui.use(['table', 'layer'], function () {
         let w = document
         table = layui.table;
         form = layui.form;
+        mylayer = layui.layer;
         table.render({
             elem: '#modlereadDatatab'
             // , page: true
@@ -229,21 +241,20 @@
                     console.log("not first time")
                 }
             }
-            <%--, "data":${data}//[{"id":10000,"username":"user-0","sex":"女","city":"城市-0","sign":"签名-0","experience":255,"logins":24,"wealth":82830700,"classify":"作家","score":57}]--%>
             , "cellMinWidth": 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
             , "cols": [[
                 {field: 'pinName', title: '引脚', width: '8.3%', sort: true}
                 , {field: 'pvValue', title: '实际值', width: '8.3%'}
                 , {field: 'spValue', title: '目标值', width: '8.3%'}
                 , {field: 'e', title: '预测误差', width: '8.3%'}
-                , {field: 'dmv', title: 'dmv', width: '8.3%'}
+                , {field: 'dmv', title: 'dmv', width: '12%'}
                 , {field: 'mvvalue', title: '给定值', width: '8.3%'}
                 , {field: 'mvFeedBack', title: '反馈', width: '8.3%'}
                 , {field: 'mvDownLmt', title: '下限', width: '8.3%'}
                 , {field: 'mvUpLmt', title: '上限', width: '8.3%'}
                 , {field: 'shockmv', title: 'mv幅值', width: '8.3%'}
                 , {field: 'shockpv', title: 'pv幅值', width: '8.3%'}
-                , {field: 'checkIO', title: '手自动', width: '8.3%', templet: '#switchTpl1', unresize: true}
+                // , {field: 'checkIO', title: '手自动', width: '8.3%', templet: '#switchTpl1', unresize: true}
             ]]
         });
 
@@ -300,45 +311,70 @@
 
 
         //监听操作
-        form.on('switch(icheckIO)', function (obj) {
-            // console.log("checkIO");
-            // layer.tips(this.value + '_' + this.name + '：' + obj.elem.checked, obj.othis);
-            if(this.value==='undefined'){
-                //console.log('value is undefine')
-                return;
-            }
-            console.log('value is undefine out'+typeof (this.value))
-            let index4modlepin = this.value.split("_");
-            var r = confirm(index4modlepin[2] == 1 ? '切除出模型控制' : '切入到模型控制');
-            if (r == true) {
-                var index = layer.msg('修改中，请稍候', {icon: 16, time: false, shade: 0.8});
-                $.ajax({
-                    url: "${pageContext.request.contextPath}/modle/modlepvcheckout/" + index4modlepin[0] + "/" + index4modlepin[1] + "/" + index4modlepin[2] + ".do" + "?" + Math.random(),
-                    async: true,
-                    type: "POST",
-                    success: function (result) {
-                        console.log(result);
-                        layer.close(index);
-                        let json = JSON.parse(result);
-                        if (json['msg'] == "error") {
-                            layer.msg("修改失败！");
-                        } else {
-                            layer.msg("修改成功！");
-                        }
-                    }
-                });
-                window.location.reload()
-            }
+        <%--form.on('switch(icheckIO)', function (obj) {--%>
+        <%--    // console.log("checkIO");--%>
+        <%--    // layer.tips(this.value + '_' + this.name + '：' + obj.elem.checked, obj.othis);--%>
+        <%--    if (this.value === 'undefined') {--%>
+        <%--        //console.log('value is undefine')--%>
+        <%--        return;--%>
+        <%--    }--%>
+        <%--    console.log('value is undefine out' + typeof (this.value))--%>
+        <%--    let index4modlepin = this.value.split("_");--%>
+        <%--    var r = confirm(index4modlepin[2] == 1 ? '切除出模型控制' : '切入到模型控制');--%>
+        <%--    if (r == true) {--%>
+        <%--        var index = layer.msg('修改中，请稍候', {icon: 16, time: false, shade: 0.8});--%>
+        <%--        $.ajax({--%>
+        <%--            url: "${pageContext.request.contextPath}/modle/modlepvcheckout/" + index4modlepin[0] + "/" + index4modlepin[1] + "/" + index4modlepin[2] + ".do" + "?" + Math.random(),--%>
+        <%--            async: true,--%>
+        <%--            type: "POST",--%>
+        <%--            success: function (result) {--%>
+        <%--                console.log(result);--%>
+        <%--                layer.close(index);--%>
+        <%--                let json = JSON.parse(result);--%>
+        <%--                if (json['msg'] == "error") {--%>
+        <%--                    layer.msg("修改失败！");--%>
+        <%--                } else {--%>
+        <%--                    layer.msg("修改成功！");--%>
+        <%--                }--%>
+        <%--            }--%>
+        <%--        });--%>
+        <%--        window.location.reload()--%>
+        <%--    }--%>
 
 
-        });
-
+        <%--});--%>
     });
+
+
+    // let table_width = $("#modlereadDatatab").width();
+    // console.log("table_width:",table_width)
+
+
 </script>
 
 <script>
 
-    findChartNum(${modle.numOfRunnablePVPins_pp});
+    <c:if test="${isrunable}">
+
+    $(document).ready(function () {
+        findChartNum(${modle.numOfRunnablePVPins_pp});
+        table_flush();
+
+
+        var tips;
+        $('.mytipbut').on({
+
+            mouseenter: function () {
+                tips = layer.tips($(this).attr('name'), this, {time: 0});
+            },
+            mouseleave: function () {
+                layer.close(tips);
+            }
+        });
+
+    });
+    </c:if>
+
 
     function table_flush() {
         clearInterval(table_flush_t);
@@ -471,6 +507,7 @@
         if (option && typeof option === "object") {
             myChart.setOption(option, true);
         }
+        myChart.resize();
         //
         // console.log("success flush container");
         // console.log("xData")
@@ -480,106 +517,89 @@
 
 
     function dataFill() {
-        $.ajax({
-            url: "${pageContext.request.contextPath}/modle/modleRealStatus/${modle.modleId}.do" + "?" + Math.random(),
-            async: true,
-            // data: {
-            //     "date": $('#sltdate').val(),
-            //     "time": $('#slttime').val(),
-            // },
-            type: "POST",
-            success: function (result) {
-                // console.log(result);
 
-                var json = JSON.parse(result);
-                // console.log(json["funneltype"][0][0]);
-                // console.log(typeof (json["funneltype"][0][0]));
-                for (let loop = 0; loop < mychartSerise.length; ++loop) {
-                    mychartSerise[loop] = [
-                        {
-                            type: 'line',
-                            showSymbol: false,
-                            clip: true,
-                            data: json['funelUp'][loop],
-                            name: json["curveNames4funelUp"][loop],
-                            itemStyle: {
-                                normal: {
-                                    lineStyle: {
-                                        // width:2,
-                                        type: json["funneltype"][loop][0] === 0 ? "solid" : "dotted",
-                                    }
+
+        let servedata=api.getmpcmodledetail('${modle.refprojectid}', '${modle.modleId}',layer);
+        if(servedata!=undefined) {
+            for (let loop = 0; loop < mychartSerise.length; ++loop) {
+                mychartSerise[loop] = [
+                    {
+                        type: 'line',
+                        showSymbol: false,
+                        clip: true,
+                        data: servedata['funelUp'][loop],
+                        name: servedata["curveNames4funelUp"][loop],
+                        itemStyle: {
+                            normal: {
+                                lineStyle: {
+                                    // width:2,
+                                    type: servedata["funneltype"][loop][0] === 0 ? "solid" : "dotted",
                                 }
                             }
+                        }
 
-                        },
-                        {
-                            type: 'line',
-                            showSymbol: false,
-                            clip: true,
-                            data: json['funelDwon'][loop],
-                            name: json['curveNames4funelDown'][loop],
-                            itemStyle: {
-                                normal: {
-                                    lineStyle: {
-                                        // width:2,
-                                        type: json["funneltype"][loop][1] === 0 ? "solid" : "dotted",
-                                    }
+                    },
+                    {
+                        type: 'line',
+                        showSymbol: false,
+                        clip: true,
+                        data: servedata['funelDwon'][loop],
+                        name: servedata['curveNames4funelDown'][loop],
+                        itemStyle: {
+                            normal: {
+                                lineStyle: {
+                                    // width:2,
+                                    type: servedata["funneltype"][loop][1] === 0 ? "solid" : "dotted",
                                 }
                             }
+                        }
 
-                        },
-                        {
-                            type: 'line',
-                            showSymbol: false,
-                            clip: true,
-                            data: json['predict'][loop],//generateData(),
-                            name: json['curveNames4pv'][loop]
+                    },
+                    {
+                        type: 'line',
+                        showSymbol: false,
+                        clip: true,
+                        data: servedata['predict'][loop],//generateData(),
+                        name: servedata['curveNames4pv'][loop]
 
-                        },
-                    ];
+                    },
+                ];
 
-                    chartNames[loop] = [
-                        json["curveNames4funelUp"][loop]
-                        , json['curveNames4funelDown'][loop]
-                        , json['curveNames4pv'][loop]];
-                }
-
-                xData = json['xaxis'];
-
-                let table_width = $("#modlereadDatatab").width();
-                // console.log("table_width:", table_width)
-                $("#modlereadDatatab").width($(document).width());
-
-
-                table.reload('modlereadDatatab', {
-                    "data": json['modleRealData'],
-                    "width": $(document).width()
-                });
-
-
-                table.reload('sdmvDatatab', {
-                    "data": json['sdmvData'],
-                    "width": $(document).width()
-                });
-
-                table.reload('ffDatatab', {
-                    "data": json['ffData'],
-                    "width": $(document).width()
-                });
-                if (json["modlestatus"] == 0) {
-                    $("#modlestatus").addClass("layui-btn-danger");
-                } else {
-                    $("#modlestatus").removeClass("layui-btn-danger");
-                }
-
-                // $("#modlereadDatatab").width($(document).width());
-
-                // let table_width = $("#modlereadDatatab").width();
-                // console.log("table_width:",table_width)
-
+                chartNames[loop] = [
+                    servedata["curveNames4funelUp"][loop]
+                    , servedata['curveNames4funelDown'][loop]
+                    , servedata['curveNames4pv'][loop]];
             }
-        });
 
+            xData = servedata['xaxis'];
+
+            let table_width = $("#modlereadDatatab").width();
+            // console.log("table_width:", table_width)
+            $("#modlereadDatatab").width($(document).width());
+
+            table.reload('modlereadDatatab', {
+                "data": servedata['modleRealData'],
+                "width": $(document).width()
+            });
+
+
+            table.reload('sdmvDatatab', {
+                "data": servedata['sdmvData'],
+                "width": $(document).width()
+            });
+
+            table.reload('ffDatatab', {
+                "data": servedata['ffData'],
+                "width": $(document).width()
+            });
+            if (servedata["modlestatus"] == 0) {
+                $("#modlestatus").addClass("layui-btn-primary");
+            } else {
+                $("#modlestatus").removeClass("layui-btn-primary");
+            }
+        }
+
+      ``
     }
 
 
@@ -588,7 +608,7 @@
 <script>
 
 
-    function newTab(title, url) {
+    function newTabformodifycomtrlmodle(title, url) {
         let element11 = parent.layui.element;
         element11.tabAdd(
             'pagetabs', {
@@ -599,24 +619,9 @@
                 id: url
             }
         );
-        // window.location.reload()
-        // var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
-        // parent.layer.close(index); //再执行关闭
-        // sleep(1000);
-        // element11.tabChange('pagetabs', url)
-
-
-        //newleft();
-
-
+        element11.tabChange('pagetabs', url)
     }
 
-
-    var sleep = function (time) {
-        var startTime = new Date().getTime() + parseInt(time, 10);
-        while (new Date().getTime() < startTime) {
-        }
-    };
 
 </script>
 

@@ -22,6 +22,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,11 +33,13 @@ import java.util.regex.Pattern;
  */
 public class CUSTOMIZEModle extends BaseModleImp {
     private Logger logger = LoggerFactory.getLogger(CUSTOMIZEModle.class);
-    private static Pattern scriptpattern = Pattern.compile("^(.*).py$");
+    public static Pattern scriptpattern = Pattern.compile("^(.*).py$");
     /**
      * memery
      */
-    private boolean iscomplete = false;
+//    private boolean javabuildcomplet = false;//java控制模型是构建完成？
+//    private boolean pythonbuildcomplet = false;//python的控制模型是否构建完成
+//    private boolean iscomputecomplete = false;//运算是否完成
     private String datasource;
     private Map<Integer, BaseModlePropertyImp> indexproperties;//key=modleid
     private PySessionManager pySessionManager;
@@ -45,18 +48,27 @@ public class CUSTOMIZEModle extends BaseModleImp {
     private String port;
 
 
-
-    public void toBeRealModle(PySessionManager pySessionManager, String nettyport, String pyproxyexecute){
-        this. port=nettyport;
-        this.pyproxyexecute=pyproxyexecute;
-        this.pySessionManager=pySessionManager;
+    public void toBeRealModle(PySessionManager pySessionManager, String nettyport, String pyproxyexecute) {
+        this.port = nettyport;
+        this.pyproxyexecute = pyproxyexecute;
+        this.pySessionManager = pySessionManager;
     }
-
 
 
     @Override
     public void connect() {
         executepythonbridge.execute();
+//        PySession customizpySession = pySessionManager.getSpecialSession(getModleId(), getCustomizepyname());
+//        while (customizpySession == null) {
+////            logger.info("try");
+//            try {
+//                TimeUnit.MILLISECONDS.sleep(500);
+//            } catch (InterruptedException e) {
+//                logger.error(e.getMessage(),e);
+//            }
+//
+//
+//        }
 
     }
 
@@ -68,7 +80,7 @@ public class CUSTOMIZEModle extends BaseModleImp {
 
     @Override
     public void destory() {
-        PySession pySession = pySessionManager.getSpecialSession(getModleId(),customizepyname);
+        PySession pySession = pySessionManager.getSpecialSession(getModleId(), customizepyname);
         if (pySession != null) {
             JSONObject json = new JSONObject();
             json.put("msg", "stop");
@@ -83,22 +95,26 @@ public class CUSTOMIZEModle extends BaseModleImp {
 
     @Override
     public void docomputeprocess() {
-        PySession pySession = pySessionManager.getSpecialSession(getModleId(),customizepyname);
-        JSONObject scriptinputcontext = new JSONObject();
-        for (ModleProperty modleProperty : propertyImpList) {
-            BaseModlePropertyImp baseModlePropertyImp = (BaseModlePropertyImp) modleProperty;
+        PySession pySession = pySessionManager.getSpecialSession(getModleId(), noscripNametail());
+        if (pySession != null) {
+            JSONObject scriptinputcontext = new JSONObject();
+            for (ModleProperty modleProperty : propertyImpList) {
+                BaseModlePropertyImp baseModlePropertyImp = (BaseModlePropertyImp) modleProperty;
 
-            if (baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIRINPUT)) {
-                JSONObject invalue = new JSONObject();
-                invalue.put("value", baseModlePropertyImp.getValue());
-                scriptinputcontext.put(baseModlePropertyImp.getModlePinName(), invalue);
+                if (baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIRINPUT)) {
+                    JSONObject invalue = new JSONObject();
+                    invalue.put("value", baseModlePropertyImp.getValue());
+                    scriptinputcontext.put(baseModlePropertyImp.getModlePinName(), invalue);
+                }
+            }
+            try {
+                setModlerunlevel(BaseModleImp.RUNLEVEL_RUNNING);
+                pySession.getCtx().writeAndFlush(CommandImp.PARAM.build(scriptinputcontext.toJSONString().getBytes("utf-8"), getModleId()));
+            } catch (UnsupportedEncodingException e) {
+                logger.error(e.getMessage(), e);
             }
         }
-        try {
-            pySession.getCtx().writeAndFlush(CommandImp.RESULT.build(scriptinputcontext.toJSONString().getBytes("utf-8"), getModleId()));
-        } catch (UnsupportedEncodingException e) {
-            logger.error(e.getMessage(), e);
-        }
+
 
     }
 
@@ -163,7 +179,7 @@ public class CUSTOMIZEModle extends BaseModleImp {
         for (ModleProperty modleProperty : propertyImpList) {
             BaseModlePropertyImp baseModlePropertyImp = (BaseModlePropertyImp) modleProperty;
             if (baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIROUTPUT)) {
-                JSONObject jsonObject = computedata.getJSONObject(baseModlePropertyImp.getModlePinName());
+                JSONObject jsonObject = computedata.getJSONObject("data").getJSONObject(baseModlePropertyImp.getModlePinName());
                 if (jsonObject != null) {
                     baseModlePropertyImp.setValue(jsonObject.getDouble("value"));
                 }
@@ -176,7 +192,7 @@ public class CUSTOMIZEModle extends BaseModleImp {
 
     @Override
     public void outprocess(Project project, JSONObject outdata) {
-
+        setModlerunlevel(BaseModleImp.RUNLEVEL_RUNCOMPLET);
     }
 
     @Override
@@ -194,8 +210,6 @@ public class CUSTOMIZEModle extends BaseModleImp {
         }
 
     }
-
-
 
 
     /****db****/
@@ -220,16 +234,6 @@ public class CUSTOMIZEModle extends BaseModleImp {
         this.customizepyname = customizepyname;
     }
 
-
-
-
-    public boolean isIscomplete() {
-        return iscomplete;
-    }
-
-    public void setIscomplete(boolean iscomplete) {
-        this.iscomplete = iscomplete;
-    }
 
     public String getDatasource() {
         return datasource;
@@ -271,4 +275,38 @@ public class CUSTOMIZEModle extends BaseModleImp {
     public void setPort(String port) {
         this.port = port;
     }
+
+    public String noscripNametail() {
+        Matcher matcher = scriptpattern.matcher(customizepyname);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return null;
+    }
+
+
+//
+//    public boolean isJavabuildcomplet() {
+//        return javabuildcomplet;
+//    }
+//
+//    public void setJavabuildcomplet(boolean javabuildcomplet) {
+//        this.javabuildcomplet = javabuildcomplet;
+//    }
+//
+//    public boolean isPythonbuildcomplet() {
+//        return pythonbuildcomplet;
+//    }
+//
+//    public void setPythonbuildcomplet(boolean pythonbuildcomplet) {
+//        this.pythonbuildcomplet = pythonbuildcomplet;
+//    }
+//
+//    public boolean isIscomputecomplete() {
+//        return iscomputecomplete;
+//    }
+//
+//    public void setIscomputecomplete(boolean iscomputecomplete) {
+//        this.iscomputecomplete = iscomputecomplete;
+//    }
 }

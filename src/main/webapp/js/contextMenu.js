@@ -71,7 +71,7 @@ var contextMenu = {
         meny_modle_ul.append(this.menu_modle_li_detail);
         //let me = this;
         this.menu_modle_li_detail.bind("click", function (e) {
-            layermanager.viewmodledetail("/projectedit/viewempcmodlerundetail",me.menu_modle_li_detail.attr("modleid"),parent.layer);
+            layermanager.viewmodledetail("/projectedit/viewempcmodlerundetail",me.menu_modle_li_detail.attr("projectid"),me.menu_modle_li_detail.attr("modleid"),parent.layer);
         });
 
 
@@ -266,13 +266,15 @@ var contextMenu = {
         this.menu_block_li_projectrun= $('<li class="imenu-item"><button class="imenu-button"><i data-feather="link"></i>运行</button></li>');
         menu_block_ul.append(this.menu_block_li_projectrun);
         this.menu_block_li_projectrun.bind("click",function (e) {
-            let result = api;
+            let result = api.runproject("/projectedit/startproject",me.menu_block_li_projectrun.attr("projectid"),parent.layer)
+
+
         });
 
         this.menu_block_li_projectstop= $('<li class="imenu-item"><button class="imenu-button"><i data-feather="link"></i>停止</button></li>');
         menu_block_ul.append(this.menu_block_li_projectstop);
         this.menu_block_li_projectstop.bind("click",function (e) {
-            let result = api;
+            let result  = api.stopproject("/projectedit/stopproject",me.menu_block_li_projectrun.attr("projectid"),parent.layer)
 
         });
 

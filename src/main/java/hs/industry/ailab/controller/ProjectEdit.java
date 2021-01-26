@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import hs.industry.ailab.dao.mysql.service.ProjectOperaterImp;
 import hs.industry.ailab.entity.ModleSight;
 import hs.industry.ailab.entity.Project;
+import hs.industry.ailab.entity.ProjectManager;
 import hs.industry.ailab.entity.ResponTimeSerise;
 import hs.industry.ailab.entity.modle.BaseModleImp;
 import hs.industry.ailab.entity.modle.BaseModlePropertyImp;
@@ -57,8 +58,12 @@ public class ProjectEdit {
 
     @Value("${oceandir}")
     private String oceandir;
+
     @Autowired
     private ProjectOperaterImp projectOperaterImp;
+
+    @Autowired
+    private ProjectManager projectManager;
 
     @RequestMapping("/savenewproject")
     @ResponseBody
@@ -74,10 +79,10 @@ public class ProjectEdit {
 
     @RequestMapping("/loadallproject")
     @ResponseBody
-    public String loadallproject(){
+    public String loadallproject() {
         JSONObject result = new JSONObject();
-        List<Project> projectList=projectOperaterImp.findAllProject();
-        result.put("contrlmodles",projectList);
+        List<Project> projectList = projectOperaterImp.findAllProject();
+        result.put("contrlmodles", projectList);
         result.put("msg", "success");
         return result.toJSONString();
     }
@@ -123,13 +128,13 @@ public class ProjectEdit {
                                 JSONObject inputjson = new JSONObject();
                                 inputjson.put("pin", mpcModleProperty.getModlePinName());
                                 inputjson.put("name", mpcModleProperty.getOpcTagName());
-                                inputjson.put("value", 0);
+                                inputjson.put("value", ((MPCModleProperty) modleProperty).getValue());
                                 jsonmodule.getJSONArray("inputproperty").add(inputjson);
                             } else if (mpcModleProperty.getPindir().equals(ModleProperty.PINDIROUTPUT)) {
                                 JSONObject outputjson = new JSONObject();
                                 outputjson.put("pin", mpcModleProperty.getModlePinName());
                                 outputjson.put("name", mpcModleProperty.getOpcTagName());
-                                outputjson.put("value", 0);
+                                outputjson.put("value", ((MPCModleProperty) modleProperty).getValue());
                                 jsonmodule.getJSONArray("outputproperty").add(outputjson);
                             }
                         } else if (modleProperty instanceof BaseModlePropertyImp) {
@@ -138,13 +143,13 @@ public class ProjectEdit {
                                 JSONObject inputjson = new JSONObject();
                                 inputjson.put("pin", baseModlePropertyImp.getModlePinName());
                                 inputjson.put("name", baseModlePropertyImp.getOpcTagName());
-                                inputjson.put("value", 0);
+                                inputjson.put("value", baseModlePropertyImp.getValue());
                                 jsonmodule.getJSONArray("inputproperty").add(inputjson);
                             } else if (baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIROUTPUT)) {
                                 JSONObject outputjson = new JSONObject();
                                 outputjson.put("pin", baseModlePropertyImp.getModlePinName());
                                 outputjson.put("name", baseModlePropertyImp.getOpcTagName());
-                                outputjson.put("value", 0);
+                                outputjson.put("value", baseModlePropertyImp.getValue());
                                 jsonmodule.getJSONArray("outputproperty").add(outputjson);
                             }
                         }
@@ -457,13 +462,391 @@ public class ProjectEdit {
     }
 
 
+    @RequestMapping("/getprojectrunstatus")
+    @ResponseBody
+    public String getprojectrunstatus(@RequestParam("projectid") int projectid) {
+        JSONObject result = new JSONObject();
+
+        try {
+//            Modle modle =projectOperaterImp.findModleByid(140);
+
+            Project project = projectManager.getProjectPool().get(projectid);//projectOperaterImp.findProjectById(projectid);
+
+            result.put("msg", "success");
+
+            JSONObject projectjson = new JSONObject();
+
+            projectjson.put("projectid", project.getProjectid() + "");
+            projectjson.put("projectname", project.getName());
+            projectjson.put("modules", new JSONArray());
+
+            result.put("project", projectjson);
+//            JSONArray modules = new JSONArray();
+            for (Modle modle : project.getModleList()) {
+                if (modle instanceof MPCModle) {
+                    MPCModle mpcModle = (MPCModle) modle;
+
+                    JSONObject jsonmodule = new JSONObject();
+                    projectjson.getJSONArray("modules").add(jsonmodule);
+                    jsonmodule.put("id", mpcModle.getModleId() + "");
+                    jsonmodule.put("type", mpcModle.getModletype());
+                    jsonmodule.put("status", 0);
+                    jsonmodule.put("name", mpcModle.getModleName());
+                    jsonmodule.put("child", mpcModle.getModleSight().getChilds());
+
+                    jsonmodule.put("inputproperty", new JSONArray());
+                    jsonmodule.put("outputproperty", new JSONArray());
+                    for (ModleProperty modleProperty : mpcModle.getPropertyImpList()) {
+                        if (modleProperty instanceof MPCModleProperty) {
+                            MPCModleProperty mpcModleProperty = (MPCModleProperty) modleProperty;
+                            if (mpcModleProperty.getPindir().equals(ModleProperty.PINDIRINPUT)) {
+                                JSONObject inputjson = new JSONObject();
+                                inputjson.put("pin", mpcModleProperty.getModlePinName());
+                                inputjson.put("name", mpcModleProperty.getOpcTagName());
+                                inputjson.put("value", ((MPCModleProperty) modleProperty).getValue());
+                                jsonmodule.getJSONArray("inputproperty").add(inputjson);
+                            } else if (mpcModleProperty.getPindir().equals(ModleProperty.PINDIROUTPUT)) {
+                                JSONObject outputjson = new JSONObject();
+                                outputjson.put("pin", mpcModleProperty.getModlePinName());
+                                outputjson.put("name", mpcModleProperty.getOpcTagName());
+                                outputjson.put("value", ((MPCModleProperty) modleProperty).getValue());
+                                jsonmodule.getJSONArray("outputproperty").add(outputjson);
+                            }
+                        } else if (modleProperty instanceof BaseModlePropertyImp) {
+                            BaseModlePropertyImp baseModlePropertyImp = (BaseModlePropertyImp) modleProperty;
+                            if (baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIRINPUT)) {
+                                JSONObject inputjson = new JSONObject();
+                                inputjson.put("pin", baseModlePropertyImp.getModlePinName());
+                                inputjson.put("name", baseModlePropertyImp.getOpcTagName());
+                                inputjson.put("value", baseModlePropertyImp.getValue());
+                                jsonmodule.getJSONArray("inputproperty").add(inputjson);
+                            } else if (baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIROUTPUT)) {
+                                JSONObject outputjson = new JSONObject();
+                                outputjson.put("pin", baseModlePropertyImp.getModlePinName());
+                                outputjson.put("name", baseModlePropertyImp.getOpcTagName());
+                                outputjson.put("value", baseModlePropertyImp.getValue());
+                                jsonmodule.getJSONArray("outputproperty").add(outputjson);
+                            }
+                        }
+
+
+                    }
+                    jsonmodule.put("top", mpcModle.getModleSight().getPositiontop());
+                    jsonmodule.put("left", mpcModle.getModleSight().getPositionleft());
+
+
+                } else if (modle instanceof PIDModle) {
+                    PIDModle pidModle = (PIDModle) modle;
+
+//                    MPCModle mpcModle=(MPCModle)modle;
+                    JSONObject jsonmodule = new JSONObject();
+                    projectjson.getJSONArray("modules").add(jsonmodule);
+                    jsonmodule.put("id", pidModle.getModleId() + "");
+                    jsonmodule.put("type", pidModle.getModletype());
+                    jsonmodule.put("status", 0);
+                    jsonmodule.put("name", pidModle.getModleName());
+                    jsonmodule.put("child", pidModle.getModleSight().getChilds());
+
+                    jsonmodule.put("inputproperty", new JSONArray());
+                    jsonmodule.put("outputproperty", new JSONArray());
+                    for (ModleProperty modleProperty : pidModle.getPropertyImpList()) {
+                        if (modleProperty instanceof MPCModleProperty) {
+                            MPCModleProperty mpcModleProperty = (MPCModleProperty) modleProperty;
+                            if (mpcModleProperty.getPindir().equals(ModleProperty.PINDIRINPUT)) {
+                                JSONObject inputjson = new JSONObject();
+                                inputjson.put("pin", mpcModleProperty.getModlePinName());
+                                inputjson.put("name", mpcModleProperty.getOpcTagName());
+                                inputjson.put("value", mpcModleProperty.getValue());
+                                jsonmodule.getJSONArray("inputproperty").add(inputjson);
+                            } else if (mpcModleProperty.getPindir().equals(ModleProperty.PINDIROUTPUT)) {
+                                JSONObject outputjson = new JSONObject();
+                                outputjson.put("pin", mpcModleProperty.getModlePinName());
+                                outputjson.put("name", mpcModleProperty.getOpcTagName());
+                                outputjson.put("value", mpcModleProperty.getValue());
+                                jsonmodule.getJSONArray("outputproperty").add(outputjson);
+                            }
+                        } else if (modleProperty instanceof BaseModlePropertyImp) {
+                            BaseModlePropertyImp baseModlePropertyImp = (BaseModlePropertyImp) modleProperty;
+                            if (baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIRINPUT)) {
+                                JSONObject inputjson = new JSONObject();
+                                inputjson.put("pin", baseModlePropertyImp.getModlePinName());
+                                inputjson.put("name", baseModlePropertyImp.getOpcTagName());
+                                inputjson.put("value",baseModlePropertyImp.getValue());
+                                jsonmodule.getJSONArray("inputproperty").add(inputjson);
+                            } else if (baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIROUTPUT)) {
+                                JSONObject outputjson = new JSONObject();
+                                outputjson.put("pin", baseModlePropertyImp.getModlePinName());
+                                outputjson.put("name", baseModlePropertyImp.getOpcTagName());
+                                outputjson.put("value", baseModlePropertyImp.getValue());
+                                jsonmodule.getJSONArray("outputproperty").add(outputjson);
+                            }
+                        }
+
+
+                    }
+                    jsonmodule.put("top", pidModle.getModleSight().getPositiontop());
+                    jsonmodule.put("left", pidModle.getModleSight().getPositionleft());
+
+                } else if (modle instanceof CUSTOMIZEModle) {
+                    CUSTOMIZEModle customizeModle = (CUSTOMIZEModle) modle;
+
+//                    MPCModle mpcModle=(MPCModle)modle;
+                    JSONObject jsonmodule = new JSONObject();
+                    projectjson.getJSONArray("modules").add(jsonmodule);
+                    jsonmodule.put("id", customizeModle.getModleId() + "");
+                    jsonmodule.put("type", customizeModle.getModletype());
+                    jsonmodule.put("status", 0);
+                    jsonmodule.put("name", customizeModle.getModleName());
+                    jsonmodule.put("child", customizeModle.getModleSight().getChilds());
+
+                    jsonmodule.put("inputproperty", new JSONArray());
+                    jsonmodule.put("outputproperty", new JSONArray());
+                    for (ModleProperty modleProperty : customizeModle.getPropertyImpList()) {
+                        if (modleProperty instanceof MPCModleProperty) {
+                            MPCModleProperty mpcModleProperty = (MPCModleProperty) modleProperty;
+                            if (mpcModleProperty.getPindir().equals(ModleProperty.PINDIRINPUT)) {
+                                JSONObject inputjson = new JSONObject();
+                                inputjson.put("pin", mpcModleProperty.getModlePinName());
+                                inputjson.put("name", mpcModleProperty.getOpcTagName());
+                                inputjson.put("value", mpcModleProperty.getValue());
+                                jsonmodule.getJSONArray("inputproperty").add(inputjson);
+                            } else if (mpcModleProperty.getPindir().equals(ModleProperty.PINDIROUTPUT)) {
+                                JSONObject outputjson = new JSONObject();
+                                outputjson.put("pin", mpcModleProperty.getModlePinName());
+                                outputjson.put("name", mpcModleProperty.getOpcTagName());
+                                outputjson.put("value", mpcModleProperty.getValue());
+                                jsonmodule.getJSONArray("outputproperty").add(outputjson);
+                            }
+                        } else if (modleProperty instanceof BaseModlePropertyImp) {
+                            BaseModlePropertyImp baseModlePropertyImp = (BaseModlePropertyImp) modleProperty;
+                            if (baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIRINPUT)) {
+                                JSONObject inputjson = new JSONObject();
+                                inputjson.put("pin", baseModlePropertyImp.getModlePinName());
+                                inputjson.put("name", baseModlePropertyImp.getOpcTagName());
+                                inputjson.put("value", baseModlePropertyImp.getValue());
+                                jsonmodule.getJSONArray("inputproperty").add(inputjson);
+                            } else if (baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIROUTPUT)) {
+                                JSONObject outputjson = new JSONObject();
+                                outputjson.put("pin", baseModlePropertyImp.getModlePinName());
+                                outputjson.put("name", baseModlePropertyImp.getOpcTagName());
+                                outputjson.put("value", baseModlePropertyImp.getValue());
+                                jsonmodule.getJSONArray("outputproperty").add(outputjson);
+                            }
+                        }
+
+
+                    }
+                    jsonmodule.put("top", customizeModle.getModleSight().getPositiontop());
+                    jsonmodule.put("left", customizeModle.getModleSight().getPositionleft());
+
+                } else if (modle instanceof FilterModle) {
+                    FilterModle filterModle = (FilterModle) modle;
+                    JSONObject jsonmodule = new JSONObject();
+                    projectjson.getJSONArray("modules").add(jsonmodule);
+                    jsonmodule.put("id", filterModle.getModleId() + "");
+                    jsonmodule.put("type", filterModle.getModletype());
+                    jsonmodule.put("status", 0);
+                    jsonmodule.put("name", filterModle.getModleName());
+                    jsonmodule.put("child", filterModle.getModleSight().getChilds());
+
+                    jsonmodule.put("inputproperty", new JSONArray());
+                    jsonmodule.put("outputproperty", new JSONArray());
+                    for (ModleProperty modleProperty : filterModle.getPropertyImpList()) {
+                        if (modleProperty instanceof MPCModleProperty) {
+                            MPCModleProperty mpcModleProperty = (MPCModleProperty) modleProperty;
+                            if (mpcModleProperty.getPindir().equals(ModleProperty.PINDIRINPUT)) {
+                                JSONObject inputjson = new JSONObject();
+                                inputjson.put("pin", mpcModleProperty.getModlePinName());
+                                inputjson.put("name", mpcModleProperty.getOpcTagName());
+                                inputjson.put("value", mpcModleProperty.getValue());
+                                jsonmodule.getJSONArray("inputproperty").add(inputjson);
+                            } else if (mpcModleProperty.getPindir().equals(ModleProperty.PINDIROUTPUT)) {
+                                JSONObject outputjson = new JSONObject();
+                                outputjson.put("pin", mpcModleProperty.getModlePinName());
+                                outputjson.put("name", mpcModleProperty.getOpcTagName());
+                                outputjson.put("value", mpcModleProperty.getValue());
+                                jsonmodule.getJSONArray("outputproperty").add(outputjson);
+                            }
+                        } else if (modleProperty instanceof BaseModlePropertyImp) {
+                            BaseModlePropertyImp baseModlePropertyImp = (BaseModlePropertyImp) modleProperty;
+                            if (baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIRINPUT)) {
+                                JSONObject inputjson = new JSONObject();
+                                inputjson.put("pin", baseModlePropertyImp.getModlePinName());
+                                inputjson.put("name", baseModlePropertyImp.getOpcTagName());
+                                inputjson.put("value", baseModlePropertyImp.getValue());
+                                jsonmodule.getJSONArray("inputproperty").add(inputjson);
+                            } else if (baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIROUTPUT)) {
+                                JSONObject outputjson = new JSONObject();
+                                outputjson.put("pin", baseModlePropertyImp.getModlePinName());
+                                outputjson.put("name", baseModlePropertyImp.getOpcTagName());
+                                outputjson.put("value", baseModlePropertyImp.getValue());
+                                jsonmodule.getJSONArray("outputproperty").add(outputjson);
+                            }
+                        }
+
+
+                    }
+                    jsonmodule.put("top", filterModle.getModleSight().getPositiontop());
+                    jsonmodule.put("left", filterModle.getModleSight().getPositionleft());
+
+
+                } else if (modle instanceof INModle) {
+                    INModle inModle = (INModle) modle;
+
+//                    FilterModle filterModle=(FilterModle)modle;
+                    JSONObject jsonmodule = new JSONObject();
+                    projectjson.getJSONArray("modules").add(jsonmodule);
+                    jsonmodule.put("id", inModle.getModleId() + "");
+                    jsonmodule.put("type", inModle.getModletype());
+                    jsonmodule.put("status", 0);
+                    jsonmodule.put("name", inModle.getModleName());
+                    jsonmodule.put("child", inModle.getModleSight().getChilds());
+
+                    jsonmodule.put("inputproperty", new JSONArray());
+                    jsonmodule.put("outputproperty", new JSONArray());
+                    for (ModleProperty modleProperty : inModle.getPropertyImpList()) {
+                        if (modleProperty instanceof MPCModleProperty) {
+                            MPCModleProperty mpcModleProperty = (MPCModleProperty) modleProperty;
+                            if (mpcModleProperty.getPindir().equals(ModleProperty.PINDIRINPUT)) {
+                                JSONObject inputjson = new JSONObject();
+                                inputjson.put("pin", mpcModleProperty.getModlePinName());
+                                inputjson.put("name", mpcModleProperty.getOpcTagName());
+                                inputjson.put("value", ((MPCModleProperty) modleProperty).getValue());
+                                jsonmodule.getJSONArray("inputproperty").add(inputjson);
+                            } else if (mpcModleProperty.getPindir().equals(ModleProperty.PINDIROUTPUT)) {
+                                JSONObject outputjson = new JSONObject();
+                                outputjson.put("pin", mpcModleProperty.getModlePinName());
+                                outputjson.put("name", mpcModleProperty.getOpcTagName());
+                                outputjson.put("value", ((MPCModleProperty) modleProperty).getValue());
+                                jsonmodule.getJSONArray("outputproperty").add(outputjson);
+                            }
+                        } else if (modleProperty instanceof BaseModlePropertyImp) {
+                            BaseModlePropertyImp baseModlePropertyImp = (BaseModlePropertyImp) modleProperty;
+                            if (baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIRINPUT)) {
+                                JSONObject inputjson = new JSONObject();
+                                inputjson.put("pin", baseModlePropertyImp.getModlePinName());
+                                inputjson.put("name", baseModlePropertyImp.getOpcTagName());
+                                inputjson.put("value", baseModlePropertyImp.getValue());
+                                jsonmodule.getJSONArray("inputproperty").add(inputjson);
+                            } else if (baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIROUTPUT)) {
+                                JSONObject outputjson = new JSONObject();
+                                outputjson.put("pin", baseModlePropertyImp.getModlePinName());
+                                outputjson.put("name", baseModlePropertyImp.getOpcTagName());
+                                outputjson.put("value", baseModlePropertyImp.getValue());
+                                jsonmodule.getJSONArray("outputproperty").add(outputjson);
+                            }
+                        }
+
+
+                    }
+                    jsonmodule.put("top", inModle.getModleSight().getPositiontop());
+                    jsonmodule.put("left", inModle.getModleSight().getPositionleft());
+                } else if (modle instanceof OUTModle) {
+                    OUTModle outModle = (OUTModle) modle;
+
+//                    INModle inModle=(INModle)modle;
+
+//                    FilterModle filterModle=(FilterModle)modle;
+                    JSONObject jsonmodule = new JSONObject();
+                    projectjson.getJSONArray("modules").add(jsonmodule);
+                    jsonmodule.put("id", outModle.getModleId() + "");
+                    jsonmodule.put("type", outModle.getModletype());
+                    jsonmodule.put("status", 0);
+                    jsonmodule.put("name", outModle.getModleName());
+                    jsonmodule.put("name", outModle.getModleName());
+                    jsonmodule.put("child", outModle.getModleSight().getChilds());
+
+                    jsonmodule.put("inputproperty", new JSONArray());
+                    jsonmodule.put("outputproperty", new JSONArray());
+                    for (ModleProperty modleProperty : outModle.getPropertyImpList()) {
+                        if (modleProperty instanceof MPCModleProperty) {
+                            MPCModleProperty mpcModleProperty = (MPCModleProperty) modleProperty;
+                            if (mpcModleProperty.getPindir().equals(ModleProperty.PINDIRINPUT)) {
+                                JSONObject inputjson = new JSONObject();
+                                inputjson.put("pin", mpcModleProperty.getModlePinName());
+                                inputjson.put("name", mpcModleProperty.getOpcTagName());
+                                inputjson.put("value", mpcModleProperty.getValue());
+                                jsonmodule.getJSONArray("inputproperty").add(inputjson);
+                            } else if (mpcModleProperty.getPindir().equals(ModleProperty.PINDIROUTPUT)) {
+                                JSONObject outputjson = new JSONObject();
+                                outputjson.put("pin", mpcModleProperty.getModlePinName());
+                                outputjson.put("name", mpcModleProperty.getOpcTagName());
+                                outputjson.put("value", mpcModleProperty.getValue());
+                                jsonmodule.getJSONArray("outputproperty").add(outputjson);
+                            }
+                        } else if (modleProperty instanceof BaseModlePropertyImp) {
+                            BaseModlePropertyImp baseModlePropertyImp = (BaseModlePropertyImp) modleProperty;
+                            if (baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIRINPUT)) {
+                                JSONObject inputjson = new JSONObject();
+                                inputjson.put("pin", baseModlePropertyImp.getModlePinName());
+                                inputjson.put("name", baseModlePropertyImp.getOpcTagName());
+                                inputjson.put("value", baseModlePropertyImp.getValue());
+                                jsonmodule.getJSONArray("inputproperty").add(inputjson);
+                            } else if (baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIROUTPUT)) {
+                                JSONObject outputjson = new JSONObject();
+                                outputjson.put("pin", baseModlePropertyImp.getModlePinName());
+                                outputjson.put("name", baseModlePropertyImp.getOpcTagName());
+                                outputjson.put("value", baseModlePropertyImp.getValue());
+                                jsonmodule.getJSONArray("outputproperty").add(outputjson);
+                            }
+                        }
+
+
+                    }
+                    jsonmodule.put("top", outModle.getModleSight().getPositiontop());
+                    jsonmodule.put("left", outModle.getModleSight().getPositionleft());
+
+                }
+
+            }
+//            projectjson.put("modules", modules)
+
+
+            /**
+             * {
+             *                 'id': "1",
+             *                 'type': 'input',
+             *                 'name': '输入点集合',
+             *                 'status': '1',
+             *                 'child': [{
+             *                     'id': 2
+             *                 }],
+             *                 'inputproperty': [],
+             *                 'outputproperty': [
+             *                     {'pin': 'input.pv', 'name': '磨机振动', 'value': 0},
+             *                     {'pin': 'input.pv', 'name': '磨机振动', 'value': 0},
+             *                     {'pin': 'input.pv', 'name': '磨机振动', 'value': 0},
+             *                     {'pin': 'input.pv', 'name': '磨机振动', 'value': 0},
+             *                     {'pin': 'input.pv', 'name': '磨机振动', 'value': 0},
+             *                     {'pin': 'input.pv', 'name': '磨机振动', 'value': 0},
+             *                     {'pin': 'input.pv', 'name': '磨机振动', 'value': 0},
+             *                     {'pin': 'input.pv', 'name': '磨机振动', 'value': 0}],
+             *                 'top': 50,
+             *                 'left': 150
+             *             }
+             *
+             *
+             *
+             * */
+
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            result.put("msg", "error");
+        }
+        return result.toJSONString();
+    }
+
+
+
+
+
     @RequestMapping("/updateproject")
     @ResponseBody
     public String updateProject(@RequestParam("projectifno") String projectifno) {
         JSONObject result = new JSONObject();
 
         try {
-            JSONObject jsonproject=JSONObject.parseObject(projectifno);
+            JSONObject jsonproject = JSONObject.parseObject(projectifno);
 //            Modle modle =projectOperaterImp.findModleByid(140);
             Project project = projectOperaterImp.findProjectById(jsonproject.getInteger("projectid"));
             project.setName(jsonproject.getString("name"));
@@ -480,192 +863,53 @@ public class ProjectEdit {
     }
 
 
-    @RequestMapping("/modelstatus/{modleid}")
+    @RequestMapping("/stopproject")
     @ResponseBody
-    public String modelstatus(@PathVariable("modleid") String modleid) {
-        JSONObject result = new JSONObject();
+    public String stopProject(@RequestParam("projectid") int projectid) {
+        JSONObject result = null;
         try {
-            ControlModle controlModle = modleConstainer.getRunnableModulepool().get(Integer.valueOf(modleid.trim()));
+            result = new JSONObject();
 
-            if(null==controlModle){
-
-                result.put("msg","error");
-
-                return result.toJSONString();
-            }
-
-            result.put("outSetp", controlModle.getControlAPCOutCycle());
-            /****曲线***/
-            if(controlModle.getRunstyle().equals(ControlModle.RUNSTYLEBYAUTO)){
-
-                result.put("funelUp", controlModle.getBackPVFunelUp());
-                result.put("funelDwon", controlModle.getBackPVFunelDown());
-                result.put("predict", controlModle.getBackPVPrediction());
-            }else {
-                result.put("funelUp", controlModle.getSimulatControlModle().getBacksimulatorPVFunelUp());
-                result.put("funelDwon", controlModle.getSimulatControlModle().getBacksimulatorPVFunelDown());
-                result.put("predict", controlModle.getSimulatControlModle().getBacksimulatorPVPrediction());
-            }
-
-            result.put("funneltype", controlModle.getFunneltype());
-
-            int[] xaxis = new int[controlModle.getTimeserise_N()];
-            for (int i = 0; i < controlModle.getTimeserise_N(); i++) {
-                xaxis[i] = i;
-            }
-            result.put("xaxis", xaxis);
-
-            String[] pvcurveNames = new String[controlModle.getNumOfRunnablePVPins_pp()];
-            String[] funelUpcurveNames = new String[controlModle.getNumOfRunnablePVPins_pp()];
-            String[] funelDowncurveNames = new String[controlModle.getNumOfRunnablePVPins_pp()];
-
-            int indexEnablepv = 0;
-            List<ModlePin> pvrunablepins = controlModle.getRunablePins(controlModle.getCategoryPVmodletag(), controlModle.getMaskisRunnablePVMatrix());
-            for (ModlePin runpvpin : pvrunablepins) {
-                pvcurveNames[indexEnablepv] = runpvpin.getModlePinName();
-                funelUpcurveNames[indexEnablepv] = "funelUp";
-                funelDowncurveNames[indexEnablepv] = "funelDown";
-                indexEnablepv++;
-            }
-
-            result.put("curveNames4funelUp", funelUpcurveNames);
-            result.put("curveNames4pv", pvcurveNames);
-            result.put("curveNames4funelDown", funelDowncurveNames);
-
-
-            /**表格内容*/
-
-
-            List<ModlePin> pvpinsrunable=controlModle.getRunablePins(controlModle.getCategoryPVmodletag(),controlModle.getMaskisRunnablePVMatrix());
-
-            List<ModlePin> sppinsrunable=controlModle.getRunablePins(controlModle.getCategorySPmodletag(),controlModle.getMaskisRunnablePVMatrix());
-
-            List<ModlePin> mvpinsrunable=controlModle.getRunablePins(controlModle.getCategoryMVmodletag(),controlModle.getMaskisRunnableMVMatrix());
-
-            List<ModlePin> ffpinsrunable=controlModle.getRunablePins(controlModle.getCategoryFFmodletag(),controlModle.getMaskisRunnableFFMatrix());
-
-
-            int pvnum=pvpinsrunable.size();
-            int mvnum=mvpinsrunable.size();
-            int maxrownum = Math.max(pvnum, mvnum);
-
-            JSONArray modlereadData = new JSONArray();
-            JSONArray sdmvData = new JSONArray();
-            JSONArray ffData = new JSONArray();
-
-            int indexEnableMV = 0;
-            int indexEnablePV = 0;
-            for (int loop = 0; loop < maxrownum; loop++) {
-                JSONObject modlereadDatarowcontext = new JSONObject();
-
-                String mainrowpinname = "";
-                if (loop < pvnum) {
-                    /*pv*/
-                    ModlePin pv = pvpinsrunable.get(loop);
-                    ModlePin sp = sppinsrunable.get(loop);
-
-                    modlereadDatarowcontext.put("pvValue", Tool.getSpecalScale(3, pv.modleGetReal()));
-                    modlereadDatarowcontext.put("spValue", Tool.getSpecalScale(3, sp.modleGetReal()));
-                    if(controlModle.getRunstyle().equals(ControlModle.RUNSTYLEBYAUTO)){
-                        modlereadDatarowcontext.put("e", Tool.getSpecalScale(3, controlModle.getBackPVPredictionError()[indexEnablePV]));
-                    }else {
-                        modlereadDatarowcontext.put("e", Tool.getSpecalScale(3, controlModle.getSimulatControlModle().getBacksimulatorPVPredictionError()[indexEnablePV]));
-
-                    }
-                    ++indexEnablePV;
-
-                    modlereadDatarowcontext.put("shockpv", pv.getShockDetector() == null ? "" : Tool.getSpecalScale(3, pv.getShockDetector().getLowhzA()));
-
-                    mainrowpinname += pv.getModlePinName();
+            Project project = projectManager.getProjectPool().get(projectid);
+            if (project != null) {
+                project.setProjectrun(false);
+                for (Modle modle : project.getModleList()) {
+                    modle.destory();
                 }
-
-
-                if (loop < mvnum) {
-                    /*mv*/
-                    ModlePin mv = mvpinsrunable.get(loop);
-                    ModlePin mvDownLmt = mv.getDownLmt();
-                    ModlePin mvUpLmt = mv.getUpLmt();
-                    ModlePin mvFeedBack = mv.getFeedBack();
-                    modlereadDatarowcontext.put("mvvalue", Tool.getSpecalScale(3, mv.modleGetReal()));
-                    modlereadDatarowcontext.put("mvDownLmt", Tool.getSpecalScale(3, mvDownLmt.modleGetReal()));
-                    modlereadDatarowcontext.put("mvUpLmt", Tool.getSpecalScale(3, mvUpLmt.modleGetReal()));
-                    modlereadDatarowcontext.put("mvFeedBack", Tool.getSpecalScale(3, mvFeedBack.modleGetReal()));
-
-                    modlereadDatarowcontext.put("dmv", Tool.getSpecalScale(3, controlModle.getBackrawDmv()[indexEnableMV])+"|"+Tool.getSpecalScale(3,controlModle.getSimulatControlModle().getBacksimulatorrawDmv()[indexEnableMV]));
-                    ++indexEnableMV;
-
-                    modlereadDatarowcontext.put("shockmv", mv.getShockDetector() == null ? "" : Tool.getSpecalScale(3, mv.getShockDetector().getLowhzA()));
-
-                    mainrowpinname += (mainrowpinname.equals("") ? mv.getModlePinName() : "|" + mv.getModlePinName());
-                }
-
-                modlereadDatarowcontext.put("pinName", mainrowpinname);
-                modlereadData.add(modlereadDatarowcontext);
-
             }
-
-            /***仿真数据，ff数据展示*/
-            indexEnablePV = 0;
-            for(ModlePin pvpin:pvpinsrunable){
-                JSONObject sdmvrowcontext = new JSONObject();
-                JSONObject ffrowcontext = new JSONObject();
-
-
-                sdmvrowcontext.put("pinName", pvpin.getModlePinName());
-                ffrowcontext.put("pinName", pvpin.getModlePinName());
-                indexEnableMV = 0;
-                /**仿真dmv*/
-                for(ModlePin mvpin:mvpinsrunable){
-                    /*是否有映射关系*/
-                    if (controlModle.getMaskMatrixRunnablePVUseMV()[indexEnablePV][indexEnableMV] == 1) {
-                        sdmvrowcontext.put(mvpin.getModlePinName(), Tool.getSpecalScale(3, controlModle.getSimulatControlModle().getBacksimulatorDmvWrite()[indexEnablePV][indexEnableMV]));
-                    }
-                    ++indexEnableMV;
-                }
-
-                int indexEnableFF = 0;
-                /**ff*/
-                if (controlModle.getBasefeedforwardpoints_v() > 0) {
-                    for(ModlePin ffpin:ffpinsrunable){
-                        if (controlModle.getMaskMatrixRunnablePVUseFF()[indexEnablePV][indexEnableFF] == 1) {
-                            /**dff*/
-                            if(controlModle.getRunstyle().equals(ControlModle.RUNSTYLEBYAUTO)){
-                                ffrowcontext.put("d" + ffpin.getModlePinName(), Tool.getSpecalScale(3, controlModle.getBackDff()[indexEnablePV][indexEnableFF]));
-                            }else {
-                                ffrowcontext.put("d" + ffpin.getModlePinName(), Tool.getSpecalScale(3, controlModle.getSimulatControlModle().getBackDff()[indexEnablePV][indexEnableFF]));
-                            }
-                            /**ff值*/
-                            ffrowcontext.put(ffpin.getModlePinName(), Tool.getSpecalScale(3, ffpin.modleGetReal()));
-                        }
-
-                        ++indexEnableFF;
-                    }
-                }
-
-                if (!sdmvrowcontext.equals("")) {
-                    sdmvData.add(sdmvrowcontext);
-                }
-
-                ffData.add(ffrowcontext);
-                ++indexEnablePV;
-            }
-
-            result.put("modleRealData", modlereadData);
-            result.put("modlestatus", controlModle.getAutoEnbalePin() != null ? controlModle.getAutoEnbalePin().modleGetReal() : 1);
-            result.put("sdmvData", sdmvData);
-
-            if (controlModle.getBasefeedforwardpoints_v() > 0) {
-                result.put("ffData", ffData);
-            }
-            result.put("msg","success");
-
-            return result.toJSONString();
+            result.put("msg", "success");
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            result.put("msg","error");
-            return result.toJSONString();
+            result.put("msg", "error");
         }
+        return result.toJSONString();
     }
+
+
+    @RequestMapping("startproject")
+    @ResponseBody
+    public String startProject(@RequestParam("projectid") int projectid) {
+        JSONObject result = null;
+        try {
+            result = new JSONObject();
+            Project oldproject=projectManager.getProjectPool().get(projectid);
+            if(oldproject!=null){
+                oldproject.setProjectrun(false);
+                for (Modle modle : oldproject.getModleList()) {
+                    modle.destory();
+                }
+            }
+            projectManager.getProjectPool().remove(projectid);
+            Project project = projectOperaterImp.findProjectById(projectid);
+            projectManager.activeProject(project);
+            result.put("msg", "success");
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            result.put("msg", "error");
+        }
+        return result.toJSONString();
+    }
+
 
 
 
@@ -807,6 +1051,198 @@ public class ProjectEdit {
             result.put("msg", "error");
         }
         return result.toJSONString();
+    }
+
+    @RequestMapping("/getmpcmodeldetail/{projectid}/{modleid}")
+    @ResponseBody
+    public String getmpcmodeldetail(@PathVariable("modleid") String projectid, @PathVariable("modleid") String modleid) {
+        JSONObject result = new JSONObject();
+        try {
+            Project project = projectManager.getProjectPool().get(Integer.valueOf(projectid.trim()));
+            Modle modle = project.getIndexmodles().get(Integer.valueOf(modleid.trim()));
+            MPCModle controlModle = null;
+            if (modle != null && modle instanceof MPCModle) {
+                controlModle = (MPCModle) modle;
+            }
+
+            if (null == controlModle) {
+
+                result.put("msg", "error");
+
+                return result.toJSONString();
+            }
+
+            result.put("outSetp", controlModle.getControlAPCOutCycle());
+            /****曲线***/
+            if (controlModle.getRunstyle().equals(MPCModle.RUNSTYLEBYAUTO)) {
+
+                result.put("funelUp", controlModle.getBackPVFunelUp());
+                result.put("funelDwon", controlModle.getBackPVFunelDown());
+                result.put("predict", controlModle.getBackPVPrediction());
+            } else {
+                result.put("funelUp", controlModle.getSimulatControlModle().getBacksimulatorPVFunelUp());
+                result.put("funelDwon", controlModle.getSimulatControlModle().getBacksimulatorPVFunelDown());
+                result.put("predict", controlModle.getSimulatControlModle().getBacksimulatorPVPrediction());
+            }
+
+            result.put("funneltype", controlModle.getFunneltype());
+
+            int[] xaxis = new int[controlModle.getTimeserise_N()];
+            for (int i = 0; i < controlModle.getTimeserise_N(); i++) {
+                xaxis[i] = i;
+            }
+            result.put("xaxis", xaxis);
+
+            String[] pvcurveNames = new String[controlModle.getNumOfRunnablePVPins_pp()];
+            String[] funelUpcurveNames = new String[controlModle.getNumOfRunnablePVPins_pp()];
+            String[] funelDowncurveNames = new String[controlModle.getNumOfRunnablePVPins_pp()];
+
+            int indexEnablepv = 0;
+            List<MPCModleProperty> pvrunablepins = controlModle.getRunablePins(controlModle.getCategoryPVmodletag(), controlModle.getMaskisRunnablePVMatrix());
+            for (MPCModleProperty runpvpin : pvrunablepins) {
+                pvcurveNames[indexEnablepv] = runpvpin.getModlePinName();
+                funelUpcurveNames[indexEnablepv] = "funelUp";
+                funelDowncurveNames[indexEnablepv] = "funelDown";
+                indexEnablepv++;
+            }
+
+            result.put("curveNames4funelUp", funelUpcurveNames);
+            result.put("curveNames4pv", pvcurveNames);
+            result.put("curveNames4funelDown", funelDowncurveNames);
+
+
+            /**表格内容*/
+
+
+            List<MPCModleProperty> pvpinsrunable = controlModle.getRunablePins(controlModle.getCategoryPVmodletag(), controlModle.getMaskisRunnablePVMatrix());
+
+            List<MPCModleProperty> sppinsrunable = controlModle.getRunablePins(controlModle.getCategorySPmodletag(), controlModle.getMaskisRunnablePVMatrix());
+
+            List<MPCModleProperty> mvpinsrunable = controlModle.getRunablePins(controlModle.getCategoryMVmodletag(), controlModle.getMaskisRunnableMVMatrix());
+
+            List<MPCModleProperty> ffpinsrunable = controlModle.getRunablePins(controlModle.getCategoryFFmodletag(), controlModle.getMaskisRunnableFFMatrix());
+
+
+            int pvnum = pvpinsrunable.size();
+            int mvnum = mvpinsrunable.size();
+            int maxrownum = Math.max(pvnum, mvnum);
+
+            JSONArray modlereadData = new JSONArray();
+            JSONArray sdmvData = new JSONArray();
+            JSONArray ffData = new JSONArray();
+
+            int indexEnableMV = 0;
+            int indexEnablePV = 0;
+            for (int loop = 0; loop < maxrownum; loop++) {
+                JSONObject modlereadDatarowcontext = new JSONObject();
+
+                String mainrowpinname = "";
+                if (loop < pvnum) {
+                    /*pv*/
+                    MPCModleProperty pv = pvpinsrunable.get(loop);
+                    MPCModleProperty sp = sppinsrunable.get(loop);
+
+                    modlereadDatarowcontext.put("pvValue", Tool.getSpecalScale(3, pv.getValue()));
+                    modlereadDatarowcontext.put("spValue", Tool.getSpecalScale(3, sp.getValue()));
+                    if (controlModle.getRunstyle().equals(MPCModle.RUNSTYLEBYAUTO)) {
+                        modlereadDatarowcontext.put("e", Tool.getSpecalScale(3, controlModle.getBackPVPredictionError()[indexEnablePV]));
+                    } else {
+                        modlereadDatarowcontext.put("e", Tool.getSpecalScale(3, controlModle.getSimulatControlModle().getBacksimulatorPVPredictionError()[indexEnablePV]));
+
+                    }
+                    ++indexEnablePV;
+
+                    modlereadDatarowcontext.put("shockpv", "");
+
+                    mainrowpinname += pv.getModlePinName();
+                }
+
+
+                if (loop < mvnum) {
+                    /*mv*/
+                    MPCModleProperty mv = mvpinsrunable.get(loop);
+                    MPCModleProperty mvDownLmt = mv.getDownLmt();
+                    MPCModleProperty mvUpLmt = mv.getUpLmt();
+                    MPCModleProperty mvFeedBack = mv.getFeedBack();
+                    modlereadDatarowcontext.put("mvvalue", Tool.getSpecalScale(3, mv.getValue()));
+                    modlereadDatarowcontext.put("mvDownLmt", Tool.getSpecalScale(3, mvDownLmt.getValue()));
+                    modlereadDatarowcontext.put("mvUpLmt", Tool.getSpecalScale(3, mvUpLmt.getValue()));
+                    modlereadDatarowcontext.put("mvFeedBack", Tool.getSpecalScale(3, mvFeedBack.getValue()));
+
+                    modlereadDatarowcontext.put("dmv", Tool.getSpecalScale(3, controlModle.getBackrawDmv()[indexEnableMV]) + "|" + Tool.getSpecalScale(3, controlModle.getSimulatControlModle().getBacksimulatorrawDmv()[indexEnableMV]));
+                    ++indexEnableMV;
+
+                    modlereadDatarowcontext.put("shockmv", "");
+
+                    mainrowpinname += (mainrowpinname.equals("") ? mv.getModlePinName() : "|" + mv.getModlePinName());
+                }
+
+                modlereadDatarowcontext.put("pinName", mainrowpinname);
+                modlereadData.add(modlereadDatarowcontext);
+
+            }
+
+            /***仿真数据，ff数据展示*/
+            indexEnablePV = 0;
+            for (MPCModleProperty pvpin : pvpinsrunable) {
+                JSONObject sdmvrowcontext = new JSONObject();
+                JSONObject ffrowcontext = new JSONObject();
+
+
+                sdmvrowcontext.put("pinName", pvpin.getModlePinName());
+                ffrowcontext.put("pinName", pvpin.getModlePinName());
+                indexEnableMV = 0;
+                /**仿真dmv*/
+                for (MPCModleProperty mvpin : mvpinsrunable) {
+                    /*是否有映射关系*/
+                    if (controlModle.getMaskMatrixRunnablePVUseMV()[indexEnablePV][indexEnableMV] == 1) {
+                        sdmvrowcontext.put(mvpin.getModlePinName(), Tool.getSpecalScale(3, controlModle.getSimulatControlModle().getBacksimulatorDmvWrite()[indexEnablePV][indexEnableMV]));
+                    }
+                    ++indexEnableMV;
+                }
+
+                int indexEnableFF = 0;
+                /**ff*/
+                if (controlModle.getBasefeedforwardpoints_v() > 0) {
+                    for (MPCModleProperty ffpin : ffpinsrunable) {
+                        if (controlModle.getMaskMatrixRunnablePVUseFF()[indexEnablePV][indexEnableFF] == 1) {
+                            /**dff*/
+                            if (controlModle.getRunstyle().equals(MPCModle.RUNSTYLEBYAUTO)) {
+                                ffrowcontext.put("d" + ffpin.getModlePinName(), Tool.getSpecalScale(3, controlModle.getBackDff()[indexEnablePV][indexEnableFF]));
+                            } else {
+                                ffrowcontext.put("d" + ffpin.getModlePinName(), Tool.getSpecalScale(3, controlModle.getSimulatControlModle().getBackDff()[indexEnablePV][indexEnableFF]));
+                            }
+                            /**ff值*/
+                            ffrowcontext.put(ffpin.getModlePinName(), Tool.getSpecalScale(3, ffpin.getValue()));
+                        }
+
+                        ++indexEnableFF;
+                    }
+                }
+
+                if (!sdmvrowcontext.equals("")) {
+                    sdmvData.add(sdmvrowcontext);
+                }
+
+                ffData.add(ffrowcontext);
+                ++indexEnablePV;
+            }
+
+            result.put("modleRealData", modlereadData);
+            result.put("modlestatus", 1);
+            result.put("sdmvData", sdmvData);
+
+            if (controlModle.getBasefeedforwardpoints_v() > 0) {
+                result.put("ffData", ffData);
+            }
+            result.put("msg", "success");
+
+            return result.toJSONString();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            result.put("msg", "error");
+            return result.toJSONString();
+        }
     }
 
 
@@ -1058,7 +1494,7 @@ public class ProjectEdit {
                             modleId,
                             mvresourcemodleId,
                             mvresourcemodlepinsId,
-                            mv, mvid,dmvHigh,dmvLow);//new BaseModlePropertyImp();
+                            mv, mvid, dmvHigh, dmvLow);//new BaseModlePropertyImp();
                     pidproperties.add(initpidmvproperty);
 
 
@@ -1069,7 +1505,7 @@ public class ProjectEdit {
                     String mvupresourcemodlepinsId = jsonmodeinfo.getString("mvupresourcemodlepinsId");
                     String mvupmodleOpcTag = jsonmodeinfo.getString("mvupmodleOpcTag");
 
-                    BaseModlePropertyImp initpidmvupproperty=initpidproperty(
+                    BaseModlePropertyImp initpidmvupproperty = initpidproperty(
                             mvupmodleOpcTag,
                             mvupopcTagName,
                             "mvup",
@@ -1086,7 +1522,7 @@ public class ProjectEdit {
                     String mvdownresourcemodlepinsId = jsonmodeinfo.getString("mvdownresourcemodlepinsId");
                     String mvdownmodleOpcTag = jsonmodeinfo.getString("mvdownmodleOpcTag");
 
-                    BaseModlePropertyImp initpidmvdownproperty=initpidproperty(
+                    BaseModlePropertyImp initpidmvdownproperty = initpidproperty(
                             mvdownmodleOpcTag,
                             mvdownopcTagName,
                             "mvdown",
@@ -1103,15 +1539,21 @@ public class ProjectEdit {
                     String ffresourcemodleId = jsonmodeinfo.getString("ffresourcemodleId");
                     String ffresourcemodlepinsId = jsonmodeinfo.getString("ffresourcemodlepinsId");
                     String ffmodleOpcTag = jsonmodeinfo.getString("ffmodleOpcTag");
-                    BaseModlePropertyImp ffbasemodleproperty = initpidproperty(
-                            ffmodleOpcTag,
-                            ffopcTagName,
-                            "ff",
-                            modleId,
-                            ffresourcemodleId,
-                            ffresourcemodlepinsId,
-                            ff, ffid);//new BaseModlePropertyImp();
-                    pidproperties.add(ffbasemodleproperty);
+                    if(Tool.isNoneString(ff)&&(Tool.isNoneString(ffresourcemodleId) && Tool.isNoneString(ffresourcemodlepinsId))){
+                        //ff 没有就不要存储了
+                    }else {
+                        BaseModlePropertyImp ffbasemodleproperty = initpidproperty(
+                                ffmodleOpcTag,
+                                ffopcTagName,
+                                "ff",
+                                modleId,
+                                ffresourcemodleId,
+                                ffresourcemodlepinsId,
+                                ff, ffid);//new BaseModlePropertyImp();
+                        pidproperties.add(ffbasemodleproperty);
+                    }
+
+
 
                     count = projectOperaterImp.updatepidmodlebusiness(pidmodle, pidproperties);
                     result.put("msg", "success");
@@ -1206,7 +1648,7 @@ public class ProjectEdit {
             JSONArray modleproperties = new JSONArray();
             for (BaseModlePropertyImp basemodleproperty : baseModlePropertyImps) {
                 MPCModleProperty mpcmodleproperty = (MPCModleProperty) basemodleproperty;
-                if (mpcmodleproperty.getPintype().equals(pintype)) {
+                if (mpcmodleproperty.getPintype()!=null&&mpcmodleproperty.getPintype().equals(pintype)) {
                     JSONObject property = new JSONObject();
                     property.put("modlepinsId", mpcmodleproperty.getModlepinsId());
                     property.put("refmodleId", mpcmodleproperty.getRefmodleId());
@@ -1267,7 +1709,7 @@ public class ProjectEdit {
             switch (jsonmodlepropertyinfo.getString("modletype")) {
 
                 case Modle.MODLETYPE_MPC: {
-                    if(jsonmodlepropertyinfo.getString("pindir").equals(ModleProperty.PINDIROUTPUT)){
+                    if (jsonmodlepropertyinfo.getString("pindir").equals(ModleProperty.PINDIROUTPUT)) {
                         MPCModleProperty propertyImp = projectOperaterImp.findMPCModlePropertyByid(jsonmodlepropertyinfo.getInteger("modlepinsId"));
                         propertyImp.setModleOpcTag(jsonmodlepropertyinfo.getString("modlePinName"));
                         propertyImp.setModlePinName(jsonmodlepropertyinfo.getString("modlePinName"));
@@ -1281,7 +1723,7 @@ public class ProjectEdit {
                         propertyImp.setModlepropertyclazz(ModleProperty.MODLEPROPERTYCLAZZ_MPC);
                         count = projectOperaterImp.updateMPCModleProperty(propertyImp);
 
-                    }else {
+                    } else {
                         MPCModleProperty mpcModleProperty = new MPCModleProperty();
                         mpcModleProperty.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
                         mpcModleProperty.setModleOpcTag(jsonmodlepropertyinfo.getString("modleOpcTag"));
@@ -1314,7 +1756,7 @@ public class ProjectEdit {
                     propertyImp.setOpcTagName(jsonmodlepropertyinfo.getString("opcTagName"));
                     JSONObject resource = new JSONObject();
                     resource.put("resource", ModleProperty.SOURCE_TYPE_OPC);
-                    resource.put("inmappingtag",jsonmodlepropertyinfo.getString("modleOpcTag"));
+                    resource.put("inmappingtag", jsonmodlepropertyinfo.getString("modleOpcTag"));
                     propertyImp.setResource(resource);
                     count = projectOperaterImp.updateBaseModleProperty(propertyImp);
                     break;
@@ -2001,8 +2443,6 @@ public class ProjectEdit {
         }
         return result.toJSONString();
     }
-
-
 
 
     @RequestMapping("/createmodleproperties")
@@ -2704,15 +3144,6 @@ public class ProjectEdit {
     }
 
 
-
-
-
-
-
-
-
-
-
     /***view***/
 
     @RequestMapping("/vieweditproject")
@@ -2795,8 +3226,8 @@ public class ProjectEdit {
 
                     modelAndView.addObject("sp", Tool.selectmodleProperyByPinname("sp", pidModle.getPropertyImpList(), ModleProperty.PINDIRINPUT));
 
-                    modelAndView.addObject("mv", (MPCModleProperty)Tool.selectmodleProperyByPinname("mv", pidModle.getPropertyImpList(), ModleProperty.PINDIRINPUT));
-                    modelAndView.addObject("mvup",Tool.selectmodleProperyByPinname("mvup", pidModle.getPropertyImpList(), ModleProperty.PINDIRINPUT));
+                    modelAndView.addObject("mv", (MPCModleProperty) Tool.selectmodleProperyByPinname("mv", pidModle.getPropertyImpList(), ModleProperty.PINDIRINPUT));
+                    modelAndView.addObject("mvup", Tool.selectmodleProperyByPinname("mvup", pidModle.getPropertyImpList(), ModleProperty.PINDIRINPUT));
                     modelAndView.addObject("mvdown", Tool.selectmodleProperyByPinname("mvdown", pidModle.getPropertyImpList(), ModleProperty.PINDIRINPUT));
                     modelAndView.addObject("ff", Tool.selectmodleProperyByPinname("ff", pidModle.getPropertyImpList(), ModleProperty.PINDIRINPUT));
 
@@ -2814,6 +3245,35 @@ public class ProjectEdit {
             logger.error(e.getMessage(), e);
         }
         return null;
+    }
+
+    @RequestMapping("/viewempcmodlerundetail")
+    public ModelAndView viewmodledetail(@RequestParam("projectid") int projectid, @RequestParam("modleId") int modleId) {
+        Project project = projectManager.getProjectPool().get(projectid);
+        Modle modle = project.getIndexmodles().get(modleId);
+
+        MPCModle controlModle = (MPCModle) modle;//modleConstainer.getRunnableModulepool().get(Integer.valueOf(modleid.trim()));
+        ModelAndView mv = new ModelAndView();
+        mv.setViewName("mpcmodlerundetail");
+        if (null != controlModle) {
+            mv.addObject("isrunable", true);
+            List<MPCModleProperty> runnablepvpins = controlModle.getRunablePins(controlModle.getCategoryPVmodletag(), controlModle.getMaskisRunnablePVMatrix());
+
+            mv.addObject("enablePVPins", runnablepvpins);
+
+            List<MPCModleProperty> runnableMVPins = controlModle.getRunablePins(controlModle.getCategoryMVmodletag(), controlModle.getMaskisRunnableMVMatrix());
+
+            mv.addObject("enableMVPins", runnableMVPins);
+
+            List<MPCModleProperty> runnableFFPins = controlModle.getRunablePins(controlModle.getCategoryFFmodletag(), controlModle.getMaskisRunnableFFMatrix());
+
+            mv.addObject("enableFFPins", runnableFFPins);
+        } else {
+            mv.addObject("isrunable", false);
+            controlModle = (MPCModle) projectOperaterImp.findModleByid(modleId);//modleDBServe.getModle();
+        }
+        mv.addObject("modle", controlModle);
+        return mv;
     }
 
     @RequestMapping("/viewaddmodleproperty")
@@ -3451,18 +3911,6 @@ public class ProjectEdit {
     /**modle run datail**/
 
 
-    @RequestMapping("/viewempcmodlerundetail")
-    public ModelAndView viewmpcmodlerundetail(@RequestParam("modleId") int modleId) {
-        ModelAndView view = new ModelAndView();
-        MPCModle mpcModle=(MPCModle)projectOperaterImp.findModleByid(modleId);
-        view.setViewName("mpcmodlerundetail");
-        view.addObject("modle", mpcModle);
-
-        return view;
-    }
-
-
-
     /**
      * @param pinname
      */
@@ -3504,7 +3952,7 @@ public class ProjectEdit {
         return kpbasemodleproperty;
     }
 
-    private MPCModleProperty initpidmvproperty(String modleOpcTag, String opcTagName, String pinname, int modleId, String resourcemodleId, String resourcemodlepinsId, String properyconstant, String propertyid,double dmvhight,double dmvlow) {
+    private MPCModleProperty initpidmvproperty(String modleOpcTag, String opcTagName, String pinname, int modleId, String resourcemodleId, String resourcemodlepinsId, String properyconstant, String propertyid, double dmvhight, double dmvlow) {
         MPCModleProperty kpbasemodleproperty = new MPCModleProperty();
         kpbasemodleproperty.setModlePinName(pinname);
         kpbasemodleproperty.setOpcTagName(opcTagName);
@@ -3543,7 +3991,6 @@ public class ProjectEdit {
         }
         return kpbasemodleproperty;
     }
-
 
 
 }

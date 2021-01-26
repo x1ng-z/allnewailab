@@ -26,4 +26,8 @@ public class NettyServerInitializer extends ChannelInitializer<SocketChannel> {
 
 
     }
+
+    public MsgDecoder_Inbound getMsgDecoder_inbound() {
+        return msgDecoder_inbound;
+    }
 }

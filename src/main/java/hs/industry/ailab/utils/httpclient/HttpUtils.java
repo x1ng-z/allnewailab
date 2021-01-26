@@ -53,7 +53,8 @@ public class HttpUtils {
 
             httpPost.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
             response2 = httpclient.execute(httpPost);
-            logger.debug("response code=" + response2.getStatusLine().getStatusCode());
+            logger.info(url+(data!=null?data.toString():""));
+            logger.info("response code=" + response2.getStatusLine().getStatusCode());
             HttpEntity entity2 = response2.getEntity();
             // do something useful with the response body
             // and ensure it is fully consumed

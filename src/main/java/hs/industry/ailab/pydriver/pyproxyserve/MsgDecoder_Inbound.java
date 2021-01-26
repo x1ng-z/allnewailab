@@ -2,6 +2,14 @@ package hs.industry.ailab.pydriver.pyproxyserve;
 
 
 import com.alibaba.fastjson.JSONObject;
+import hs.industry.ailab.entity.Project;
+import hs.industry.ailab.entity.ProjectManager;
+import hs.industry.ailab.entity.modle.BaseModleImp;
+import hs.industry.ailab.entity.modle.Modle;
+import hs.industry.ailab.entity.modle.controlmodle.MPCModle;
+import hs.industry.ailab.entity.modle.controlmodle.PIDModle;
+import hs.industry.ailab.entity.modle.customizemodle.CUSTOMIZEModle;
+import hs.industry.ailab.entity.modle.filtermodle.FilterModle;
 import hs.industry.ailab.pydriver.command.CommandImp;
 import hs.industry.ailab.pydriver.session.PySession;
 import hs.industry.ailab.pydriver.session.PySessionManager;
@@ -28,6 +36,8 @@ public class MsgDecoder_Inbound extends ChannelInboundHandlerAdapter {
     @Autowired
     private PySessionManager sessionManager;
 
+
+    private ProjectManager projectManager;
 
     public MsgDecoder_Inbound() {
         super();
@@ -77,7 +87,50 @@ public class MsgDecoder_Inbound extends ChannelInboundHandlerAdapter {
                 switch (command[0]) {
                     case 0x01: {
                         if (CommandImp.RESULT.valid(bytes)) {
-                            logger.info(CommandImp.RESULT.analye(bytes).toJSONString());
+                            JSONObject computeresult=CommandImp.RESULT.analye(bytes);
+                            logger.info(computeresult.toJSONString());
+                            Modle modle =projectManager.getspecialModle(modleid);
+                            if(computeresult.getString("msg").equals("error")){
+                                BaseModleImp baseModleImp=(BaseModleImp)modle;
+                                baseModleImp.setErrormsg(computeresult.getString("msg"));
+                                baseModleImp.setErrortimestamp(computeresult.getLong("errortimestamp"));
+                            }else {
+                                if(modle instanceof MPCModle){
+                                    MPCModle mpcModle=(MPCModle)modle;
+                                    if(computeresult.getString("scriptName").equals(mpcModle.getMpcscript())){
+
+                                        mpcModle.computresulteprocess(null,computeresult);
+                                        mpcModle.outprocess(null,null);
+
+                                    }else if(computeresult.getString("scriptName").equals(mpcModle.getSimulatorscript())){
+                                        mpcModle.getSimulatControlModle().computresulteprocess(null,computeresult);
+                                        mpcModle.getSimulatControlModle().outprocess(null,null);
+                                    }
+                                }else if(modle instanceof PIDModle){
+                                    PIDModle pidModle=(PIDModle)modle;
+                                    if(computeresult.getString("scriptName").equals(pidModle.getPidscript())){
+                                        pidModle.computresulteprocess(null,computeresult);
+                                        pidModle.outprocess(null,null);
+                                    }
+
+                                }else if(modle instanceof CUSTOMIZEModle){
+                                    CUSTOMIZEModle customizeModle=(CUSTOMIZEModle)modle;
+                                    if(computeresult.getString("scriptName").equals(customizeModle.noscripNametail())){
+                                        customizeModle.computresulteprocess(null,computeresult);
+                                        customizeModle.outprocess(null,null);
+                                    }
+
+                                }else if(modle instanceof FilterModle){
+                                    FilterModle filterModle=(FilterModle)modle;
+                                    if(computeresult.getString("scriptName").equals(filterModle.getFilterscript())){
+                                        filterModle.computresulteprocess(null,computeresult);
+                                        filterModle.outprocess(null,null);
+                                    }
+
+                                }
+                            }
+
+
                         }
                         break;
                     }
@@ -161,4 +214,11 @@ public class MsgDecoder_Inbound extends ChannelInboundHandlerAdapter {
         return reult;
     }
 
+    public ProjectManager getProjectManager() {
+        return projectManager;
+    }
+
+    public void setProjectManager(ProjectManager projectManager) {
+        this.projectManager = projectManager;
+    }
 }

@@ -30,7 +30,9 @@ public class OUTModle extends BaseModleImp {
     /**
      * memory
      */
-    private boolean iscomplete = false;
+//    private boolean javabuildcomplet = false;//java控制模型是构建完成？
+//    private boolean pythonbuildcomplet = false;//python的控制模型是否构建完成
+//    private boolean iscomputecomplete = false;//运算是否完成
     private String datasource;
     private Map<Integer, BaseModlePropertyImp> indexproperties;//key=modleid
 
@@ -57,7 +59,7 @@ public class OUTModle extends BaseModleImp {
 
     @Override
     public void docomputeprocess() {
-
+        setModlerunlevel(BaseModleImp.RUNLEVEL_RUNNING);
     }
 
 
@@ -139,6 +141,7 @@ public class OUTModle extends BaseModleImp {
         postdata.put("tagvalue",writecontext.toJSONString());
         String inputdata = HttpUtils.PostData(datasource + "/opc/write", postdata);
         logger.info("modleid="+getModleId()+" write info"+inputdata);
+        setModlerunlevel(BaseModleImp.RUNLEVEL_RUNCOMPLET);
         return;
     }
 
@@ -165,13 +168,6 @@ public class OUTModle extends BaseModleImp {
     }
 
 
-    public boolean isIscomplete() {
-        return iscomplete;
-    }
-
-    public void setIscomplete(boolean iscomplete) {
-        this.iscomplete = iscomplete;
-    }
 
     public String getDatasource() {
         return datasource;
@@ -188,4 +184,28 @@ public class OUTModle extends BaseModleImp {
     public void setIndexproperties(Map<Integer, BaseModlePropertyImp> indexproperties) {
         this.indexproperties = indexproperties;
     }
+//
+//    public boolean isJavabuildcomplet() {
+//        return javabuildcomplet;
+//    }
+//
+//    public void setJavabuildcomplet(boolean javabuildcomplet) {
+//        this.javabuildcomplet = javabuildcomplet;
+//    }
+//
+//    public boolean isPythonbuildcomplet() {
+//        return pythonbuildcomplet;
+//    }
+//
+//    public void setPythonbuildcomplet(boolean pythonbuildcomplet) {
+//        this.pythonbuildcomplet = pythonbuildcomplet;
+//    }
+//
+//    public boolean isIscomputecomplete() {
+//        return iscomputecomplete;
+//    }
+//
+//    public void setIscomputecomplete(boolean iscomputecomplete) {
+//        this.iscomputecomplete = iscomputecomplete;
+//    }
 }

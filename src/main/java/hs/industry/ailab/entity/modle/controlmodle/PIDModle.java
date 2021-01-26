@@ -21,6 +21,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author zzx
@@ -33,7 +34,9 @@ public class PIDModle extends BaseModleImp {
     /**
      * memery
      */
-    private boolean iscomplete = false;
+//    private boolean javabuildcomplet = false;//java控制模型是构建完成？
+//    private boolean pythonbuildcomplet = false;//python的控制模型是否构建完成
+//    private boolean iscomputecomplete = false;//运算是否完成
     private String datasource;
     private Map<Integer, BaseModlePropertyImp> indexproperties;//key=modleid
     private PySessionManager pySessionManager;
@@ -52,6 +55,17 @@ public class PIDModle extends BaseModleImp {
     @Override
     public void connect() {
         executepythonbridge.execute();
+        PySession pidpySession = pySessionManager.getSpecialSession(getModleId(), pidscript);
+//        while (pidpySession == null) {
+////            logger.info("try");
+//            try {
+//                TimeUnit.MILLISECONDS.sleep(500);
+//            } catch (InterruptedException e) {
+//                logger.error(e.getMessage(),e);
+//            }
+//
+//
+//        }
 
     }
 
@@ -81,32 +95,36 @@ public class PIDModle extends BaseModleImp {
     public void docomputeprocess() {
 
         PySession pySession = pySessionManager.getSpecialSession(getModleId(),pidscript);
-        JSONObject scriptinputcontext = new JSONObject();
+        if(pySession!=null){
+            JSONObject scriptinputcontext = new JSONObject();
 
-        JSONObject INjson=new JSONObject();
-        scriptinputcontext.put("IN1",INjson);
+            JSONObject INjson=new JSONObject();
+            scriptinputcontext.put("IN1",INjson);
 
-        JSONObject OUTjson=new JSONObject();
-        scriptinputcontext.put("OUT1",OUTjson);
-        for (ModleProperty modleProperty : propertyImpList) {
-            BaseModlePropertyImp baseModlePropertyImp = (BaseModlePropertyImp) modleProperty;
+            JSONObject OUTjson=new JSONObject();
+            scriptinputcontext.put("OUT1",OUTjson);
+            for (ModleProperty modleProperty : propertyImpList) {
+                BaseModlePropertyImp baseModlePropertyImp = (BaseModlePropertyImp) modleProperty;
 
-            if (baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIRINPUT)) {
-                JSONObject invalue = new JSONObject();
-                invalue.put("value", baseModlePropertyImp.getValue());
-                INjson.put(baseModlePropertyImp.getModlePinName(),invalue);
+                if (baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIRINPUT)) {
+                    JSONObject invalue = new JSONObject();
+                    invalue.put("value", baseModlePropertyImp.getValue());
+                    INjson.put(baseModlePropertyImp.getModlePinName(),invalue);
 
-            }else if(baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIROUTPUT)){
-                JSONObject outvalue = new JSONObject();
-                OUTjson.put(baseModlePropertyImp.getModlePinName(),outvalue);
-                outvalue.put("pinName", baseModlePropertyImp.getModlePinName());
+                }else if(baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIROUTPUT)){
+                    JSONObject outvalue = new JSONObject();
+                    OUTjson.put(baseModlePropertyImp.getModlePinName(),outvalue);
+                    outvalue.put("pinName", baseModlePropertyImp.getModlePinName());
+                }
+            }
+            try {
+                setModlerunlevel(BaseModleImp.RUNLEVEL_RUNNING);
+                pySession.getCtx().writeAndFlush(CommandImp.PARAM.build(scriptinputcontext.toJSONString().getBytes("utf-8"), getModleId()));
+            } catch (UnsupportedEncodingException e) {
+                logger.error(e.getMessage(), e);
             }
         }
-        try {
-            pySession.getCtx().writeAndFlush(CommandImp.RESULT.build(scriptinputcontext.toJSONString().getBytes("utf-8"), getModleId()));
-        } catch (UnsupportedEncodingException e) {
-            logger.error(e.getMessage(), e);
-        }
+
 
     }
     @Override
@@ -163,17 +181,19 @@ public class PIDModle extends BaseModleImp {
         for (ModleProperty modleProperty : propertyImpList) {
             BaseModlePropertyImp pidinproperty = (BaseModlePropertyImp) modleProperty;
             if (pidinproperty.getPindir().equals(ModleProperty.PINDIROUTPUT)) {
-                JSONObject outpinjsoncontext=computedata.getJSONObject(pidinproperty.getModlePinName());
+                JSONObject outpinjsoncontext=computedata.getJSONObject("data").getJSONObject(pidinproperty.getModlePinName());
                 if(outpinjsoncontext!=null){
                     pidinproperty.setValue(outpinjsoncontext.getDouble("value"));
                 }
             }
         }
+
         return null;
     }
 
     @Override
     public void outprocess(Project project, JSONObject outdata) {
+        setModlerunlevel(BaseModleImp.RUNLEVEL_RUNCOMPLET);
     }
 
 
@@ -207,13 +227,7 @@ public class PIDModle extends BaseModleImp {
 
 
 
-    public boolean isIscomplete() {
-        return iscomplete;
-    }
 
-    public void setIscomplete(boolean iscomplete) {
-        this.iscomplete = iscomplete;
-    }
 
     public String getDatasource() {
         return datasource;
@@ -262,4 +276,12 @@ public class PIDModle extends BaseModleImp {
     public void setPidscript(String pidscript) {
         this.pidscript = pidscript;
     }
+
+//    public boolean isIscomputecomplete() {
+//        return iscomputecomplete;
+//    }
+//
+//    public void setIscomputecomplete(boolean iscomputecomplete) {
+//        this.iscomputecomplete = iscomputecomplete;
+//    }
 }

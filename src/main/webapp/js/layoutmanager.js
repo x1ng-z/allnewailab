@@ -43,7 +43,7 @@ var layermanager={
     },
 
 
-    viewmodledetail:function(url,modleId,layer){
+    viewmodledetail:function(url,projectid,modleId,layer){
         let indexlayer = layer.open(
             {
                 type: 2
@@ -53,7 +53,7 @@ var layermanager={
                 // ,closeBtn: false
                 ,maxmin:true
                 , area: ['750px', '550px'] //['300px', '260px']
-                , content: url+'?modleId='+modleId
+                , content: url+'?modleId='+modleId+'&projectid='+projectid
                 //[dom.attr("lay-href"),'no']//不要滚动条
                 , zIndex: layer.zIndex //重点1
                 , shade: 0

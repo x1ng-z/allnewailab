@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import hs.industry.ailab.entity.Project;
 import hs.industry.ailab.entity.ResponTimeSerise;
+import hs.industry.ailab.entity.modle.BaseModleImp;
 import hs.industry.ailab.entity.modle.ModleProperty;
 import hs.industry.ailab.entity.modle.modlerproerty.MPCModleProperty;
 import org.slf4j.Logger;
@@ -13,8 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static hs.industry.ailab.entity.modle.controlmodle.MPCModle.MSGTYPE_BUILD;
-import static hs.industry.ailab.entity.modle.controlmodle.MPCModle.MSGTYPE_COMPUTE;
+import static hs.industry.ailab.entity.modle.controlmodle.MPCModle.*;
 
 /**
  * @author zzx
@@ -25,7 +25,7 @@ import static hs.industry.ailab.entity.modle.controlmodle.MPCModle.MSGTYPE_COMPU
 /**
  * 拆分每个pv，并分配相应的mv、ff进行dmv的计算
  **/
-public class SimulatControlModle {
+public class SimulatControlModle extends BaseModleImp {
 
     private Logger logger = LoggerFactory.getLogger(SimulatControlModle.class);
     private String simulatorbuilddir;
@@ -472,6 +472,32 @@ public class SimulatControlModle {
     }
 
 
+    @Override
+    public void connect() {
+
+    }
+
+    @Override
+    public void reconnect() {
+
+    }
+
+    @Override
+    public void destory() {
+
+    }
+
+    @Override
+    public void docomputeprocess() {
+
+    }
+
+    @Override
+    public JSONObject inprocess(Project project) {
+        return null;
+    }
+
+    @Override
     public JSONObject computresulteprocess(Project project, JSONObject computedata) {
 
         if (computedata.getJSONObject("data").getString("msgtype").equals(MSGTYPE_BUILD)) {
@@ -532,7 +558,7 @@ public class SimulatControlModle {
 //                writemvJson;//要进行写入
 //                writedmvJson;
 
-                if (controlModle.getRunstyle() == 1) {
+                if (controlModle.getRunstyle().equals(RUNSTYLEBYMANUL) ) {
                     int index = 0;
                     for (MPCModleProperty mpcModleProperty : controlModle.getCategoryMVmodletag()) {
                         String outputpinname = mpcModleProperty.getModlePinName();
@@ -554,7 +580,7 @@ public class SimulatControlModle {
                     }
                 }
 
-
+                iscomputecomplete=true;
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
             }
@@ -562,6 +588,16 @@ public class SimulatControlModle {
 
 
         return null;
+    }
+
+    @Override
+    public void outprocess(Project project, JSONObject outdata) {
+        setModlerunlevel(BaseModleImp.RUNLEVEL_RUNCOMPLET);
+    }
+
+    @Override
+    public void init() {
+
     }
 
     /**

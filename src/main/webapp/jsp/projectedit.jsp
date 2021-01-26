@@ -117,42 +117,87 @@
     var element;
     var layer;
     var jsplumbinstance;
-    layui.use(['element', 'layer'], function(){
-        element = layui.element;
-        console.log("projectedit get parent layer object",parent.layer === undefined);
+    var projectstatus_flush_t;
+        layui.use(['element', 'layer'], function(){
+            element = layui.element;
+            console.log("projectedit get parent layer object",parent.layer === undefined);
 
-        layer = parent.layer === undefined ? layui.layer : parent.layer;
+            layer = parent.layer === undefined ? layui.layer : parent.layer;
 
-        //jueryui 拖拉
-        $('.btn-controler').draggable({
-            // revert: true,
-            helper: 'clone',
-            scope: 'ss',
+            //jueryui 拖拉
+            $('.btn-controler').draggable({
+                // revert: true,
+                helper: 'clone',
+                scope: 'ss',
+            });
+
+            //jueryui 设置放置
+            $(areaId).droppable({
+                scope: 'ss',
+                drop: function (event, ui) {
+                    dropNode(ui.draggable[0].dataset.template, ui.position,$('.layui-container').attr('projectid'))
+                }
+            });
+
+            $('#app').on('click', function (event) {
+                event.stopPropagation()
+                event.preventDefault()
+                eventHandler(event.target.dataset)
+            })
+
+            jsPlumb.ready(main)//document.ready
+            //监听折叠
+            element.on('collapse(test)', function(data){
+                // layer.msg('展开状态：'+ data.show);
+            });
+            projectstatuflush();
+
+
+        });
+        jsPlumb.importDefaults({
+            ConnectionsDetachable: false
         });
 
-        //jueryui 设置放置
-        $(areaId).droppable({
-            scope: 'ss',
-            drop: function (event, ui) {
-                dropNode(ui.draggable[0].dataset.template, ui.position,$('.layui-container').attr('projectid'))
-            }
-        });
 
-        $('#app').on('click', function (event) {
-            event.stopPropagation()
-            event.preventDefault()
-            eventHandler(event.target.dataset)
-        })
 
-        jsPlumb.ready(main)//document.ready
-        //监听折叠
-        element.on('collapse(test)', function(data){
-            // layer.msg('展开状态：'+ data.show);
-        });
-    });
-    jsPlumb.importDefaults({
-        ConnectionsDetachable: false
-    })
+
+
+    function projectstatuflush() {
+        clearInterval(projectstatus_flush_t);
+        try {
+            let projectresult=api.projectstatus('${project.projectid}');
+                projectresult['modules'].forEach(function (module) {
+                    let inputcontext=$('#'+module.id).find('#'+module.id+'incontext');
+
+                    let context_='';
+                    for(let index=0;index<module.inputproperty.length;index++){
+                        context_=context_+(module.inputproperty[index].name.substring(0,7))+ (module.inputproperty[index].pin!=undefined?module.inputproperty[index].pin.substring(0,7):"")  + '\n' + module.inputproperty[index].value+'\n';
+                    }
+                    // console.log("ins",inuputcontext_3.text());
+                    // inuputcontext_3.html(context_);
+                    inputcontext[0].innerText=context_;
+
+
+                    let outputcontext=$('#'+module.id).find('#'+module.id+'outcontext');
+                    context_='';
+                    for(let index=0;index<module.outputproperty.length;index++){
+                        context_=context_+(module.outputproperty[index].name.substring(0,7))+ (module.outputproperty[index].pin!=undefined?module.outputproperty[index].pin.substring(0,7):"")  + '\n' + module.outputproperty[index].value+'\n';
+                    }
+                    // console.log(outputcontext_3.text());
+                    // console.log("context_",context_)
+                    outputcontext[0].innerText=context_;
+
+
+
+                });
+            element.render();
+            //buildtable();
+        } catch (e) {
+            console.log(e);
+        }
+
+        projectstatus_flush_t = setInterval(projectstatuflush, 3000);
+    }
 
 </script>
 
