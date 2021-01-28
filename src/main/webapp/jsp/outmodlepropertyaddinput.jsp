@@ -70,9 +70,20 @@
                 <div class="layui-input-inline">
                     <select name="modleOpcTag" lay-verify="required"  lay-search="" lay-filter="selectopctag" id="selectopctagid">
                         <option value="">请选择</option>
+<%--                        <c:forEach items="${points}" var="point" varStatus="Count">--%>
+<%--                            <option value="${point.modlePinName}" resourcemodleId="${point.refmodleId}" resourcemodlepinsId="${point.modlepinsId}" >${point.opcTagName}</option>--%>
+<%--                        </c:forEach>--%>
                         <c:forEach items="${points}" var="point" varStatus="Count">
-                            <option value="${point.modlePinName}" resourcemodleId="${point.refmodleId}" resourcemodlepinsId="${point.modlepinsId}" >${point.opcTagName}</option>
+                            <optgroup label="${point.key}">
+                                <c:forEach items="${point.value}" var="parentpin">
+                                    <option value="${parentpin.modlePinName}" resourcemodleId="${parentpin.refmodleId}"
+                                                                                           resourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})</option>
+                                </c:forEach>
+                            </optgroup>
+
                         </c:forEach>
+
+
                     </select>
                 </div>
             </div>
@@ -85,7 +96,7 @@
                     <select name="outpinmappingtag" lay-verify="required" lay-filter="selectoutputpinmapping" lay-search="" id="selectoutputpinmappingid">
                         <option value="">请选择测点</option>
                         <c:forEach items="${outpinmappings}" var="point" varStatus="Count">
-                            <option value="${point.modleOpcTag}">${point.opcTagName}</option>
+                            <option value="${point.modleOpcTag}">${point.modleOpcTag}(${point.opcTagName})</option>
                         </c:forEach>
                     </select>
                 </div>

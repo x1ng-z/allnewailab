@@ -5,6 +5,8 @@ import hs.industry.ailab.entity.ModleSight;
 import hs.industry.ailab.entity.Project;
 import hs.industry.ailab.entity.modle.Modle;
 
+import java.time.Instant;
+
 /**
  * @author zzx
  * @version 1.0
@@ -14,14 +16,18 @@ public abstract class BaseModleImp implements Modle {
     public static final int RUNLEVEL_RUNNING=1;//正在运行中
     public static final int RUNLEVEL_RUNCOMPLET=2;//运行完成
     public static final int RUNLEVEL_INITE=3;//初始状态
+//    public static final int RUNLEVEL_ENABLE=6;//dcs自动
+//    public static final int RUNLEVEL_DISENABLE=7;//dcs手动
     public static final int RUNLEVEL_JAVAMODLEBUILDCOMPLET=5;//java模型构建完成状态
     public static final int RUNLEVEL_PYTHONMODLEBUILDCOMPLET=4;//python模型构建状态
 
 
     /**memory*/
     private int modlerunlevel=RUNLEVEL_INITE;
-    private String errormsg;
+    private String errormsg="";
     private long errortimestamp;
+    private int autovalue=1;
+    private Instant beginruntime;//模型开始运行时间
 
 
     /***db***/
@@ -125,5 +131,21 @@ public abstract class BaseModleImp implements Modle {
 
     public void setErrortimestamp(long errortimestamp) {
         this.errortimestamp = errortimestamp;
+    }
+
+    public int getAutovalue() {
+        return autovalue;
+    }
+
+    public void setAutovalue(int autovalue) {
+        this.autovalue = autovalue;
+    }
+
+    public Instant getBeginruntime() {
+        return beginruntime;
+    }
+
+    public void setBeginruntime(Instant beginruntime) {
+        this.beginruntime = beginruntime;
     }
 }

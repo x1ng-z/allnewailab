@@ -50,7 +50,7 @@ var api = {
                 // layer.close(index);
                 let json = JSON.parse(result);
                 if (json['msg'] == "error") {
-                    layer.msg("加载失败！");
+                    // layer.msg("加载失败！");
                     // return [];
                 } else {
                     // layer.msg("加载成功！");
@@ -185,7 +185,7 @@ var api = {
         let deletemodleinfo;
         //console.log(JSON.stringify({'position':position,'modletype':modletype,'projectid':projectid})+'');
         $.ajax({
-            url: "http://127.0.0.1/projectedit/deletemodlechild" + "?" + Math.random(),
+            url: "/projectedit/deletemodlechild" + "?" + Math.random(),
             async: false,
             data: {
                 "modlechildinfo": JSON.stringify({'modleid': modleid, 'childid': childid}) + ''

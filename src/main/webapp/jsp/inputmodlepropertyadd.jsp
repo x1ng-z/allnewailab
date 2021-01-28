@@ -72,7 +72,7 @@
                     <select name="modleOpcTag" lay-verify="required" lay-filter="selectopctag" lay-search="" lay-filter="selectopctag">
                         <option value="">请选择测点</option>
                         <c:forEach items="${points}" var="point" varStatus="Count">
-                            <option value="${point.modleOpcTag}">${point.opcTagName}</option>
+                            <option value="${point.modleOpcTag}">${point.modleOpcTag}(${point.opcTagName})</option>
                         </c:forEach>
                     </select>
                 </div>

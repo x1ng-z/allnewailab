@@ -12,7 +12,7 @@
     <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
     <script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery-3.0.0.js"></script>
     <script type="text/javascript" src="${pageContext.request.contextPath}/js/layui/layui.js"></script>
-    <script type="text/javascript" src="${pageContext.request.contextPath}/js/contrlmodle/contrlmodle.js"></script>
+<%--    <script type="text/javascript" src="${pageContext.request.contextPath}/js/contrlmodle/contrlmodle.js"></script>--%>
     <script src="/js/api.js"></script>
     <script src="/js/layoutmanager.js"></script>
     <meta name="renderer" content="webkit">

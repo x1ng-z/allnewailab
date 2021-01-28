@@ -27,6 +27,8 @@ import org.springframework.stereotype.Component;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 
+import static hs.industry.ailab.entity.modle.controlmodle.MPCModle.MSGTYPE_BUILD;
+
 @ChannelHandler.Sharable
 @Component
 public class MsgDecoder_Inbound extends ChannelInboundHandlerAdapter {
@@ -72,11 +74,11 @@ public class MsgDecoder_Inbound extends ChannelInboundHandlerAdapter {
             String clientIp = ipSocket.getAddress().getHostAddress();
             Integer port = ipSocket.getPort();
             String ipAndPort = clientIp + ":" + port;
-            logger.info(ipAndPort);
+//            logger.info(ipAndPort);
             ByteBuf wait_for_read = (ByteBuf) msg;
             if (wait_for_read.isReadable()) {
                 int datacontextlength = wait_for_read.readableBytes();
-                logger.info("read dada size=" + wait_for_read.readableBytes());
+//                logger.info("read dada size=" + wait_for_read.readableBytes());
                 byte[] bytes = new byte[wait_for_read.readableBytes()];
                 wait_for_read.readBytes(bytes);
                 //提取命令
@@ -90,7 +92,7 @@ public class MsgDecoder_Inbound extends ChannelInboundHandlerAdapter {
                             JSONObject computeresult=CommandImp.RESULT.analye(bytes);
                             logger.info(computeresult.toJSONString());
                             Modle modle =projectManager.getspecialModle(modleid);
-                            if(computeresult.getString("msg").equals("error")){
+                            if(computeresult.getString("msg").equals("reason")){
                                 BaseModleImp baseModleImp=(BaseModleImp)modle;
                                 baseModleImp.setErrormsg(computeresult.getString("msg"));
                                 baseModleImp.setErrortimestamp(computeresult.getLong("errortimestamp"));
@@ -100,11 +102,17 @@ public class MsgDecoder_Inbound extends ChannelInboundHandlerAdapter {
                                     if(computeresult.getString("scriptName").equals(mpcModle.getMpcscript())){
 
                                         mpcModle.computresulteprocess(null,computeresult);
-                                        mpcModle.outprocess(null,null);
+                                        if(!computeresult.getJSONObject("data").getString("msgtype").equals(MPCModle.MSGTYPE_BUILD)){
+                                            mpcModle.outprocess(null,null);
+                                        }
+
 
                                     }else if(computeresult.getString("scriptName").equals(mpcModle.getSimulatorscript())){
                                         mpcModle.getSimulatControlModle().computresulteprocess(null,computeresult);
-                                        mpcModle.getSimulatControlModle().outprocess(null,null);
+                                        if (!computeresult.getJSONObject("data").getString("msgtype").equals(MPCModle.MSGTYPE_BUILD)) {
+                                            mpcModle.getSimulatControlModle().outprocess(null,null);
+                                        }
+
                                     }
                                 }else if(modle instanceof PIDModle){
                                     PIDModle pidModle=(PIDModle)modle;

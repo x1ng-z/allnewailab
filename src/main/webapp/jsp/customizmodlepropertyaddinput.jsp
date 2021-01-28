@@ -80,9 +80,22 @@
                 <div class="layui-input-inline">
                     <select name="modleOpcTag"  lay-filter="selectopctag"  lay-search="">
                         <option value="">请选择测点</option>
+<%--                        <c:forEach items="${points}" var="point" varStatus="Count">--%>
+<%--                            <option value="${point.modlePinName}" resourcemodleId="${point.refmodleId}" resourcemodlepinsId="${point.modlepinsId}" >${point.opcTagName}</option>--%>
+<%--                        </c:forEach>--%>
+
                         <c:forEach items="${points}" var="point" varStatus="Count">
-                            <option value="${point.modlePinName}" resourcemodleId="${point.refmodleId}" resourcemodlepinsId="${point.modlepinsId}" >${point.opcTagName}</option>
+                            <optgroup label="${point.key}">
+                                <c:forEach items="${point.value}" var="parentpin">
+                                    <option value="${parentpin.modlePinName}" resourcemodleId="${parentpin.refmodleId}"
+                                            resourcemodlepinsId="${parentpin.modlepinsId}"
+                                            selected>${parentpin.modlePinName}(${parentpin.opcTagName})</option>
+                                </c:forEach>
+                            </optgroup>
+
                         </c:forEach>
+
+
                     </select>
                 </div>
             </div>

@@ -28,6 +28,29 @@ public class MPCModleProperty extends BaseModlePropertyImp {
     private volatile boolean thisTimeParticipate=true;
 
 
+    /**
+     * 判断是否超过的上下界限
+     * @return true 突破了;false 没有突破
+     * */
+    public boolean isBreakLimit(){
+        //判断是否超过置信区间
+        boolean breaklow=((downLmt!=null)&&(getValue()<downLmt.getValue()));
+        boolean breakup=((upLmt!=null)&&(getValue()>upLmt.getValue()));
+        return (breaklow||breakup);
+    }
+
+    /**
+     * 检测引脚闹铃时间到了，可以就可以运行引脚了
+     * */
+    public boolean clockAlarm(){
+        return Instant.now().isAfter(runClock);
+    }
+
+    public void clearRunClock() {
+        this.runClock = null;
+    }
+
+
 
     /******db*****/
     private double Q;

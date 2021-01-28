@@ -65,7 +65,7 @@ public enum CommandImp implements Command {
             byte[] paramercontext = Arrays.copyOfRange(context, 10, context.length);
             try {
                 String str = new String(paramercontext, "UTF-8");
-                logger.info(str);
+//                logger.info(str);
                 try {
                     JSONObject.parseObject(str);
                     return true;
@@ -132,7 +132,7 @@ public enum CommandImp implements Command {
             byte[] paramercontext = Arrays.copyOfRange(context, 10, context.length);
             try {
                 String str = new String(paramercontext, "UTF-8");
-                logger.info(str);
+//                logger.info(str);
                 try {
                     JSONObject.parseObject(str);
                     return true;
@@ -208,7 +208,7 @@ public enum CommandImp implements Command {
             byte[] paramercontext = Arrays.copyOfRange(context, 10, context.length);
             try {
                 String str = new String(paramercontext, "UTF-8");
-                logger.info(str);
+//                logger.info(str);
                 try {
                     JSONObject.parseObject(str);
                     return true;
@@ -280,7 +280,7 @@ public enum CommandImp implements Command {
             byte[] paramercontext = Arrays.copyOfRange(context, 10, context.length);
             try {
                 String str = new String(paramercontext, "UTF-8");
-                logger.info(str);
+//                logger.info(str);
                 try {
                     JSONObject.parseObject(str);
                     return true;
@@ -353,7 +353,7 @@ public enum CommandImp implements Command {
             byte[] paramercontext = Arrays.copyOfRange(context, 10, context.length);
             try {
                 String str = new String(paramercontext, "UTF-8");
-                logger.info(str);
+//                logger.info(str);
                 try {
                     JSONObject.parseObject(str);
                     return true;
@@ -390,7 +390,7 @@ public enum CommandImp implements Command {
         byte[] paramercontext = Arrays.copyOfRange(context, 10, context.length);
         try {
             String str = new String(paramercontext, "UTF-8");
-            logger.info(str);
+//            logger.info(str);
             try {
                 JSONObject.parseObject(str);
             } catch (Exception e) {
@@ -408,7 +408,7 @@ public enum CommandImp implements Command {
         byte[] paramercontext = Arrays.copyOfRange(context, 10, context.length);
         try {
             String str = new String(paramercontext, "UTF-8");
-            logger.info(str);
+//            logger.info(str);
             try {
                 return (JSONObject) JSONObject.parseObject(str);
             } catch (Exception e) {

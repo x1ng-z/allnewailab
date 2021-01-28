@@ -12,8 +12,10 @@
 <%--    <link rel="stylesheet" href="../css/index.css"/>--%>
     <script src="${pageContext.request.contextPath}/js/layui/layui.js"></script>
     <script src="${pageContext.request.contextPath}/js/jquery-3.0.0.js"></script>
-    <script src="${pageContext.request.contextPath}/js/aimodle/newaimodle.js"></script>
-    <script src="${pageContext.request.contextPath}/js/contrlmodle/contrlmodle.js"></script>
+    <script src="/js/api.js" ></script>
+    <script src="/js/layoutmanager.js"></script>
+<%--    <script src="${pageContext.request.contextPath}/js/aimodle/newaimodle.js"></script>--%>
+<%--    <script src="${pageContext.request.contextPath}/js/contrlmodle/contrlmodle.js"></script>--%>
     <style>
         .layui-layout-admin .layui-side-menu {
             z-index: 1001;
@@ -214,7 +216,7 @@
 <%--                        <dd><a href="javascript:;"--%>
 <%--                               lay-href="${pageContext.request.contextPath}/modle/newmodle.do">模型新建</a></dd>--%>
                         <dd><a href="javascript:;"
-                               id="newcontrlmodle" lay-href="${pageContext.request.contextPath}/contrlmodle/newmodle.do">控制模型新建</a></dd>
+                               id="newproject" lay-href="${pageContext.request.contextPath}/projectedit/newproject">控制工程新建</a></dd>
                         <dd><a href="javascript:;" lay-href="${pageContext.request.contextPath}/aimodle/newaimodle.do"
                                id="newaimodle">ai模型新建</a></dd>
                         <dd><a href="javascript:;" lay-href="${pageContext.request.contextPath}/opc/opcserveinfo.do"
@@ -381,10 +383,9 @@
                 if ($(this).attr("lay-href") !== undefined) {
 
 
-                    if (($(this).attr("id") != undefined) && ($(this).attr("id") == 'newaimodle')) {
+                    if (($(this).attr("id") != undefined) && ($(this).attr("id") == 'newproject')) {
 
-                        let indexlayer = newaimodlewindows(indexdocument, myelement, layer, this);
-
+                        let indexlayer =layermanager.viewnewproject($(this).attr("lay-href"),layer);
 
                     } else if (($(this).attr("id") != undefined) && ($(this).attr("id") == 'newcontrlmodle')){
 

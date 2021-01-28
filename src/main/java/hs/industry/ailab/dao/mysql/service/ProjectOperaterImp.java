@@ -33,7 +33,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author zzx
@@ -442,13 +444,13 @@ public class ProjectOperaterImp {
         Modle modle = projectOperate.findModleByid(modleid);
         BaseModleImp baseModleImp = (BaseModleImp) modle;
         baseModleImp.setModleName(modename);
-        int count=0;
-        if(modle instanceof INModle){
-            count+=projectOperate.updateINModle((INModle) baseModleImp);
+        int count = 0;
+        if (modle instanceof INModle) {
+            count += projectOperate.updateINModle((INModle) baseModleImp);
         }
-       if(modle instanceof OUTModle){
-           count+=projectOperate.updateOUTModle((OUTModle)baseModleImp);
-       }
+        if (modle instanceof OUTModle) {
+            count += projectOperate.updateOUTModle((OUTModle) baseModleImp);
+        }
         return count;
     }
 
@@ -481,65 +483,76 @@ public class ProjectOperaterImp {
 
 
     @Transactional(isolation = Isolation.READ_COMMITTED, transactionManager = "mysqlTransactionManager")
-    public List<BaseModlePropertyImp> findparentmodleboutputpinsbusiness(int modleid) {
-        List<BaseModlePropertyImp> baseModlePropertyImps = new ArrayList<>();
+    public Map<String, List<BaseModlePropertyImp>> findparentmodleboutputpinsbusiness(int modleid) {
+//        List<BaseModlePropertyImp> baseModlePropertyImps = new ArrayList<>();
+        Map<String, List<BaseModlePropertyImp>> parentsPoints = new HashMap();
         BaseModleImp baseModleImp = (BaseModleImp) projectOperate.findModleByid(modleid);
         JSONArray parentmodleids = baseModleImp.getModleSight().getParents();
-        for (int indexparent = 0; indexparent < parentmodleids.size(); indexparent++) {
 
+
+        for (int indexparent = 0; indexparent < parentmodleids.size(); indexparent++) {
             Modle parentmodle = projectOperate.findModleByid(parentmodleids.getJSONObject(indexparent).getInteger("id"));
+            List<BaseModlePropertyImp> parentpoits = new ArrayList<>();
+
             if (parentmodle instanceof INModle) {
                 INModle inModle = (INModle) parentmodle;
+                parentsPoints.put(inModle.getModleName(), parentpoits);
                 for (ModleProperty modleProperty : inModle.getPropertyImpList()) {
+
                     if (((BaseModlePropertyImp) modleProperty).getPindir().equals(ModleProperty.PINDIROUTPUT)) {
-                        baseModlePropertyImps.add((BaseModlePropertyImp) modleProperty);
+                        parentpoits.add((BaseModlePropertyImp) modleProperty);
                     }
 
                 }
 
             } else if (parentmodle instanceof OUTModle) {
                 OUTModle outModle = (OUTModle) parentmodle;
+                parentsPoints.put(outModle.getModleName(), parentpoits);
                 for (ModleProperty modleProperty : outModle.getPropertyImpList()) {
                     if (((BaseModlePropertyImp) modleProperty).getPindir().equals(ModleProperty.PINDIROUTPUT)) {
-                        baseModlePropertyImps.add((BaseModlePropertyImp) modleProperty);
+                        parentpoits.add((BaseModlePropertyImp) modleProperty);
                     }
                 }
 
             } else if (parentmodle instanceof FilterModle) {
                 FilterModle filterModle = (FilterModle) parentmodle;
+                parentsPoints.put(filterModle.getModleName(), parentpoits);
                 for (ModleProperty modleProperty : filterModle.getPropertyImpList()) {
                     if (((BaseModlePropertyImp) modleProperty).getPindir().equals(ModleProperty.PINDIROUTPUT)) {
-                        baseModlePropertyImps.add((BaseModlePropertyImp) modleProperty);
+                        parentpoits.add((BaseModlePropertyImp) modleProperty);
                     }
                 }
 
             } else if (parentmodle instanceof CUSTOMIZEModle) {
                 CUSTOMIZEModle customizeModle = (CUSTOMIZEModle) parentmodle;
+                parentsPoints.put(customizeModle.getModleName(), parentpoits);
                 for (ModleProperty modleProperty : customizeModle.getPropertyImpList()) {
                     if (((BaseModlePropertyImp) modleProperty).getPindir().equals(ModleProperty.PINDIROUTPUT)) {
-                        baseModlePropertyImps.add((BaseModlePropertyImp) modleProperty);
+                        parentpoits.add((BaseModlePropertyImp) modleProperty);
                     }
                 }
 
             } else if (parentmodle instanceof PIDModle) {
                 PIDModle pidModle = (PIDModle) parentmodle;
+                parentsPoints.put(pidModle.getModleName(), parentpoits);
                 for (ModleProperty modleProperty : pidModle.getPropertyImpList()) {
                     if (((BaseModlePropertyImp) modleProperty).getPindir().equals(ModleProperty.PINDIROUTPUT)) {
-                        baseModlePropertyImps.add((BaseModlePropertyImp) modleProperty);
+                        parentpoits.add((BaseModlePropertyImp) modleProperty);
                     }
                 }
 
             } else if (parentmodle instanceof MPCModle) {
                 MPCModle mpcModle = (MPCModle) parentmodle;
+                parentsPoints.put(mpcModle.getModleName(), parentpoits);
                 for (ModleProperty modleProperty : mpcModle.getPropertyImpList()) {
                     if (((BaseModlePropertyImp) modleProperty).getPindir().equals(ModleProperty.PINDIROUTPUT)) {
-                        baseModlePropertyImps.add((BaseModlePropertyImp) modleProperty);
+                        parentpoits.add((BaseModlePropertyImp) modleProperty);
                     }
                 }
             }
 
         }
-        return baseModlePropertyImps;
+        return parentsPoints;
 
     }
 
@@ -664,18 +677,16 @@ public class ProjectOperaterImp {
         for (BaseModlePropertyImp baseModlePropertyImp : pidproperties) {
             if (baseModlePropertyImp.getModlepinsId() == -1) {
 
-                if(baseModlePropertyImp instanceof MPCModleProperty) {
-                    count += projectOperate.insertMPCModleProperty((MPCModleProperty)baseModlePropertyImp);
-                }else
-                if(baseModlePropertyImp instanceof BaseModlePropertyImp){
+                if (baseModlePropertyImp instanceof MPCModleProperty) {
+                    count += projectOperate.insertMPCModleProperty((MPCModleProperty) baseModlePropertyImp);
+                } else if (baseModlePropertyImp instanceof BaseModlePropertyImp) {
                     count += projectOperate.insertBaseModleProperty(baseModlePropertyImp);
                 }
 
             } else {
-                if(baseModlePropertyImp instanceof MPCModleProperty){
-                    count += projectOperate.updateMPCModleProperty((MPCModleProperty)baseModlePropertyImp);
-                }else
-                if(baseModlePropertyImp instanceof BaseModlePropertyImp) {
+                if (baseModlePropertyImp instanceof MPCModleProperty) {
+                    count += projectOperate.updateMPCModleProperty((MPCModleProperty) baseModlePropertyImp);
+                } else if (baseModlePropertyImp instanceof BaseModlePropertyImp) {
                     count += projectOperate.updateBaseModleProperty(baseModlePropertyImp);
                 }
             }
@@ -687,21 +698,20 @@ public class ProjectOperaterImp {
 
 
     @Transactional(isolation = Isolation.READ_COMMITTED, transactionManager = "mysqlTransactionManager")
-    public int insertoutmodlepropertybusiness(BaseModlePropertyImp inproperty,BaseModlePropertyImp outproperty) {
+    public int insertoutmodlepropertybusiness(BaseModlePropertyImp inproperty, BaseModlePropertyImp outproperty) {
         int count = 0;
-        count+=projectOperate.insertBaseModleProperty(inproperty);
-        outproperty.getResource().put("modlepinsId",inproperty.getModlepinsId());
-        count+=projectOperate.insertBaseModleProperty(outproperty);
+        count += projectOperate.insertBaseModleProperty(inproperty);
+        outproperty.getResource().put("modlepinsId", inproperty.getModlepinsId());
+        count += projectOperate.insertBaseModleProperty(outproperty);
         return count;
     }
 
 
-
     @Transactional(isolation = Isolation.READ_COMMITTED, transactionManager = "mysqlTransactionManager")
-    public int updateoutmodlepropertybusiness(BaseModlePropertyImp inproperty,BaseModlePropertyImp outproperty) {
+    public int updateoutmodlepropertybusiness(BaseModlePropertyImp inproperty, BaseModlePropertyImp outproperty) {
         int count = 0;
-        count+=projectOperate.updateBaseModleProperty(inproperty);
-        count+=projectOperate.updateBaseModleProperty(outproperty);
+        count += projectOperate.updateBaseModleProperty(inproperty);
+        count += projectOperate.updateBaseModleProperty(outproperty);
         return count;
     }
 
@@ -709,8 +719,8 @@ public class ProjectOperaterImp {
     @Transactional(isolation = Isolation.READ_COMMITTED, transactionManager = "mysqlTransactionManager")
     public int insertmpcmodlepvrelationpropertybusiness(MPCModleProperty... mpcModleProperties) {
         int count = 0;
-        for(MPCModleProperty mpcModleProperty:mpcModleProperties){
-            count+=projectOperate.insertMPCModleProperty(mpcModleProperty);
+        for (MPCModleProperty mpcModleProperty : mpcModleProperties) {
+            count += projectOperate.insertMPCModleProperty(mpcModleProperty);
         }
         return count;
     }
@@ -719,8 +729,21 @@ public class ProjectOperaterImp {
     @Transactional(isolation = Isolation.READ_COMMITTED, transactionManager = "mysqlTransactionManager")
     public int updatempcmodlepvrelationpropertybusiness(MPCModleProperty... mpcModleProperties) {
         int count = 0;
-        for(MPCModleProperty mpcModleProperty:mpcModleProperties){
-            count+=projectOperate.updateMPCModleProperty(mpcModleProperty);
+        for (MPCModleProperty mpcModleProperty : mpcModleProperties) {
+            count += projectOperate.updateMPCModleProperty(mpcModleProperty);
+        }
+        return count;
+    }
+
+
+    @Transactional(isolation = Isolation.READ_COMMITTED, transactionManager = "mysqlTransactionManager")
+    public int updatempcmodlebusiness(MPCModle mpcModle, MPCModleProperty mpcModleautoProperties) {
+        int count = 0;
+        count+=projectOperate.updateMPCModle(mpcModle);
+        if (mpcModleautoProperties.getModlepinsId() == -1) {
+            count += projectOperate.insertMPCModleProperty( mpcModleautoProperties);
+        } else {
+            count += projectOperate.updateMPCModleProperty( mpcModleautoProperties);
         }
         return count;
     }

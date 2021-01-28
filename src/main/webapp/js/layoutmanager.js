@@ -1,5 +1,43 @@
-var layermanager={
-    vieweditproject:function(url,projectid,layer){
+var layermanager = {
+
+    viewnewproject: function (url, layer) {
+        let indexlayer = layer.open(
+            {
+                type: 2
+                , title: false //不显示标题栏
+                // ,id:'idLAY_layuipro'
+                // ,closeBtn: false
+                , area: '500px' //['300px', '260px']
+                , content: [url, 'no']//不要滚动条
+                , zIndex: layer.zIndex //重点1
+                , shade: 0.3
+                , id: 'LAY_layuipro'
+                , btn: ['确定', '取消']
+                , yes: function (index, layero) {
+                    //按钮【按钮一】的回调
+                    // layer.getChildFrame()
+                    // var iframeWin = window[layero.find('iframe')[0]['name']];
+                    // iframeWin.document.getElementById("modlesubmit").click();
+
+                    var body = layer.getChildFrame('body', index);
+                    // console.log('newcontrlmodlepinsubmitbt',body.find("#newcontrlmodlepinsubmitbt"));
+                    body.find("#motifymodlesubmit").trigger('click');
+                }
+                , btn2: function (index, layero) {
+                    //按钮【按钮二】的回调 do nothing
+                    //return false 开启该代码可禁止点击该按钮关闭
+                }
+                , btnAlign: 'c'
+                , success: function (layero) {
+                    layer.setTop(layero); //重点2
+                }
+
+                // content: 'http://sentsin.com' //这里content是一个URL，如果你不想让iframe出现滚动条，你还可以content: ['http://sentsin.com', 'no']
+            }
+        );
+        return indexlayer;
+    },
+    vieweditproject: function (url, projectid, layer) {
         let indexlayer = layer.open(
             {
                 type: 2
@@ -7,9 +45,9 @@ var layermanager={
                 // ,title: false //不显示标题栏
                 // ,id:'idLAY_layuipro'
                 // ,closeBtn: false
-                ,maxmin:true
+                , maxmin: true
                 , area: ['750px', '550px'] //['300px', '260px']
-                , content: url+'?projectid='+projectid
+                , content: url + '?projectid=' + projectid
                 //[dom.attr("lay-href"),'no']//不要滚动条
                 , zIndex: layer.zIndex //重点1
                 , shade: 0
@@ -43,7 +81,7 @@ var layermanager={
     },
 
 
-    viewmodledetail:function(url,projectid,modleId,layer){
+    viewmodledetail: function (url, projectid, modleId, layer) {
         let indexlayer = layer.open(
             {
                 type: 2
@@ -51,9 +89,9 @@ var layermanager={
                 // ,title: false //不显示标题栏
                 // ,id:'idLAY_layuipro'
                 // ,closeBtn: false
-                ,maxmin:true
+                , maxmin: true
                 , area: ['750px', '550px'] //['300px', '260px']
-                , content: url+'?modleId='+modleId+'&projectid='+projectid
+                , content: url + '?modleId=' + modleId + '&projectid=' + projectid
                 //[dom.attr("lay-href"),'no']//不要滚动条
                 , zIndex: layer.zIndex //重点1
                 , shade: 0
@@ -86,7 +124,7 @@ var layermanager={
 
     },
 
-    vieweditmolde:function(url,modleId,layer){
+    vieweditmolde: function (url, modleId, layer) {
         let indexlayer = layer.open(
             {
                 type: 2
@@ -94,9 +132,9 @@ var layermanager={
                 // ,title: false //不显示标题栏
                 // ,id:'idLAY_layuipro'
                 // ,closeBtn: false
-                ,maxmin:true
+                , maxmin: true
                 , area: ['750px', '550px'] //['300px', '260px']
-                , content: url+'?modleId='+modleId
+                , content: url + '?modleId=' + modleId
                 //[dom.attr("lay-href"),'no']//不要滚动条
                 , zIndex: layer.zIndex //重点1
                 , shade: 0
@@ -130,13 +168,13 @@ var layermanager={
     },
 
 
-    viewaddinputproperty:function(url, modletype, modleId, pindir,layer, dom){
+    viewaddinputproperty: function (url, modletype, modleId, pindir, layer, dom) {
         let indexlayer = layer.open(
             {
                 type: 2
                 , title: '添加输入设置'
                 , area: ['600px', '500px'] //['300px', '260px']
-                , content: url+'?modletype='+modletype+'&modleId='+modleId+'&pindir='+pindir//http://127.0.0.1//modifyaimodleproperty.do?modleid=' + modleid + '&propertyid=' + propertyid
+                , content: url + '?modletype=' + modletype + '&modleId=' + modleId + '&pindir=' + pindir//http://127.0.0.1//modifyaimodleproperty.do?modleid=' + modleid + '&propertyid=' + propertyid
                 //[dom.attr("lay-href"),'no']//不要滚动条
                 , zIndex: layer.zIndex //重点1
                 , shade: 0.3
@@ -146,7 +184,7 @@ var layermanager={
                     //按钮【按钮一】的回调
                     // layer.getChildFrame()
                     var body = layer.getChildFrame('body', index);
-                    console.log('newcontrlmodlepinsubmitbt',body.find("#newcontrlmodlepinsubmitbt"));
+                    console.log('newcontrlmodlepinsubmitbt', body.find("#newcontrlmodlepinsubmitbt"));
                     body.find("#newcontrlmodlepinsubmitbt").trigger('click');
                     $("#bt_flush_pvtab", dom).trigger('click');
                     // var iframeWin = window[layero.find('iframe')[0]['name']];
@@ -166,13 +204,13 @@ var layermanager={
         );
     },
 
-    viewaddmpcmodleproperty:function(url, pintype, modleId,layer, dom){
+    viewaddmpcmodleproperty: function (url, pintype, modleId, layer, dom) {
         let indexlayer = layer.open(
             {
                 type: 2
                 , title: '添加输入设置'
                 , area: ['600px', '500px'] //['300px', '260px']
-                , content: url+'?pintype='+pintype+'&modleId='+modleId//http://127.0.0.1//modifyaimodleproperty.do?modleid=' + modleid + '&propertyid=' + propertyid
+                , content: url + '?pintype=' + pintype + '&modleId=' + modleId//http://127.0.0.1//modifyaimodleproperty.do?modleid=' + modleid + '&propertyid=' + propertyid
                 //[dom.attr("lay-href"),'no']//不要滚动条
                 , zIndex: layer.zIndex //重点1
                 , shade: 0.3
@@ -201,13 +239,13 @@ var layermanager={
             }
         );
     },
-    viewaddmpcmodlerespon:function(url, modleId,layer, dom){
+    viewaddmpcmodlerespon: function (url, modleId, layer, dom) {
         let indexlayer = layer.open(
             {
                 type: 2
                 , title: '添加响应设置'
                 , area: ['600px', '500px'] //['300px', '260px']
-                , content: url+'?modleId='+modleId//http://127.0.0.1//modifyaimodleproperty.do?modleid=' + modleid + '&propertyid=' + propertyid
+                , content: url + '?modleId=' + modleId//http://127.0.0.1//modifyaimodleproperty.do?modleid=' + modleid + '&propertyid=' + propertyid
                 //[dom.attr("lay-href"),'no']//不要滚动条
                 , zIndex: layer.zIndex //重点1
                 , shade: 0.3
@@ -237,13 +275,13 @@ var layermanager={
         );
     },
 
-    viewupdateinputproperty:function(url, modletype, propertyid, layer, dom){
+    viewupdateinputproperty: function (url, modletype, propertyid, layer, dom) {
         let indexlayer = layer.open(
             {
                 type: 2
                 , title: '更新输出设置'
                 , area: ['600px', '500px'] //['300px', '260px']
-                , content: url+'?modletype='+modletype+'&modlepinsId='+propertyid+''
+                , content: url + '?modletype=' + modletype + '&modlepinsId=' + propertyid + ''
                 //[dom.attr("lay-href"),'no']//不要滚动条
                 , zIndex: layer.zIndex //重点1
                 , shade: 0.3
@@ -264,9 +302,9 @@ var layermanager={
                     //return false 开启该代码可禁止点击该按钮关闭
                 }
                 , btnAlign: 'c'
-                , success: function (layero,index) {
-                    console.log('layero',layero);
-                    console.log('index',index);
+                , success: function (layero, index) {
+                    console.log('layero', layero);
+                    console.log('index', index);
                     layer.setTop(layero); //重点2
                 }
 
@@ -277,13 +315,13 @@ var layermanager={
         return indexlayer;
     },
 
-    viewupdatempcmodleproperty:function(url, pintype, modlepinsId,layer, dom){
+    viewupdatempcmodleproperty: function (url, pintype, modlepinsId, layer, dom) {
         let indexlayer = layer.open(
             {
                 type: 2
                 , title: '修改设置'
                 , area: ['600px', '500px'] //['300px', '260px']
-                , content: url+'?pintype='+pintype+'&modlepinsId='+modlepinsId//http://127.0.0.1//modifyaimodleproperty.do?modleid=' + modleid + '&propertyid=' + propertyid
+                , content: url + '?pintype=' + pintype + '&modlepinsId=' + modlepinsId//http://127.0.0.1//modifyaimodleproperty.do?modleid=' + modleid + '&propertyid=' + propertyid
                 //[dom.attr("lay-href"),'no']//不要滚动条
                 , zIndex: layer.zIndex //重点1
                 , shade: 0.3
@@ -313,13 +351,13 @@ var layermanager={
         );
     },
 
-    viewupdatempcmodlerespon:function(url, modleresponId,layer, dom){
+    viewupdatempcmodlerespon: function (url, modleresponId, layer, dom) {
         let indexlayer = layer.open(
             {
                 type: 2
                 , title: '修改设置'
                 , area: ['600px', '500px'] //['300px', '260px']
-                , content: url+'?modleresponId='+modleresponId//http://127.0.0.1//modifyaimodleproperty.do?modleid=' + modleid + '&propertyid=' + propertyid
+                , content: url + '?modleresponId=' + modleresponId//http://127.0.0.1//modifyaimodleproperty.do?modleid=' + modleid + '&propertyid=' + propertyid
                 //[dom.attr("lay-href"),'no']//不要滚动条
                 , zIndex: layer.zIndex //重点1
                 , shade: 0.3
@@ -348,7 +386,6 @@ var layermanager={
             }
         );
     },
-
 
 
     createmodleview: function (position) {
@@ -385,6 +422,25 @@ var layermanager={
             }
         );
 
+    },
+    newleft: function (projectname, prjectid, root) {
+
+
+        // console.log($(".layui-nav-tree", indexjspdocument).find("li:eq(1)").find("dl:last"))
+
+        mydd = parent.document.createElement("dd");
+        mya = parent.document.createElement("a");
+        mya.setAttribute("lay-href", root + "/projectedit/vieweditproject?projectid=" + prjectid);
+        mya.setAttribute("href", "javascript:;");
+        mya.innerHTML = projectname;
+        mydd.appendChild(mya);
+        let parentli
+        $(".layui-nav-tree", parent.document).find("li:eq(0)").find("dl:last").append(mydd);
+        $("#bt_flush_nav", parent.document).trigger("click")
+        // $(".layui-nav-tree", parent.document).find("li:eq(1)").find("dl:last").append(mydd);
+        //indexjspelement.render('nav', 'navtree');
+        // $("#bt_flush_nav", parent.document).trigger("click")
+        // indexjspelement.init();
     },
 
 }

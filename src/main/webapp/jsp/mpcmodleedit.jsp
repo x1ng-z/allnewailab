@@ -42,6 +42,12 @@
                    style="visibility: hidden;width: 0px;height: 0px;z-index: -99;">
         </div>
 
+        <div class="layui-inline">
+            <input type="text" name="autoid" value="${auto.modlepinsId}" autocomplete="off"
+                   class="layui-input"
+                   style="visibility: hidden;width: 0px;height: 0px;z-index: -99;">
+        </div>
+
     </div>
 
     <div class="layui-form-item">
@@ -103,6 +109,49 @@
 
                 </select>
             </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">手自动开关值</label>
+                <div class="layui-input-inline">
+                    <%--                lay-verify="number"--%>
+                    <input type="number" name="auto" autocomplete="off" class="layui-input"
+                           value="${auto.resource.getDouble("value")}" placeholder="请输入常量值" id="autoconstantid">
+                </div>
+            </div>
+
+            <div class="layui-inline">
+                <label class="layui-form-label">手自动开关映射</label>
+                <div class="layui-input-inline">
+                    <select name="automodleOpcTag" lay-search="" id="autoselect" lay-filter="autoselect">
+                        <option value="">请选择</option>
+
+                        <c:forEach items="${points}" var="point" varStatus="Count">
+                            <optgroup label="${point.key}">
+                                <c:forEach items="${point.value}" var="parentpin">
+                                    <c:choose>
+                                        <c:when test="${parentpin.modlepinsId==auto.resource.getInteger('modlepinsId')}">
+                                            <option value="${parentpin.modlePinName}"
+                                                    autoresourcemodleId="${parentpin.refmodleId}"
+                                                    autoresourcemodlepinsId="${parentpin.modlepinsId}"
+                                                    selected>${parentpin.modlePinName}(${parentpin.opcTagName})
+                                            </option>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <option value="${parentpin.modlePinName}"
+                                                    autoresourcemodleId="${parentpin.refmodleId}"
+                                                    autoresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})
+                                            </option>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </c:forEach>
+                            </optgroup>
+                        </c:forEach>
+                    </select>
+                </div>
+            </div>
+
         </div>
 
 
@@ -745,18 +794,41 @@
             element = layui.element;
             form = layui.form;
             layer = parent.layer === undefined ? layui.layer : parent.layer;
+            ${auto.resource.getString("resource")=="constant"||auto.resource.getString("resource")!="modle"}
+                ? $('#autoconstantid').removeAttr("disabled") : $("#autoconstantid").attr("disabled", true);
+
             form.render(); //更新全部
             form.render('select'); //刷新select选择框渲染
             form.on('submit(motifymodlesubmit)', function (data) {
-                console.log(' data.field', data.field);
+                // console.log(' data.field', data.field);
                 let index = layer.msg('修改中，请稍候', {icon: 16, time: false, shade: 0.8});
                 let url = "/projectedit/updatemodle";
-                if (api.updatemodle(url, data.field, layer)) {
+
+                partcontex=data.field;
+                partcontex['autoopcTagName'] = $('#autoselect').find("option:selected").html();
+                partcontex['autoresourcemodleId'] = $('#autoselect').find("option:selected").attr("autoresourcemodleId");
+                partcontex['autoresourcemodlepinsId'] = $('#autoselect').find("option:selected").attr("autoresourcemodlepinsId");
+
+                if (api.updatemodle(url,partcontex , layer)) {
                     layer.close(layer.getFrameIndex(window.name));
                 }
                 layer.close(index);
 
                 return false;
+            });
+
+
+            form.on('select(autoselect)', function (data) {
+                if (data.value == '') {
+                    $('#autoconstantid').removeAttr('disabled');
+                    // $('#modlePincontantvalueid').attr('value','');
+                    form.render();
+                    element.render();
+                } else {
+                    $('#autoconstantid').attr('disabled', true);
+                    form.render();
+                    element.render();
+                }
             });
 
             pvtabrender(table);

@@ -78,20 +78,40 @@
                             <select name="ffmodleOpcTag" lay-search=""
                                     lay-filter="selectffopctag" id="selectffopctag">
                                 <option value="">请选择</option>
+<%--                                <c:forEach items="${points}" var="point" varStatus="Count">--%>
+<%--                                    <c:choose>--%>
+<%--                                        <c:when test="${point.modlepinsId==ff.resource.getInteger('modlepinsId')}">--%>
+<%--                                            <option value="${point.modlePinName}"--%>
+<%--                                                    ffresourcemodleId="${point.refmodleId}"--%>
+<%--                                                    ffresourcemodlepinsId="${point.modlepinsId}"--%>
+<%--                                                    selected>${point.opcTagName}</option>--%>
+<%--                                        </c:when>--%>
+<%--                                        <c:otherwise>--%>
+<%--                                            <option value="${point.modlePinName}"--%>
+<%--                                                    ffresourcemodleId="${point.refmodleId}"--%>
+<%--                                                    ffresourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>--%>
+<%--                                        </c:otherwise>--%>
+<%--                                    </c:choose>--%>
+<%--                                </c:forEach>--%>
+
+
                                 <c:forEach items="${points}" var="point" varStatus="Count">
-                                    <c:choose>
-                                        <c:when test="${point.modlepinsId==ff.resource.getInteger('modlepinsId')}">
-                                            <option value="${point.modlePinName}"
-                                                    ffresourcemodleId="${point.refmodleId}"
-                                                    ffresourcemodlepinsId="${point.modlepinsId}"
-                                                    selected>${point.opcTagName}</option>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <option value="${point.modlePinName}"
-                                                    ffresourcemodleId="${point.refmodleId}"
-                                                    ffresourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>
-                                        </c:otherwise>
-                                    </c:choose>
+                                    <optgroup label="${point.key}">
+                                        <c:forEach items="${point.value}" var="parentpin">
+                                            <c:choose>
+                                                <c:when test="${parentpin.modlepinsId==ff.resource.getInteger('modlepinsId')}">
+                                                    <option value="${parentpin.modlePinName}" ffresourcemodleId="${parentpin.refmodleId}"
+                                                            ffresourcemodlepinsId="${parentpin.modlepinsId}"
+                                                            selected>${parentpin.modlePinName}(${parentpin.opcTagName})</option>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <option value="${parentpin.modlePinName}" ffresourcemodleId="${parentpin.refmodleId}"
+                                                            ffresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})</option>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </c:forEach>
+                                    </optgroup>
+
                                 </c:forEach>
                             </select>
                         </div>
@@ -126,21 +146,41 @@
                             <select name="ffupmodleOpcTag" lay-search=""
                                     lay-filter="selectffupopctag" id="selectffupopctag">
                                 <option value="">请选择</option>
+<%--                                <c:forEach items="${points}" var="point" varStatus="Count">--%>
+<%--                                    <c:choose>--%>
+<%--                                        <c:when test="${point.modlepinsId==ffup.resource.getInteger('modlepinsId')}">--%>
+<%--                                            <option value="${point.modlePinName}"--%>
+<%--                                                    ffupresourcemodleId="${point.refmodleId}"--%>
+<%--                                                    ffupresourcemodlepinsId="${point.modlepinsId}"--%>
+<%--                                                    selected>${point.opcTagName}</option>--%>
+<%--                                        </c:when>--%>
+<%--                                        <c:otherwise>--%>
+<%--                                            <option value="${point.modlePinName}"--%>
+<%--                                                    ffupresourcemodleId="${point.refmodleId}"--%>
+<%--                                                    ffupresourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>--%>
+<%--                                        </c:otherwise>--%>
+<%--                                    </c:choose>--%>
+<%--                                </c:forEach>--%>
+
                                 <c:forEach items="${points}" var="point" varStatus="Count">
-                                    <c:choose>
-                                        <c:when test="${point.modlepinsId==ffup.resource.getInteger('modlepinsId')}">
-                                            <option value="${point.modlePinName}"
-                                                    ffupresourcemodleId="${point.refmodleId}"
-                                                    ffupresourcemodlepinsId="${point.modlepinsId}"
-                                                    selected>${point.opcTagName}</option>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <option value="${point.modlePinName}"
-                                                    ffupresourcemodleId="${point.refmodleId}"
-                                                    ffupresourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>
-                                        </c:otherwise>
-                                    </c:choose>
+                                    <optgroup label="${point.key}">
+                                        <c:forEach items="${point.value}" var="parentpin">
+                                            <c:choose>
+                                                <c:when test="${parentpin.modlepinsId==ffup.resource.getInteger('modlepinsId')}">
+                                                    <option value="${parentpin.modlePinName}" ffupresourcemodleId="${parentpin.refmodleId}"
+                                                            ffupresourcemodlepinsId="${parentpin.modlepinsId}"
+                                                            selected>${parentpin.modlePinName}(${parentpin.opcTagName})</option>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <option value="${parentpin.modlePinName}" ffupresourcemodleId="${parentpin.refmodleId}"
+                                                            ffupresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})</option>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </c:forEach>
+                                    </optgroup>
+
                                 </c:forEach>
+
                             </select>
                         </div>
                     </div>
@@ -171,21 +211,41 @@
                             <select name="ffdownmodleOpcTag" lay-search=""
                                     lay-filter="selectffdownopctag" id="selectffdownopctag">
                                 <option value="">请选择</option>
+<%--                                <c:forEach items="${points}" var="point" varStatus="Count">--%>
+<%--                                    <c:choose>--%>
+<%--                                        <c:when test="${point.modlepinsId==ffdown.resource.getInteger('modlepinsId')}">--%>
+<%--                                            <option value="${point.modlePinName}"--%>
+<%--                                                    ffdownresourcemodleId="${point.refmodleId}"--%>
+<%--                                                    ffdownresourcemodlepinsId="${point.modlepinsId}"--%>
+<%--                                                    selected>${point.opcTagName}</option>--%>
+<%--                                        </c:when>--%>
+<%--                                        <c:otherwise>--%>
+<%--                                            <option value="${point.modlePinName}"--%>
+<%--                                                    ffdownresourcemodleId="${point.refmodleId}"--%>
+<%--                                                    ffdownresourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>--%>
+<%--                                        </c:otherwise>--%>
+<%--                                    </c:choose>--%>
+<%--                                </c:forEach>--%>
+
                                 <c:forEach items="${points}" var="point" varStatus="Count">
-                                    <c:choose>
-                                        <c:when test="${point.modlepinsId==ffdown.resource.getInteger('modlepinsId')}">
-                                            <option value="${point.modlePinName}"
-                                                    ffdownresourcemodleId="${point.refmodleId}"
-                                                    ffdownresourcemodlepinsId="${point.modlepinsId}"
-                                                    selected>${point.opcTagName}</option>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <option value="${point.modlePinName}"
-                                                    ffdownresourcemodleId="${point.refmodleId}"
-                                                    ffdownresourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>
-                                        </c:otherwise>
-                                    </c:choose>
+                                    <optgroup label="${point.key}">
+                                        <c:forEach items="${point.value}" var="parentpin">
+                                            <c:choose>
+                                                <c:when test="${parentpin.modlepinsId==ffdown.resource.getInteger('modlepinsId')}">
+                                                    <option value="${parentpin.modlePinName}" ffdownresourcemodleId="${parentpin.refmodleId}"
+                                                            ffdownresourcemodlepinsId="${parentpin.modlepinsId}"
+                                                            selected>${parentpin.modlePinName}(${parentpin.opcTagName})</option>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <option value="${parentpin.modlePinName}" ffdownresourcemodleId="${parentpin.refmodleId}"
+                                                            ffdownresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})</option>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </c:forEach>
+                                    </optgroup>
+
                                 </c:forEach>
+
                             </select>
                         </div>
                     </div>

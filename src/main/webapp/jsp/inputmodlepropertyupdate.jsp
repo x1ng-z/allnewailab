@@ -67,10 +67,10 @@
                         <c:forEach items="${points}" var="point" varStatus="Count">
                             <c:choose>
                                 <c:when test="${point.modleOpcTag==baseModlePropertyImp.modleOpcTag}">
-                                    <option value="${point.modleOpcTag}" selected>${point.opcTagName}</option>
+                                    <option value="${point.modleOpcTag}" selected>${point.modleOpcTag}(${point.opcTagName})</option>
                                 </c:when>
                                 <c:otherwise>
-                                    <option value="${point.modleOpcTag}">${point.opcTagName}</option>
+                                    <option value="${point.modleOpcTag}">${point.modleOpcTag}(${point.opcTagName})</option>
                                 </c:otherwise>
                             </c:choose>
                         </c:forEach>

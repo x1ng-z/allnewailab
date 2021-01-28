@@ -71,16 +71,37 @@
                 <div class="layui-input-inline">
                     <select name="modleOpcTag" lay-verify="required" lay-search="" lay-filter="selectopctag">
                         <option value="">请选择</option>
+<%--                        <c:forEach items="${points}" var="point" varStatus="Count">--%>
+<%--                            <c:choose>--%>
+<%--                                <c:when test="${point.modlepinsId==baseModlePropertyImp.resource.getInteger('modlepinsId')}">--%>
+<%--                                    <option value="${point.modlePinName}" resourcemodleId="${point.refmodleId}" resourcemodlepinsId="${point.modlepinsId}" selected>${point.opcTagName}</option>--%>
+<%--                                </c:when>--%>
+<%--                                <c:otherwise>--%>
+<%--                                    <option value="${point.modlePinName}" resourcemodleId="${point.refmodleId}" resourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>--%>
+<%--                                </c:otherwise>--%>
+<%--                            </c:choose>--%>
+<%--                        </c:forEach>--%>
+
                         <c:forEach items="${points}" var="point" varStatus="Count">
-                            <c:choose>
-                                <c:when test="${point.modlepinsId==baseModlePropertyImp.resource.getInteger('modlepinsId')}">
-                                    <option value="${point.modlePinName}" resourcemodleId="${point.refmodleId}" resourcemodlepinsId="${point.modlepinsId}" selected>${point.opcTagName}</option>
-                                </c:when>
-                                <c:otherwise>
-                                    <option value="${point.modlePinName}" resourcemodleId="${point.refmodleId}" resourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>
-                                </c:otherwise>
-                            </c:choose>
+                            <optgroup label="${point.key}">
+                                <c:forEach items="${point.value}" var="parentpin">
+                                    <c:choose>
+                                        <c:when test="${parentpin.modlepinsId==baseModlePropertyImp.resource.getInteger('modlepinsId')}">
+                                            <option value="${parentpin.modlePinName}" resourcemodleId="${parentpin.refmodleId}"
+                                                    resourcemodlepinsId="${parentpin.modlepinsId}"
+                                                    selected>${parentpin.modlePinName}(${parentpin.opcTagName})</option>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <option value="${parentpin.modlePinName}" resourcemodleId="${parentpin.refmodleId}"
+                                                    resourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})</option>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </c:forEach>
+                            </optgroup>
+
                         </c:forEach>
+
+
                     </select>
                 </div>
             </div>

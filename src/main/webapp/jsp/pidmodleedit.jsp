@@ -1,4 +1,5 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ page import="com.alibaba.fastjson.JSONObject" %>
 <%--
   Created by IntelliJ IDEA.
   User: zaixz
@@ -88,6 +89,13 @@
                    style="visibility: hidden;width: 0px;height: 0px;z-index: -99;">
         </div>
 
+        <div class="layui-inline">
+            <input type="text" name="autoid" value="${auto.modlepinsId}" autocomplete="off"
+                   class="layui-input"
+                   style="visibility: hidden;width: 0px;height: 0px;z-index: -99;">
+        </div>
+
+
     </div>
 
     <fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
@@ -102,6 +110,51 @@
             </div>
         </div>
     </div>
+
+
+    <div class="layui-form-item">
+        <div class="layui-inline">
+            <label class="layui-form-label">手自动开关值</label>
+            <div class="layui-input-inline">
+                <%--                lay-verify="number"--%>
+                <input type="number" name="auto" autocomplete="off" class="layui-input"
+                       value="${auto.resource.getDouble("value")}" placeholder="请输入常量值" id="autoconstantid">
+            </div>
+        </div>
+
+        <div class="layui-inline">
+            <label class="layui-form-label">手自动开关映射</label>
+            <div class="layui-input-inline">
+                <select name="automodleOpcTag" lay-search="" id="autoselect" lay-filter="autoselect">
+                    <option value="">请选择</option>
+
+                    <c:forEach items="${points}" var="point" varStatus="Count">
+                        <optgroup label="${point.key}">
+                            <c:forEach items="${point.value}" var="parentpin">
+                                <c:choose>
+                                    <c:when test="${parentpin.modlepinsId==auto.resource.getInteger('modlepinsId')}">
+                                        <option value="${parentpin.modlePinName}"
+                                                autoresourcemodleId="${parentpin.refmodleId}"
+                                                autoresourcemodlepinsId="${parentpin.modlepinsId}"
+                                                selected>${parentpin.modlePinName}(${parentpin.opcTagName})
+                                        </option>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <option value="${parentpin.modlePinName}"
+                                                autoresourcemodleId="${parentpin.refmodleId}"
+                                                autoresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})
+                                        </option>
+                                    </c:otherwise>
+                                </c:choose>
+                            </c:forEach>
+                        </optgroup>
+                    </c:forEach>
+                </select>
+            </div>
+        </div>
+
+    </div>
+
 
     <div class="layui-form-item">
         <div class="layui-inline">
@@ -118,18 +171,27 @@
             <div class="layui-input-inline">
                 <select name="kpmodleOpcTag" lay-search="" id="kpselect" lay-filter="kpselect">
                     <option value="">请选择</option>
+
                     <c:forEach items="${points}" var="point" varStatus="Count">
-                        <c:choose>
-                            <c:when test="${point.modlepinsId==kp.resource.getInteger('modlepinsId')}">
-                                <option value="${point.modlePinName}" kpresourcemodleId="${point.refmodleId}"
-                                        kpresourcemodlepinsId="${point.modlepinsId}"
-                                        selected>${point.opcTagName}</option>
-                            </c:when>
-                            <c:otherwise>
-                                <option value="${point.modlePinName}" kpresourcemodleId="${point.refmodleId}"
-                                        kpresourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>
-                            </c:otherwise>
-                        </c:choose>
+                        <optgroup label="${point.key}">
+                            <c:forEach items="${point.value}" var="parentpin">
+                                <c:choose>
+                                    <c:when test="${parentpin.modlepinsId==kp.resource.getInteger('modlepinsId')}">
+                                        <option value="${parentpin.modlePinName}"
+                                                kpresourcemodleId="${parentpin.refmodleId}"
+                                                kpresourcemodlepinsId="${parentpin.modlepinsId}"
+                                                selected>${parentpin.modlePinName}(${parentpin.opcTagName})
+                                        </option>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <option value="${parentpin.modlePinName}"
+                                                kpresourcemodleId="${parentpin.refmodleId}"
+                                                kpresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})
+                                        </option>
+                                    </c:otherwise>
+                                </c:choose>
+                            </c:forEach>
+                        </optgroup>
                     </c:forEach>
                 </select>
             </div>
@@ -153,22 +215,29 @@
                 <select name="kimodleOpcTag" lay-search="" id="kiselect" lay-filter="kiselect">
                     <option value="">请选择</option>
                     <c:forEach items="${points}" var="point" varStatus="Count">
-                        <c:choose>
-                            <c:when test="${point.modlepinsId==ki.resource.getInteger('modlepinsId')}">
-                                <option value="${point.modlePinName}" kiresourcemodleId="${point.refmodleId}"
-                                        kiresourcemodlepinsId="${point.modlepinsId}"
-                                        selected>${point.opcTagName}</option>
-                            </c:when>
-                            <c:otherwise>
-                                <option value="${point.modlePinName}" kiresourcemodleId="${point.refmodleId}"
-                                        kiresourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>
-                            </c:otherwise>
-                        </c:choose>
+                        <optgroup label="${point.key}">
+                            <c:forEach items="${point.value}" var="parentpin">
+                                <c:choose>
+                                    <c:when test="${parentpin.modlepinsId==ki.resource.getInteger('modlepinsId')}">
+                                        <option value="${parentpin.modlePinName}"
+                                                kiresourcemodleId="${parentpin.refmodleId}"
+                                                kiresourcemodlepinsId="${parentpin.modlepinsId}"
+                                                selected>${parentpin.modlePinName}(${parentpin.opcTagName})
+                                        </option>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <option value="${parentpin.modlePinName}"
+                                                kiresourcemodleId="${parentpin.refmodleId}"
+                                                kiresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})
+                                        </option>
+                                    </c:otherwise>
+                                </c:choose>
+                            </c:forEach>
+                        </optgroup>
                     </c:forEach>
                 </select>
             </div>
         </div>
-
     </div>
 
 
@@ -188,17 +257,26 @@
                 <select name="kdmodleOpcTag" lay-search="" id="kdselect" lay-filter="kdselect">
                     <option value="">请选择</option>
                     <c:forEach items="${points}" var="point" varStatus="Count">
-                        <c:choose>
-                            <c:when test="${point.modlepinsId==kd.resource.getInteger('modlepinsId')}">
-                                <option value="${point.modlePinName}" kdresourcemodleId="${point.refmodleId}"
-                                        kdresourcemodlepinsId="${point.modlepinsId}"
-                                        selected>${point.opcTagName}</option>
-                            </c:when>
-                            <c:otherwise>
-                                <option value="${point.modlePinName}" kdresourcemodleId="${point.refmodleId}"
-                                        kdresourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>
-                            </c:otherwise>
-                        </c:choose>
+                        <optgroup label="${point.key}">
+                            <c:forEach items="${point.value}" var="parentpin">
+                                <c:choose>
+                                    <c:when test="${parentpin.modlepinsId==kd.resource.getInteger('modlepinsId')}">
+                                        <option value="${parentpin.modlePinName}"
+                                                kdresourcemodleId="${parentpin.refmodleId}"
+                                                kdresourcemodlepinsId="${parentpin.modlepinsId}"
+                                                selected>${parentpin.modlePinName}(${parentpin.opcTagName})
+                                        </option>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <option value="${parentpin.modlePinName}"
+                                                kdresourcemodleId="${parentpin.refmodleId}"
+                                                kdresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})
+                                        </option>
+                                    </c:otherwise>
+                                </c:choose>
+                            </c:forEach>
+                        </optgroup>
+
                     </c:forEach>
                 </select>
             </div>
@@ -211,7 +289,7 @@
         <div class="layui-inline">
             <label class="layui-form-label">PV</label>
             <div class="layui-input-inline">
-                <input type="number" name="sp" autocomplete="off" class="layui-input"
+                <input type="number" name="pv" autocomplete="off" class="layui-input"
                        value="${pv.resource.getDouble("value")}" placeholder="请输入PV常量值" id="pvconstantid">
             </div>
         </div>
@@ -221,24 +299,41 @@
                 <select name="pvmodleOpcTag" lay-search="" id="pvselect" lay-filter="pvselect">
                     <option value="">请选择</option>
                     <c:forEach items="${points}" var="point" varStatus="Count">
-
-                        <c:choose>
-                            <c:when test="${point.modlepinsId==pv.resource.getInteger('modlepinsId')}">
-                                <option value="${point.modlePinName}" pvresourcemodleId="${point.refmodleId}"
-                                        pvresourcemodlepinsId="${point.modlepinsId}"
-                                        selected>${point.opcTagName}</option>
-                            </c:when>
-                            <c:otherwise>
-                                <option value="${point.modlePinName}" pvresourcemodleId="${point.refmodleId}"
-                                        pvresourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>
-                            </c:otherwise>
-                        </c:choose>
-
+                        <optgroup label="${point.key}">
+                            <c:forEach items="${point.value}" var="parentpin">
+                                <c:choose>
+                                    <c:when test="${parentpin.modlepinsId==pv.resource.getInteger('modlepinsId')}">
+                                        <option value="${parentpin.modlePinName}"
+                                                pvresourcemodleId="${parentpin.refmodleId}"
+                                                pvresourcemodlepinsId="${parentpin.modlepinsId}"
+                                                selected>${parentpin.modlePinName}(${parentpin.opcTagName})
+                                        </option>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <option value="${parentpin.modlePinName}"
+                                                pvresourcemodleId="${parentpin.refmodleId}"
+                                                pvresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})
+                                        </option>
+                                    </c:otherwise>
+                                </c:choose>
+                            </c:forEach>
+                        </optgroup>
 
                     </c:forEach>
                 </select>
             </div>
         </div>
+
+        <div class="layui-inline">
+            <label class="layui-form-label">pv死区</label>
+            <div class="layui-input-inline">
+                <input type="number" name="deadZone" lay-verify="required"  autocomplete="off" lay-verify="required|number"
+                       class="layui-input" placeholder="pv的死区" value="${pv.deadZone}"
+                       onmousewheel='scrollFunc()'>
+            </div>
+        </div>
+
+
     </div>
 
     <div class="layui-form-item">
@@ -255,18 +350,26 @@
                 <select name="spmodleOpcTag" lay-search="" id="spselect" lay-filter="spselect">
                     <option value="">请选择</option>
                     <c:forEach items="${points}" var="point" varStatus="Count">
+                        <optgroup label="${point.key}">
+                            <c:forEach items="${point.value}" var="parentpin">
+                                <c:choose>
+                                    <c:when test="${parentpin.modlepinsId==sp.resource.getInteger('modlepinsId')}">
+                                        <option value="${parentpin.modlePinName}"
+                                                spresourcemodleId="${parentpin.refmodleId}"
+                                                spresourcemodlepinsId="${parentpin.modlepinsId}"
+                                                selected>${parentpin.modlePinName}(${parentpin.opcTagName})
+                                        </option>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <option value="${parentpin.modlePinName}"
+                                                spresourcemodleId="${parentpin.refmodleId}"
+                                                spresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})
+                                        </option>
+                                    </c:otherwise>
+                                </c:choose>
+                            </c:forEach>
+                        </optgroup>
 
-                        <c:choose>
-                            <c:when test="${point.modlepinsId==sp.resource.getInteger('modlepinsId')}">
-                                <option value="${point.modlePinName}" spresourcemodleId="${point.refmodleId}"
-                                        spresourcemodlepinsId="${point.modlepinsId}"
-                                        selected>${point.opcTagName}</option>
-                            </c:when>
-                            <c:otherwise>
-                                <option value="${point.modlePinName}" spresourcemodleId="${point.refmodleId}"
-                                        spresourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>
-                            </c:otherwise>
-                        </c:choose>
                     </c:forEach>
                 </select>
             </div>
@@ -288,20 +391,25 @@
                 <select name="mvmodleOpcTag" lay-search="" id="mvselect" lay-filter="mvselect">
                     <option value="">请选择</option>
                     <c:forEach items="${points}" var="point" varStatus="Count">
-                        <c:choose>
-                            <c:when test="${point.modlepinsId==mv.resource.getInteger('modlepinsId')}">
-                                <option value="${point.modlePinName}" mvresourcemodleId="${point.refmodleId}"
-                                        mvresourcemodlepinsId="${point.modlepinsId}"
-                                        selected>${point.opcTagName}</option>
-
-                            </c:when>
-                            <c:otherwise>
-                                <option value="${point.modlePinName}" mvresourcemodleId="${point.refmodleId}"
-                                        mvresourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>
-
-                            </c:otherwise>
-                        </c:choose>
-
+                        <optgroup label="${point.key}">
+                            <c:forEach items="${point.value}" var="parentpin">
+                                <c:choose>
+                                    <c:when test="${parentpin.modlepinsId==mv.resource.getInteger('modlepinsId')}">
+                                        <option value="${parentpin.modlePinName}"
+                                                mvresourcemodleId="${parentpin.refmodleId}"
+                                                mvresourcemodlepinsId="${parentpin.modlepinsId}"
+                                                selected>${parentpin.modlePinName}(${parentpin.opcTagName})
+                                        </option>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <option value="${parentpin.modlePinName}"
+                                                mvresourcemodleId="${parentpin.refmodleId}"
+                                                mvresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})
+                                        </option>
+                                    </c:otherwise>
+                                </c:choose>
+                            </c:forEach>
+                        </optgroup>
 
                     </c:forEach>
                 </select>
@@ -354,19 +462,26 @@
                         lay-filter="selectmvupopctag" id="selectmvupopctag">
                     <option value="">请选择</option>
                     <c:forEach items="${points}" var="point" varStatus="Count">
-                        <c:choose>
-                            <c:when test="${point.modlepinsId==mvup.resource.getInteger('modlepinsId')}">
-                                <option value="${point.modlePinName}"
-                                        mvupresourcemodleId="${point.refmodleId}"
-                                        mvupresourcemodlepinsId="${point.modlepinsId}"
-                                        selected>${point.opcTagName}</option>
-                            </c:when>
-                            <c:otherwise>
-                                <option value="${point.modlePinName}"
-                                        mvupresourcemodleId="${point.refmodleId}"
-                                        mvupresourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>
-                            </c:otherwise>
-                        </c:choose>
+                        <optgroup label="${point.key}">
+                            <c:forEach items="${point.value}" var="parentpin">
+                                <c:choose>
+                                    <c:when test="${parentpin.modlepinsId==mvup.resource.getInteger('modlepinsId')}">
+                                        <option value="${parentpin.modlePinName}"
+                                                mvupresourcemodleId="${parentpin.refmodleId}"
+                                                mvupresourcemodlepinsId="${parentpin.modlepinsId}"
+                                                selected>${parentpin.modlePinName}(${parentpin.opcTagName})
+                                        </option>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <option value="${parentpin.modlePinName}"
+                                                mvupresourcemodleId="${parentpin.refmodleId}"
+                                                mvupresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})
+                                        </option>
+                                    </c:otherwise>
+                                </c:choose>
+                            </c:forEach>
+                        </optgroup>
+
                     </c:forEach>
                 </select>
             </div>
@@ -394,19 +509,26 @@
                         lay-filter="selectmvdownopctag" id="selectmvdownopctag">
                     <option value="">请选择</option>
                     <c:forEach items="${points}" var="point" varStatus="Count">
-                        <c:choose>
-                            <c:when test="${point.modlepinsId==mvdown.resource.getInteger('modlepinsId')}">
-                                <option value="${point.modlePinName}"
-                                        mvdownresourcemodleId="${point.refmodleId}"
-                                        mvdownresourcemodlepinsId="${point.modlepinsId}"
-                                        selected>${point.opcTagName}</option>
-                            </c:when>
-                            <c:otherwise>
-                                <option value="${point.modlePinName}"
-                                        mvdownresourcemodleId="${point.refmodleId}"
-                                        mvdownresourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>
-                            </c:otherwise>
-                        </c:choose>
+                        <optgroup label="${point.key}">
+                            <c:forEach items="${point.value}" var="parentpin">
+                                <c:choose>
+                                    <c:when test="${parentpin.modlepinsId==mvdown.resource.getInteger('modlepinsId')}">
+                                        <option value="${parentpin.modlePinName}"
+                                                mvdownresourcemodleId="${parentpin.refmodleId}"
+                                                mvdownresourcemodlepinsId="${parentpin.modlepinsId}"
+                                                selected>${parentpin.modlePinName}(${parentpin.opcTagName})
+                                        </option>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <option value="${parentpin.modlePinName}"
+                                                mvdownresourcemodleId="${parentpin.refmodleId}"
+                                                mvdownresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})
+                                        </option>
+                                    </c:otherwise>
+                                </c:choose>
+                            </c:forEach>
+                        </optgroup>
+
                     </c:forEach>
                 </select>
             </div>
@@ -428,17 +550,26 @@
                 <select name="ffmodleOpcTag" lay-search="" id="ffselect" lay-filter="ffselect">
                     <option value="">请选择</option>
                     <c:forEach items="${points}" var="point" varStatus="Count">
-                        <c:choose>
-                            <c:when test="${point.modlepinsId==ff.resource.getInteger('modlepinsId')}">
-                                <option value="${point.modlePinName}" ffresourcemodleId="${point.refmodleId}"
-                                        ffresourcemodlepinsId="${point.modlepinsId}"
-                                        selected>${point.opcTagName}</option>
-                            </c:when>
-                            <c:otherwise>
-                                <option value="${point.modlePinName}" ffresourcemodleId="${point.refmodleId}"
-                                        ffresourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>
-                            </c:otherwise>
-                        </c:choose>
+                        <optgroup label="${point.key}">
+                            <c:forEach items="${point.value}" var="parentpin">
+                                <c:choose>
+                                    <c:when test="${parentpin.modlepinsId==ff.resource.getInteger('modlepinsId')}">
+                                        <option value="${parentpin.modlePinName}"
+                                                ffresourcemodleId="${parentpin.refmodleId}"
+                                                ffresourcemodlepinsId="${parentpin.modlepinsId}"
+                                                selected>${parentpin.modlePinName}(${parentpin.opcTagName})
+                                        </option>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <option value="${parentpin.modlePinName}"
+                                                ffresourcemodleId="${parentpin.refmodleId}"
+                                                ffresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})
+                                        </option>
+                                    </c:otherwise>
+                                </c:choose>
+                            </c:forEach>
+                        </optgroup>
+
                     </c:forEach>
                 </select>
             </div>
@@ -507,9 +638,12 @@
                 ? $("#mvconstantid").removeAttr("disabled") : $("#mvconstantid").attr("disabled", true);
             ${ff.resource.getString("resource")=="constant"||ff.resource.getString("resource")!="modle"}
                 ? $("#ffconstantid").removeAttr("disabled") : $("#ffconstantid").attr("disabled", true);
-                ${mvup.resource.getString('resource')=='constant'||mvup.resource.getString('resource')!='modle'} ? $('#mvuppincontantvalueid').removeAttr('disabled') : $('#mvuppincontantvalueid').attr('disabled', true);
-                ${mvdown.resource.getString('resource')=='constant'||mvdown.resource.getString('resource')!='modle'} ? $('#mvdownpincontantvalueid').removeAttr('disabled') : $('#mvdownpincontantvalueid').attr('disabled', true);
-
+            ${mvup.resource.getString('resource')=='constant'||mvup.resource.getString('resource')!='modle'}
+                ? $('#mvuppincontantvalueid').removeAttr('disabled') : $('#mvuppincontantvalueid').attr('disabled', true);
+            ${mvdown.resource.getString('resource')=='constant'||mvdown.resource.getString('resource')!='modle'}
+                ? $('#mvdownpincontantvalueid').removeAttr('disabled') : $('#mvdownpincontantvalueid').attr('disabled', true);
+            ${auto.resource.getString("resource")=="constant"||auto.resource.getString("resource")!="modle"}
+                ? $('#autoconstantid').removeAttr("disabled") : $("#autoconstantid").attr("disabled", true);
 
             form.render(); //更新全部
             // form.render('select'); //刷新select选择框渲染
@@ -561,6 +695,10 @@
                 partcontex['ffopcTagName'] = $('#ffselect').find("option:selected").html();
                 partcontex['ffresourcemodleId'] = $('#ffselect').find("option:selected").attr("ffresourcemodleId");
                 partcontex['ffresourcemodlepinsId'] = $('#ffselect').find("option:selected").attr("ffresourcemodlepinsId");
+
+                partcontex['autoopcTagName'] = $('#autoselect').find("option:selected").html();
+                partcontex['autoresourcemodleId'] = $('#autoselect').find("option:selected").attr("autoresourcemodleId");
+                partcontex['autoresourcemodlepinsId'] = $('#autoselect').find("option:selected").attr("autoresourcemodlepinsId");
 
                 if (api.updatemodle(url, partcontex, layer)) {
                     layer.close(layer.getFrameIndex(window.name));
@@ -689,6 +827,20 @@
                     element.render();
                 } else {
                     $('#ffconstantid').attr('disabled', true);
+                    form.render();
+                    element.render();
+                }
+            });
+
+
+            form.on('select(autoselect)', function (data) {
+                if (data.value == '') {
+                    $('#autoconstantid').removeAttr('disabled');
+                    // $('#modlePincontantvalueid').attr('value','');
+                    form.render();
+                    element.render();
+                } else {
+                    $('#autoconstantid').attr('disabled', true);
                     form.render();
                     element.render();
                 }

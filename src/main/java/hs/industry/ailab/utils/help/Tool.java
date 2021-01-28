@@ -30,7 +30,6 @@ public class Tool {
 
 
     public static BaseModlePropertyImp selectmodleProperyByPinname(String pinname, List<ModleProperty> properties, String pindir) {
-
         for (ModleProperty baseproperty : properties) {
             BaseModlePropertyImp property=(BaseModlePropertyImp)baseproperty;
             if (property.getModlePinName().equals(pinname)) {
@@ -96,12 +95,17 @@ public class Tool {
     public static List<MPCModleProperty> getspecialpintypeBympc(String pintype, List<MPCModleProperty> mpcModleProperties){
         List<MPCModleProperty> specialpintypeproperties=new ArrayList<>();
         for(MPCModleProperty modleProperty:mpcModleProperties){
-            if(modleProperty.getPintype().equals(pintype)){
-                specialpintypeproperties.add(modleProperty);
+            if(!isNoneString(modleProperty.getPintype())){
+                if(modleProperty.getPintype().equals(pintype)){
+                    specialpintypeproperties.add(modleProperty);
+                }
             }
+
         }
         return specialpintypeproperties;
     }
+
+
 
 //    public  static int getPinindex(Pattern pattern, ModlePin pin){
 //        int pvpinscope = -1;

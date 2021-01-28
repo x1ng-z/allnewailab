@@ -39,7 +39,7 @@
     <script src="/js/panzoom.js" ></script>
     <script src="/js/templefactory.js" ></script>
     <script src="/js/contextMenu.js" ></script>
-    <script src="/js/contextMenu.js" ></script>
+<%--    <script src="/js/contextMenu.js" ></script>--%>
     <script src="/js/layui/layui.js" charset="utf-8"></script>
 </head>
 
@@ -48,46 +48,47 @@
 <div id="app">
     <div class="layui-container" projectid="${project.projectid}">
         <div class="layui-row">
-            <div id="side-buttons" class="layui-col-md2"  style="background-color: rgb(217,237,247);height: 3000px;left: 0">
+<%--            rgb(217,237,247)--%>
+            <div id="side-buttons" class="layui-col-md2"  style="background-color: rgba(60,63,65,0.22);height: 3000px;left: 0">
                 <div>
                     <h5 style="font-size: 30px">模块列表</h5>
                     <ul>
 
                         <li>
-                            <a class="btn btn-success btn-controler" href="#" data-template="input" role="button">
+                            <a class="btn btn-success btn-controler" style="background-color: rgba(0,150,136,0.42)" href="#" data-template="input" role="button">
                                 <i class="layui-icon" style="font-size: 20px; color: #fbfff8;">&#xe66e;输入模块</i>
                             </a>
                         </li>
 
                         <li>
-                            <a class="btn btn-success btn-controler" href="#" data-template="output" role="button">
+                            <a class="btn btn-success btn-controler" style="background-color: rgba(0,150,136,0.42)" href="#" data-template="output" role="button">
                                 <i class="layui-icon" style="font-size: 20px; color: #fbfff8;">&#xe691;输出模块</i>
                             </a>
                         </li>
 
 
                         <li>
-                            <a class="btn btn-success btn-controler" href="#" data-template="customize" role="button">
+                            <a class="btn btn-success btn-controler" style="background-color: rgba(0,150,136,0.42)" href="#" data-template="customize" role="button">
                                 <i class="layui-icon" style="font-size: 20px; color: #fbfff8;">&#xe655;自定义脚本</i>
                             </a>
                         </li>
 
                         <li>
-                            <a class="btn btn-success btn-controler" href="#" data-template="filter" role="button">
+                            <a class="btn btn-success btn-controler" style="background-color: rgba(0,150,136,0.42)" href="#" data-template="filter" role="button">
                                 <i class="layui-icon" style="font-size: 20px; color: #fbfff8;">&#xe663;滤波模块</i>
                             </a>
                         </li>
 
 
                         <li>
-                            <a class="btn btn-success btn-controler" href="#" data-template="mpc" role="button">
+                            <a class="btn btn-success btn-controler" style="background-color: rgba(0,150,136,0.42)" href="#" data-template="mpc" role="button">
                                 <i class="layui-icon" style="font-size: 20px; color: #fbfff8;">&#xe638;MPC</i>
                             </a>
                         </li>
 
 
                         <li>
-                            <a class="btn btn-success btn-controler" href="#" data-template="pid" role="button">
+                            <a class="btn btn-success btn-controler" style="background-color: rgba(0,150,136,0.42)" href="#" data-template="pid" role="button">
                                 <i class="layui-icon" style="font-size: 20px; color: #fbfff8;">&#xe638;PID</i>
                             </a>
                         </li>
@@ -98,7 +99,8 @@
 
                 </div>
             </div>
-            <div class="layui-col-md10 mainContainerWrap" id="cannv" style="background-color: rgb(223,240,216);">
+<%--    rgb(223,240,216)--%>
+            <div class="layui-col-md10 mainContainerWrap" id="cannv" style="background-color: rgba(60,63,65,0.09);">
                 <div style="height: 3000px;" id="mainContainer" data-id="mainContainer" data-projectid="${project.projectid}">
                 </div>
             </div>
@@ -183,6 +185,7 @@
                     for(let index=0;index<module.outputproperty.length;index++){
                         context_=context_+(module.outputproperty[index].name.substring(0,7))+ (module.outputproperty[index].pin!=undefined?module.outputproperty[index].pin.substring(0,7):"")  + '\n' + module.outputproperty[index].value+'\n';
                     }
+                    context_=context_+'errormsg\n'+module.errormsg+'\n';
                     // console.log(outputcontext_3.text());
                     // console.log("context_",context_)
                     outputcontext[0].innerText=context_;

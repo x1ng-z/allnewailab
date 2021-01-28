@@ -28,12 +28,11 @@ public class INModle extends BaseModleImp {
 //    private boolean pythonbuildcomplet = false;//python的控制模型是否构建完成
 //    private boolean iscomputecomplete = false;//运算是否完成
     private String datasource;
-    private Map<Integer,BaseModlePropertyImp> indexproperties;//key=modleid
+    private Map<Integer, BaseModlePropertyImp> indexproperties;//key=modleid
 
 
-
-    public void toBeRealModle(String datasource){
-        this.datasource=datasource;
+    public void toBeRealModle(String datasource) {
+        this.datasource = datasource;
     }
 
     @Override
@@ -65,14 +64,18 @@ public class INModle extends BaseModleImp {
         for (ModleProperty modleProperty : propertyImpList) {
             tags.append(((BaseModlePropertyImp) modleProperty).getResource().getString("inmappingtag") + ",");
         }
-        postdata.put("tags", tags.toString().substring(0, tags.length() - 1));
-        String inputdata = HttpUtils.PostData(datasource + "/realdata/read", postdata);
-        JSONObject jsoninputdata = JSONObject.parseObject(inputdata);
-        return jsoninputdata.getJSONObject("data");
+        if (propertyImpList.size() > 0) {
+            postdata.put("tags", tags.toString().substring(0, tags.length() - 1));
+            String inputdata = HttpUtils.PostData(datasource + "/realdata/read", postdata);
+            JSONObject jsoninputdata = JSONObject.parseObject(inputdata);
+            return jsoninputdata.getJSONObject("data");
+        }
+        return new JSONObject();
+
     }
 
     @Override
-    public JSONObject computresulteprocess(Project project,JSONObject computedata) {
+    public JSONObject computresulteprocess(Project project, JSONObject computedata) {
 
         return null;
     }
@@ -82,8 +85,10 @@ public class INModle extends BaseModleImp {
     @Override
     public void outprocess(Project project, JSONObject outdata) {
         for (ModleProperty modleProperty : propertyImpList) {
-            Double tagvalue = outdata.getDouble(((BaseModlePropertyImp) modleProperty).getResource().getString("inmappingtag"));
-            ((BaseModlePropertyImp) modleProperty).setValue(tagvalue);
+            if (outdata.containsKey(((BaseModlePropertyImp) modleProperty).getResource().getString("inmappingtag"))) {
+                Double tagvalue = outdata.getDouble(((BaseModlePropertyImp) modleProperty).getResource().getString("inmappingtag"));
+                ((BaseModlePropertyImp) modleProperty).setValue(tagvalue);
+            }
         }
         setModlerunlevel(BaseModleImp.RUNLEVEL_RUNCOMPLET);
     }
@@ -91,10 +96,10 @@ public class INModle extends BaseModleImp {
 
     @Override
     public void init() {
-        indexproperties=new HashMap<>();
+        indexproperties = new HashMap<>();
         for (ModleProperty modleProperty : propertyImpList) {
             BaseModlePropertyImp baseModlePropertyImp = (BaseModlePropertyImp) modleProperty;
-            indexproperties.put( baseModlePropertyImp.getModlepinsId(),baseModlePropertyImp);
+            indexproperties.put(baseModlePropertyImp.getModlepinsId(), baseModlePropertyImp);
         }
     }
 

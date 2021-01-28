@@ -73,10 +73,21 @@
                             <select name="mvmodleOpcTag" lay-search=""
                                     lay-filter="selectmvopctag" id="selectmvopctag">
                                 <option value="">请选择</option>
+<%--                                <c:forEach items="${points}" var="point" varStatus="Count">--%>
+<%--                                    <option value="${point.modlePinName}" mvresourcemodleId="${point.refmodleId}"--%>
+<%--                                            mvresourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>--%>
+<%--                                </c:forEach>--%>
+
                                 <c:forEach items="${points}" var="point" varStatus="Count">
-                                    <option value="${point.modlePinName}" mvresourcemodleId="${point.refmodleId}"
-                                            mvresourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>
+                                    <optgroup label="${point.key}">
+                                        <c:forEach items="${point.value}" var="parentpin">
+                                            <option value="${parentpin.modlePinName}" mvresourcemodleId="${parentpin.refmodleId}"
+                                                    mvresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})</option>
+                                        </c:forEach>
+                                    </optgroup>
+
                                 </c:forEach>
+
                             </select>
                         </div>
                     </div>
@@ -167,9 +178,19 @@
                             <select name="mvupmodleOpcTag" lay-search=""
                                     lay-filter="selectmvupopctag" id="selectmvupopctag">
                                 <option value="">请选择</option>
+<%--                                <c:forEach items="${points}" var="point" varStatus="Count">--%>
+<%--                                    <option value="${point.modlePinName}" mvupresourcemodleId="${point.refmodleId}"--%>
+<%--                                            mvupresourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>--%>
+<%--                                </c:forEach>--%>
+
                                 <c:forEach items="${points}" var="point" varStatus="Count">
-                                    <option value="${point.modlePinName}" mvupresourcemodleId="${point.refmodleId}"
-                                            mvupresourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>
+                                    <optgroup label="${point.key}">
+                                        <c:forEach items="${point.value}" var="parentpin">
+                                            <option value="${parentpin.modlePinName}" mvupresourcemodleId="${parentpin.refmodleId}"
+                                                    mvupresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})</option>
+                                        </c:forEach>
+                                    </optgroup>
+
                                 </c:forEach>
                             </select>
                         </div>
@@ -201,9 +222,20 @@
                             <select name="mvdownmodleOpcTag" lay-search=""
                                     lay-filter="selectmvdownopctag" id="selectmvdownopctag">
                                 <option value="">请选择</option>
+<%--                                <c:forEach items="${points}" var="point" varStatus="Count">--%>
+<%--                                    <option value="${point.modlePinName}" mvdownresourcemodleId="${point.refmodleId}"--%>
+<%--                                            mvdownresourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>--%>
+<%--                                </c:forEach>--%>
+
+
                                 <c:forEach items="${points}" var="point" varStatus="Count">
-                                    <option value="${point.modlePinName}" mvdownresourcemodleId="${point.refmodleId}"
-                                            mvdownresourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>
+                                    <optgroup label="${point.key}">
+                                        <c:forEach items="${point.value}" var="parentpin">
+                                            <option value="${parentpin.modlePinName}" mvdownresourcemodleId="${parentpin.refmodleId}"
+                                                    mvdownresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})</option>
+                                        </c:forEach>
+                                    </optgroup>
+
                                 </c:forEach>
                             </select>
                         </div>
@@ -235,10 +267,22 @@
                             <select name="mvfbmodleOpcTag" lay-search=""
                                     lay-filter="selectmvfbopctag" id="selectmvfbopctag">
                                 <option value="">请选择</option>
+<%--                                <c:forEach items="${points}" var="point" varStatus="Count">--%>
+<%--                                    <option value="${point.modlePinName}" mvfbresourcemodleId="${point.refmodleId}"--%>
+<%--                                            mvfbresourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>--%>
+<%--                                </c:forEach>--%>
+
+
                                 <c:forEach items="${points}" var="point" varStatus="Count">
-                                    <option value="${point.modlePinName}" mvfbresourcemodleId="${point.refmodleId}"
-                                            mvfbresourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>
+                                    <optgroup label="${point.key}">
+                                        <c:forEach items="${point.value}" var="parentpin">
+                                            <option value="${parentpin.modlePinName}" mvfbresourcemodleId="${parentpin.refmodleId}"
+                                                    mvfbresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})</option>
+                                        </c:forEach>
+                                    </optgroup>
+
                                 </c:forEach>
+
                             </select>
                         </div>
                     </div>

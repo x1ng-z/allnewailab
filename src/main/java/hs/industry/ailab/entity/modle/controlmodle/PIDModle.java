@@ -10,10 +10,12 @@ import hs.industry.ailab.entity.modle.customizemodle.CUSTOMIZEModle;
 import hs.industry.ailab.entity.modle.filtermodle.FilterModle;
 import hs.industry.ailab.entity.modle.iomodle.INModle;
 import hs.industry.ailab.entity.modle.iomodle.OUTModle;
+import hs.industry.ailab.entity.modle.modlerproerty.MPCModleProperty;
 import hs.industry.ailab.pydriver.command.CommandImp;
 import hs.industry.ailab.pydriver.session.PySession;
 import hs.industry.ailab.pydriver.session.PySessionManager;
 import hs.industry.ailab.utils.bridge.ExecutePythonBridge;
+import hs.industry.ailab.utils.help.Tool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,13 +47,14 @@ public class PIDModle extends BaseModleImp {
     private String port;
     private String pidscript;
 
-    public void toBeRealModle(PySessionManager pySessionManager,String pidscript, String nettyport, String pyproxyexecute){
-        this.pidscript=pidscript;
-        this. port=nettyport;
-        this.pyproxyexecute=pyproxyexecute;
-        this.pySessionManager=pySessionManager;
+    public void toBeRealModle(PySessionManager pySessionManager, String pidscript, String nettyport, String pyproxyexecute) {
+        this.pidscript = pidscript;
+        this.port = nettyport;
+        this.pyproxyexecute = pyproxyexecute;
+        this.pySessionManager = pySessionManager;
 
     }
+
     @Override
     public void connect() {
         executepythonbridge.execute();
@@ -72,12 +75,13 @@ public class PIDModle extends BaseModleImp {
     @Override
     public void reconnect() {
         executepythonbridge.stop();
+        setModlerunlevel(BaseModleImp.RUNLEVEL_INITE);
         executepythonbridge.execute();
     }
 
     @Override
     public void destory() {
-        PySession pySession = pySessionManager.getSpecialSession(getModleId(),pidscript);
+        PySession pySession = pySessionManager.getSpecialSession(getModleId(), pidscript);
         if (pySession != null) {
             JSONObject json = new JSONObject();
             json.put("msg", "stop");
@@ -94,26 +98,72 @@ public class PIDModle extends BaseModleImp {
     @Override
     public void docomputeprocess() {
 
-        PySession pySession = pySessionManager.getSpecialSession(getModleId(),pidscript);
-        if(pySession!=null){
+//            BaseModlePropertyImp baseModlePropertyImp=(BaseModlePropertyImp)modleProperty;
+        BaseModlePropertyImp autopin = Tool.selectmodleProperyByPinname(ModleProperty.TYPE_PIN_MODLE_AUTO, propertyImpList, ModleProperty.PINDIRINPUT);
+        BaseModlePropertyImp mvinputpin = Tool.selectmodleProperyByPinname(ModleProperty.TYPE_PIN_MV, propertyImpList, ModleProperty.PINDIRINPUT);
+        BaseModlePropertyImp mvoutputpin = Tool.selectmodleProperyByPinname(ModleProperty.TYPE_PIN_MV, propertyImpList, ModleProperty.PINDIROUTPUT);
+
+        if((autopin!=null)&&(mvinputpin!=null)&&(mvoutputpin!=null)){
+            if (autopin.getValue() == 0) {
+                //把输入的mv直接丢给输出mv
+                JSONObject fakecomputedata = new JSONObject();
+                JSONObject data = new JSONObject();
+                data.put("value", mvinputpin.getValue());
+                data.put("partki", 0f);
+                data.put("partki", 0f);
+                data.put("partki", 0f);
+                JSONObject pindata=new JSONObject();
+                pindata.put(mvoutputpin.getModlePinName(),data);
+                fakecomputedata.put("data", pindata);
+                computresulteprocess(null, fakecomputedata);
+                outprocess(null, null);
+                setAutovalue(0);
+                return;
+            } else if ((autopin.getValue() != 0) && (getAutovalue() == 0)) {
+                setAutovalue(1);
+                reconnect();
+                try {
+                    TimeUnit.SECONDS.sleep(1);
+                } catch (InterruptedException e) {
+                    logger.error(e.getMessage(), e);
+                }
+            }
+
+        }
+
+        PySession pySession = pySessionManager.getSpecialSession(getModleId(), pidscript);
+        if (pySession != null) {
             JSONObject scriptinputcontext = new JSONObject();
 
-            JSONObject INjson=new JSONObject();
-            scriptinputcontext.put("IN1",INjson);
+            JSONObject INjson = new JSONObject();
+            scriptinputcontext.put("IN1", INjson);
 
-            JSONObject OUTjson=new JSONObject();
-            scriptinputcontext.put("OUT1",OUTjson);
+            JSONObject OUTjson = new JSONObject();
+            scriptinputcontext.put("OUT1", OUTjson);
             for (ModleProperty modleProperty : propertyImpList) {
                 BaseModlePropertyImp baseModlePropertyImp = (BaseModlePropertyImp) modleProperty;
 
                 if (baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIRINPUT)) {
                     JSONObject invalue = new JSONObject();
                     invalue.put("value", baseModlePropertyImp.getValue());
-                    INjson.put(baseModlePropertyImp.getModlePinName(),invalue);
+                    INjson.put(baseModlePropertyImp.getModlePinName(), invalue);
+                    if (baseModlePropertyImp.getModlePinName().equals(ModleProperty.TYPE_PIN_PV)) {
+                        JSONObject inpvdeadZonealue = new JSONObject();
+                        inpvdeadZonealue.put("value", ((MPCModleProperty) baseModlePropertyImp).getDeadZone());
+                        INjson.put("deadZone", inpvdeadZonealue);
+                    } else if (baseModlePropertyImp.getModlePinName().equals(ModleProperty.TYPE_PIN_MV)) {
+                        JSONObject inmvdmvHighnealue = new JSONObject();
+                        inmvdmvHighnealue.put("value", ((MPCModleProperty) baseModlePropertyImp).getDmvHigh());
+                        INjson.put("dmvHigh", inmvdmvHighnealue);
 
-                }else if(baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIROUTPUT)){
+                        JSONObject inmvdmvLownealue = new JSONObject();
+                        inmvdmvLownealue.put("value", ((MPCModleProperty) baseModlePropertyImp).getDmvLow());
+                        INjson.put("dmvLow", inmvdmvLownealue);
+                    }
+
+                } else if (baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIROUTPUT)) {
                     JSONObject outvalue = new JSONObject();
-                    OUTjson.put(baseModlePropertyImp.getModlePinName(),outvalue);
+                    OUTjson.put(baseModlePropertyImp.getModlePinName(), outvalue);
                     outvalue.put("pinName", baseModlePropertyImp.getModlePinName());
                 }
             }
@@ -127,6 +177,7 @@ public class PIDModle extends BaseModleImp {
 
 
     }
+
     @Override
     public JSONObject inprocess(Project project) {
         for (ModleProperty modleProperty : propertyImpList) {
@@ -181,9 +232,16 @@ public class PIDModle extends BaseModleImp {
         for (ModleProperty modleProperty : propertyImpList) {
             BaseModlePropertyImp pidinproperty = (BaseModlePropertyImp) modleProperty;
             if (pidinproperty.getPindir().equals(ModleProperty.PINDIROUTPUT)) {
-                JSONObject outpinjsoncontext=computedata.getJSONObject("data").getJSONObject(pidinproperty.getModlePinName());
-                if(outpinjsoncontext!=null){
+                JSONObject outpinjsoncontext = computedata.getJSONObject("data").getJSONObject(pidinproperty.getModlePinName());
+                if (outpinjsoncontext != null) {
                     pidinproperty.setValue(outpinjsoncontext.getDouble("value"));
+                    if (outpinjsoncontext.containsKey("partkp") && outpinjsoncontext.containsKey("partki") && outpinjsoncontext.containsKey("partkd")) {
+                        setErrormsg("partkp:" + Tool.getSpecalScale(4, outpinjsoncontext.getDouble("partkp")) + "\n"
+                                + "partki:" + Tool.getSpecalScale(4, outpinjsoncontext.getDouble("partki")) + "\n"
+                                + "partkd:" + Tool.getSpecalScale(4, outpinjsoncontext.getDouble("partkd"))
+                        );
+                    }
+
                 }
             }
         }
@@ -223,10 +281,6 @@ public class PIDModle extends BaseModleImp {
     public void setPropertyImpList(List<ModleProperty> propertyImpList) {
         this.propertyImpList = propertyImpList;
     }
-
-
-
-
 
 
     public String getDatasource() {

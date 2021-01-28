@@ -80,7 +80,7 @@ public class CUSTOMIZEModle extends BaseModleImp {
 
     @Override
     public void destory() {
-        PySession pySession = pySessionManager.getSpecialSession(getModleId(), customizepyname);
+        PySession pySession = pySessionManager.getSpecialSession(getModleId(), noscripNametail());
         if (pySession != null) {
             JSONObject json = new JSONObject();
             json.put("msg", "stop");
@@ -204,10 +204,9 @@ public class CUSTOMIZEModle extends BaseModleImp {
         }
 
         String filterpath = System.getProperty("user.dir") + "\\" + pyproxyexecute;
-        Matcher matcher = scriptpattern.matcher(customizepyname);
-        if (matcher.find()) {
-            executepythonbridge = new ExecutePythonBridge(filterpath, "127.0.0.1", port, matcher.group(1), getModleId() + "");
-        }
+
+            executepythonbridge = new ExecutePythonBridge(filterpath, "127.0.0.1", port, noscripNametail(), getModleId() + "");
+
 
     }
 
