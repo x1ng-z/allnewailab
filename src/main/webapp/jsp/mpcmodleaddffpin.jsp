@@ -79,7 +79,7 @@
                                 <c:forEach items="${points}" var="point" varStatus="Count">
                                     <optgroup label="${point.key}">
                                         <c:forEach items="${point.value}" var="parentpin">
-                                            <option value="${parentpin.modlePinName}" ffresourcemodleId="${parentpin.refmodleId}"
+                                            <option value="${parentpin.modlepinsId}_${parentpin.modlePinName}" ffresourcemodleId="${parentpin.refmodleId}"
                                                     ffresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})</option>
                                         </c:forEach>
                                     </optgroup>
@@ -127,7 +127,7 @@
                                 <c:forEach items="${points}" var="point" varStatus="Count">
                                     <optgroup label="${point.key}">
                                         <c:forEach items="${point.value}" var="parentpin">
-                                            <option value="${parentpin.modlePinName}" ffupresourcemodleId="${parentpin.refmodleId}"
+                                            <option value="${parentpin.modlepinsId}_${parentpin.modlePinName}" ffupresourcemodleId="${parentpin.refmodleId}"
                                                     ffupresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})</option>
                                         </c:forEach>
                                     </optgroup>
@@ -171,7 +171,7 @@
                                 <c:forEach items="${points}" var="point" varStatus="Count">
                                     <optgroup label="${point.key}">
                                         <c:forEach items="${point.value}" var="parentpin">
-                                            <option value="${parentpin.modlePinName}" ffdownresourcemodleId="${parentpin.refmodleId}"
+                                            <option value="${parentpin.modlepinsId}_${parentpin.modlePinName}" ffdownresourcemodleId="${parentpin.refmodleId}"
                                                     ffdownresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})</option>
                                         </c:forEach>
                                     </optgroup>

@@ -132,14 +132,14 @@
                                 <c:forEach items="${point.value}" var="parentpin">
                                     <c:choose>
                                         <c:when test="${parentpin.modlepinsId==auto.resource.getInteger('modlepinsId')}">
-                                            <option value="${parentpin.modlePinName}"
+                                            <option value="${parentpin.modlepinsId}_${parentpin.modlePinName}"
                                                     autoresourcemodleId="${parentpin.refmodleId}"
                                                     autoresourcemodlepinsId="${parentpin.modlepinsId}"
                                                     selected>${parentpin.modlePinName}(${parentpin.opcTagName})
                                             </option>
                                         </c:when>
                                         <c:otherwise>
-                                            <option value="${parentpin.modlePinName}"
+                                            <option value="${parentpin.modlepinsId}_${parentpin.modlePinName}"
                                                     autoresourcemodleId="${parentpin.refmodleId}"
                                                     autoresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})
                                             </option>

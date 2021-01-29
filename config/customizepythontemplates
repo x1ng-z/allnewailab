@@ -1,5 +1,6 @@
 #import start
-
+#here 'a1' and 'b1' are inupt pinname
+#and 'c1' is output pin name
 ### customer code start
 def main(input_data, context):
     a1=input_data['a1']['value']

@@ -63,8 +63,8 @@ public class MsgDecoder_Inbound extends ChannelInboundHandlerAdapter {
         InetSocketAddress ipSocket = (InetSocketAddress) ctx.channel().remoteAddress();
         String clientIp = ipSocket.getAddress().getHostAddress();
         Integer port = ipSocket.getPort();
-        PySession pySession = sessionManager.removeSessionModule( ctx);
-        logger.info("come out" + clientIp + ":" + port + " modleid=" + pySession.getModleid()+" scriptName="+pySession.getScriptName());
+        PySession pySession = sessionManager.removeSessionModule(ctx);
+        logger.info("come out" + clientIp + ":" + port + " modleid=" + pySession.getModleid() + " scriptName=" + pySession.getScriptName());
     }
 
     @Override
@@ -89,52 +89,53 @@ public class MsgDecoder_Inbound extends ChannelInboundHandlerAdapter {
                 switch (command[0]) {
                     case 0x01: {
                         if (CommandImp.RESULT.valid(bytes)) {
-                            JSONObject computeresult=CommandImp.RESULT.analye(bytes);
+                            JSONObject computeresult = CommandImp.RESULT.analye(bytes);
                             logger.info(computeresult.toJSONString());
-                            Modle modle =projectManager.getspecialModle(modleid);
-                            if(computeresult.getString("msg").equals("reason")){
-                                BaseModleImp baseModleImp=(BaseModleImp)modle;
+                            Modle modle = projectManager.getspecialModle(modleid);
+                            if (computeresult.getString("msg").equals("reason")) {
+                                BaseModleImp baseModleImp = (BaseModleImp) modle;
                                 baseModleImp.setErrormsg(computeresult.getString("msg"));
                                 baseModleImp.setErrortimestamp(computeresult.getLong("errortimestamp"));
-                            }else {
-                                if(modle instanceof MPCModle){
-                                    MPCModle mpcModle=(MPCModle)modle;
-                                    if(computeresult.getString("scriptName").equals(mpcModle.getMpcscript())){
+                            } else {
+                                if (modle instanceof MPCModle) {
+                                    MPCModle mpcModle = (MPCModle) modle;
+                                    if (computeresult.getString("scriptName").equals(mpcModle.getMpcscript())) {
 
-                                        mpcModle.computresulteprocess(null,computeresult);
-                                        if(!computeresult.getJSONObject("data").getString("msgtype").equals(MPCModle.MSGTYPE_BUILD)){
-                                            mpcModle.outprocess(null,null);
-                                        }
-
-
-                                    }else if(computeresult.getString("scriptName").equals(mpcModle.getSimulatorscript())){
-                                        mpcModle.getSimulatControlModle().computresulteprocess(null,computeresult);
+                                        mpcModle.computresulteprocess(null, computeresult);
                                         if (!computeresult.getJSONObject("data").getString("msgtype").equals(MPCModle.MSGTYPE_BUILD)) {
-                                            mpcModle.getSimulatControlModle().outprocess(null,null);
+                                            mpcModle.outprocess(null, null);
+                                        }
+
+
+                                    } else if (computeresult.getString("scriptName").equals(mpcModle.getSimulatorscript())) {
+                                        mpcModle.getSimulatControlModle().computresulteprocess(null, computeresult);
+                                        if (!computeresult.getJSONObject("data").getString("msgtype").equals(MPCModle.MSGTYPE_BUILD)) {
+                                            mpcModle.getSimulatControlModle().outprocess(null, null);
                                         }
 
                                     }
-                                }else if(modle instanceof PIDModle){
-                                    PIDModle pidModle=(PIDModle)modle;
-                                    if(computeresult.getString("scriptName").equals(pidModle.getPidscript())){
-                                        pidModle.computresulteprocess(null,computeresult);
-                                        pidModle.outprocess(null,null);
+                                    break;
+                                } else if (modle instanceof PIDModle) {
+                                    PIDModle pidModle = (PIDModle) modle;
+                                    if (computeresult.getString("scriptName").equals(pidModle.getPidscript())) {
+                                        pidModle.computresulteprocess(null, computeresult);
+                                        pidModle.outprocess(null, null);
                                     }
-
-                                }else if(modle instanceof CUSTOMIZEModle){
-                                    CUSTOMIZEModle customizeModle=(CUSTOMIZEModle)modle;
-                                    if(computeresult.getString("scriptName").equals(customizeModle.noscripNametail())){
-                                        customizeModle.computresulteprocess(null,computeresult);
-                                        customizeModle.outprocess(null,null);
+                                    break;
+                                } else if (modle instanceof CUSTOMIZEModle) {
+                                    CUSTOMIZEModle customizeModle = (CUSTOMIZEModle) modle;
+                                    if (computeresult.getString("scriptName").equals(customizeModle.noscripNametail())) {
+                                        customizeModle.computresulteprocess(null, computeresult);
+                                        customizeModle.outprocess(null, null);
                                     }
-
-                                }else if(modle instanceof FilterModle){
-                                    FilterModle filterModle=(FilterModle)modle;
-                                    if(computeresult.getString("scriptName").equals(filterModle.getFilterscript())){
-                                        filterModle.computresulteprocess(null,computeresult);
-                                        filterModle.outprocess(null,null);
+                                    break;
+                                } else if (modle instanceof FilterModle) {
+                                    FilterModle filterModle = (FilterModle) modle;
+                                    if (computeresult.getString("scriptName").equals(filterModle.getFilterscript())) {
+                                        filterModle.computresulteprocess(null, computeresult);
+                                        filterModle.outprocess(null, null);
                                     }
-
+                                    break;
                                 }
                             }
 
@@ -147,7 +148,7 @@ public class MsgDecoder_Inbound extends ChannelInboundHandlerAdapter {
                         if (CommandImp.HEART.valid(bytes)) {
                             JSONObject heartmsg = CommandImp.HEART.analye(bytes);
                             logger.info(heartmsg.toJSONString());
-                            sessionManager.addSessionModule(modleid, heartmsg.getString("scriptName"),ctx);
+                            sessionManager.addSessionModule(modleid, heartmsg.getString("scriptName"), ctx);
                         }
                         break;
                     }

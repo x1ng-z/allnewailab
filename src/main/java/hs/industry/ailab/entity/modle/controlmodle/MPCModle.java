@@ -665,6 +665,7 @@ public class MPCModle extends BaseModleImp {
 
                 }else {
                     //短路模型
+                    setErrormsg("modle build error:\n"+"p:"+numOfRunnablePVPins_pp+" m:"+numOfRunnableMVpins_mm+" ff:"+numOfRunnableFFpins_vv);
                     modleshortcircuit();
                 }
 

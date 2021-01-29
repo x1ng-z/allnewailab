@@ -523,7 +523,7 @@
     <insert id="insertFirstOrderLagFilter" parameterType="hs.industry.ailab.entity.modle.filter.FirstOrderLagFilter"
             useGeneratedKeys="true" keyProperty="filterid">
         insert into filter(filtermethod,filteralphe,refmodleid)
-        value#{filter.filtermethod},
+        value(#{filter.filtermethod},
       #{filter.filteralphe},
        #{filter.refmodleid})
     </insert>

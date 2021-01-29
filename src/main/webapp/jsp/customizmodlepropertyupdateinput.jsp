@@ -96,12 +96,12 @@
                                 <c:forEach items="${point.value}" var="parentpin">
                                     <c:choose>
                                         <c:when test="${parentpin.modlepinsId==customizmodle.resource.getInteger('modlepinsId')}">
-                                            <option value="${parentpin.modlePinName}" resourcemodleId="${parentpin.refmodleId}"
+                                            <option value="${parentpin.modlepinsId}_${parentpin.modlePinName}" resourcemodleId="${parentpin.refmodleId}"
                                                     resourcemodlepinsId="${parentpin.modlepinsId}"
                                                     selected>${parentpin.modlePinName}(${parentpin.opcTagName})</option>
                                         </c:when>
                                         <c:otherwise>
-                                            <option value="${parentpin.modlePinName}" resourcemodleId="${parentpin.refmodleId}"
+                                            <option value="${parentpin.modlepinsId}_${parentpin.modlePinName}" resourcemodleId="${parentpin.refmodleId}"
                                                     resourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})</option>
                                         </c:otherwise>
                                     </c:choose>

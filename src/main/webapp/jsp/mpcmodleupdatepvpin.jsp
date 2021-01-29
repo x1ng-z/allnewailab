@@ -107,12 +107,12 @@
                                         <c:forEach items="${point.value}" var="parentpin">
                                             <c:choose>
                                                 <c:when test="${parentpin.modlepinsId==pv.resource.getInteger('modlepinsId')}">
-                                                    <option value="${parentpin.modlePinName}" pvresourcemodleId="${parentpin.refmodleId}"
+                                                    <option value="${parentpin.modlepinsId}_${parentpin.modlePinName}" pvresourcemodleId="${parentpin.refmodleId}"
                                                             pvresourcemodlepinsId="${parentpin.modlepinsId}"
                                                             selected>${parentpin.modlePinName}(${parentpin.opcTagName})</option>
                                                 </c:when>
                                                 <c:otherwise>
-                                                    <option value="${parentpin.modlePinName}" pvresourcemodleId="${parentpin.refmodleId}"
+                                                    <option value="${parentpin.modlepinsId}_${parentpin.modlePinName}" pvresourcemodleId="${parentpin.refmodleId}"
                                                             pvresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})</option>
                                                 </c:otherwise>
                                             </c:choose>
@@ -307,12 +307,12 @@
                                         <c:forEach items="${point.value}" var="parentpin">
                                             <c:choose>
                                                 <c:when test="${parentpin.modlepinsId==pvup.resource.getInteger('modlepinsId')}">
-                                                    <option value="${parentpin.modlePinName}" pvupresourcemodleId="${parentpin.refmodleId}"
+                                                    <option value="${parentpin.modlepinsId}_${parentpin.modlePinName}" pvupresourcemodleId="${parentpin.refmodleId}"
                                                             pvupresourcemodlepinsId="${parentpin.modlepinsId}"
                                                             selected>${parentpin.modlePinName}(${parentpin.opcTagName})</option>
                                                 </c:when>
                                                 <c:otherwise>
-                                                    <option value="${parentpin.modlePinName}" pvupresourcemodleId="${parentpin.refmodleId}"
+                                                    <option value="${parentpin.modlepinsId}_${parentpin.modlePinName}" pvupresourcemodleId="${parentpin.refmodleId}"
                                                             pvupresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})</option>
                                                 </c:otherwise>
                                             </c:choose>
@@ -370,12 +370,12 @@
                                         <c:forEach items="${point.value}" var="parentpin">
                                             <c:choose>
                                                 <c:when test="${parentpin.modlepinsId==pvdown.resource.getInteger('modlepinsId')}">
-                                                    <option value="${parentpin.modlePinName}" pvdownresourcemodleId="${parentpin.refmodleId}"
+                                                    <option value="${parentpin.modlepinsId}_${parentpin.modlePinName}" pvdownresourcemodleId="${parentpin.refmodleId}"
                                                             pvdownresourcemodlepinsId="${parentpin.modlepinsId}"
                                                             selected>${parentpin.modlePinName}(${parentpin.opcTagName})</option>
                                                 </c:when>
                                                 <c:otherwise>
-                                                    <option value="${parentpin.modlePinName}" pvdownresourcemodleId="${parentpin.refmodleId}"
+                                                    <option value="${parentpin.modlepinsId}_${parentpin.modlePinName}" pvdownresourcemodleId="${parentpin.refmodleId}"
                                                             pvdownresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})</option>
                                                 </c:otherwise>
                                             </c:choose>
@@ -443,12 +443,12 @@
                                         <c:forEach items="${point.value}" var="parentpin">
                                             <c:choose>
                                                 <c:when test="${parentpin.modlepinsId==sp.resource.getInteger('modlepinsId')}">
-                                                    <option value="${parentpin.modlePinName}" spresourcemodleId="${parentpin.refmodleId}"
+                                                    <option value="${parentpin.modlepinsId}_${parentpin.modlePinName}" spresourcemodleId="${parentpin.refmodleId}"
                                                             spresourcemodlepinsId="${parentpin.modlepinsId}"
                                                             selected>${parentpin.modlePinName}(${parentpin.opcTagName})</option>
                                                 </c:when>
                                                 <c:otherwise>
-                                                    <option value="${parentpin.modlePinName}" spresourcemodleId="${parentpin.refmodleId}"
+                                                    <option value="${parentpin.modlepinsId}_${parentpin.modlePinName}" spresourcemodleId="${parentpin.refmodleId}"
                                                             spresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})</option>
                                                 </c:otherwise>
                                             </c:choose>

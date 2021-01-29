@@ -76,7 +76,7 @@
                         <c:forEach items="${points}" var="point" varStatus="Count">
                             <optgroup label="${point.key}">
                                 <c:forEach items="${point.value}" var="parentpin">
-                                    <option value="${parentpin.modlePinName}" resourcemodleId="${parentpin.refmodleId}"
+                                    <option value="${parentpin.modlepinsId}_${parentpin.modlePinName}" resourcemodleId="${parentpin.refmodleId}"
                                                                                            resourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})</option>
                                 </c:forEach>
                             </optgroup>

@@ -91,14 +91,15 @@ public class FileHelp {
 
     public static void creatpyfile(String pyfilename, String pytemplete) throws IOException {
 
-        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-        Resource resource = resolver.getResource(pytemplete);
+//        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+//        Resource resource = resolver.getResource(pytemplete);
         BufferedReader comstomizpytempletreader = null;
+        String pythontemplet=System.getProperty("user.dir") + "\\config"+"\\"+pytemplete;
         try {
-            comstomizpytempletreader = new BufferedReader(new FileReader(resource.getFile()));
+            comstomizpytempletreader = new BufferedReader(new FileReader(new File(pythontemplet)));
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            throw new RuntimeException("can't find customizepythontemplates");
+            throw new RuntimeException("can't find customizepythontemplates"+ "the dir is "+pythontemplet);
         }
 
 

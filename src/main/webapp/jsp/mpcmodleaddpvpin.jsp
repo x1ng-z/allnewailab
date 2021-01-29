@@ -83,7 +83,7 @@
                                 <c:forEach items="${points}" var="point" varStatus="Count">
                                     <optgroup label="${point.key}">
                                         <c:forEach items="${point.value}" var="parentpin">
-                                            <option value="${parentpin.modlePinName}" pvresourcemodleId="${parentpin.refmodleId}"
+                                            <option value="${parentpin.modlepinsId}_${parentpin.modlePinName}" pvresourcemodleId="${parentpin.refmodleId}"
                                                     pvresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})</option>
                                         </c:forEach>
                                     </optgroup>
@@ -219,7 +219,7 @@
                                 <c:forEach items="${points}" var="point" varStatus="Count">
                                     <optgroup label="${point.key}">
                                         <c:forEach items="${point.value}" var="parentpin">
-                                            <option value="${parentpin.modlePinName}" pvupresourcemodleId="${parentpin.refmodleId}"
+                                            <option value="${parentpin.modlepinsId}_${parentpin.modlePinName}" pvupresourcemodleId="${parentpin.refmodleId}"
                                                     pvupresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})</option>
                                         </c:forEach>
                                     </optgroup>
@@ -257,7 +257,7 @@
                                 <c:forEach items="${points}" var="point" varStatus="Count">
                                     <optgroup label="${point.key}">
                                         <c:forEach items="${point.value}" var="parentpin">
-                                            <option value="${parentpin.modlePinName}" pvdownresourcemodleId="${parentpin.refmodleId}"
+                                            <option value="${parentpin.modlepinsId}_${parentpin.modlePinName}" pvdownresourcemodleId="${parentpin.refmodleId}"
                                                     pvdownresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})</option>
                                         </c:forEach>
                                     </optgroup>
@@ -307,7 +307,7 @@
                                 <c:forEach items="${points}" var="point" varStatus="Count">
                                     <optgroup label="${point.key}">
                                         <c:forEach items="${point.value}" var="parentpin">
-                                            <option value="${parentpin.modlePinName}" spresourcemodleId="${parentpin.refmodleId}"
+                                            <option value="${parentpin.modlepinsId}_${parentpin.modlePinName}" spresourcemodleId="${parentpin.refmodleId}"
                                                     spresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})</option>
                                         </c:forEach>
                                     </optgroup>

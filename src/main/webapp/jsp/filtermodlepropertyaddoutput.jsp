@@ -72,7 +72,7 @@
                     <select name="modleOpcTag" lay-verify="required"  lay-search="" lay-filter="selectopctag">
                         <option value="">请选择</option>
                         <c:forEach items="${points}" var="point" varStatus="Count">
-                            <option value="${point.modlePinName}"  resourcemodleId="${point.refmodleId}" resourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>
+                            <option value="${point.refmodleId}_${point.modlePinName}"  resourcemodleId="${point.refmodleId}" resourcemodlepinsId="${point.modlepinsId}">${point.opcTagName}</option>
                         </c:forEach>
                     </select>
                 </div>
