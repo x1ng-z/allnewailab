@@ -255,20 +255,38 @@ public class MPCModle extends BaseModleImp {
         this.controlAPCOutCycle = controlAPCOutCycle;
     }
 
+    /**
+     * 需要判断mpc/simulator是否都运行成功
+     */
     public boolean ismpcmodleruncomplet() {
+        /**
+         * 函数思路 注意mpc javabuild和simultor的javabuild肯定是一起的
+         * mpc运行成功可能是
+         * 1、他就是正常运行成功
+         * 2、build出错：
+         *      2.1mpcjavabuild出错，导致mpc模型短路，这时候就不要去判断simulator的输出了（模型直接短路,输入的mv直接幅值给输出的mv，变成完成状态）
+         *      2.2simulatorbuild出错，导致simulator为空，这时候虽然mpcjavabuild完成，由于simultor为空，模型直接短路（输入的mv直接幅值给输出的mv，变成完成状态）
+         * */
         if (getModlerunlevel() == BaseModleImp.RUNLEVEL_RUNCOMPLET) {
-            if(javabuildcomplet){
-                if((simulatControlModle != null) && simulatControlModle.getModlerunlevel() == BaseModleImp.RUNLEVEL_RUNCOMPLET){
+            //判断下mpc完成状态下，simultor模型是否完成模型构建
+            if (javabuildcomplet) {
+                //mpc的javabuild完成，那么就要要求simulator的也javabuild完成，否则就是simulator的python数据肯定还没有计算完成
+                if ((simulatControlModle != null) && (simulatControlModle.isJavabuildcomplet()) && simulatControlModle.getModlerunlevel() == BaseModleImp.RUNLEVEL_RUNCOMPLET) {
+                    //simulator的javabuild成功，且运行完成
                     return true;
+                } else {
+                    //simulator的javabuild出错 模型整体被短路
+                    return false;
                 }
-            }else {
+            } else {
+                //mpc javabuild有问题，模型短路，那么就要直接判断模型已经运行成功了
                 return true;
             }
 
         } else {
+            //模型未完成运算
             return false;
         }
-        return false;
     }
 
 
@@ -292,17 +310,58 @@ public class MPCModle extends BaseModleImp {
 
     }
 
+    /**
+     * 确保python模型已经连接
+     */
     @Override
     public void reconnect() {
+        setJavabuildcomplet(false);
+        pythonbuildcomplet = false;
+        if (simulatControlModle != null) {
+            simulatControlModle.setJavabuildcomplet(false);
+            simulatControlModle.setPythonbuildcomplet(false);
+        }
+
+        PySession mpcpySession = pySessionManager.getSpecialSession(getModleId(), mpcscript);
+        if (mpcpySession != null) {
+            JSONObject json = new JSONObject();
+            json.put("msg", "stop");
+            try {
+                mpcpySession.getCtx().writeAndFlush(CommandImp.STOP.build(json.toJSONString().getBytes("utf-8"), getModleId()));
+            } catch (UnsupportedEncodingException e) {
+                logger.error(e.getMessage(), e);
+            }
+            pySessionManager.removeSessionModule(mpcpySession.getCtx()).getCtx().close();
+        }
+
+        PySession simulatepySession = pySessionManager.getSpecialSession(getModleId(), simulatorscript);
+        if (simulatepySession != null) {
+            JSONObject json = new JSONObject();
+            json.put("msg", "stop");
+            try {
+                simulatepySession.getCtx().writeAndFlush(CommandImp.STOP.build(json.toJSONString().getBytes("utf-8"), getModleId()));
+            } catch (UnsupportedEncodingException e) {
+                logger.error(e.getMessage(), e);
+            }
+            pySessionManager.removeSessionModule(simulatepySession.getCtx()).getCtx().close();
+        }
+
+        try {
+            TimeUnit.SECONDS.sleep(1);
+        } catch (InterruptedException e) {
+            logger.error(e.getMessage(), e);
+        }
+
         mpcexecutepythonbridge.stop();
         simulateexecutePythonBridge.stop();
 
         mpcexecutepythonbridge.execute();
         simulateexecutePythonBridge.execute();
 
-        PySession mpcpySession = pySessionManager.getSpecialSession(getModleId(), mpcscript);
-        PySession simulatepySession = pySessionManager.getSpecialSession(getModleId(), simulatorscript);
-        while (mpcpySession == null || simulatepySession == null) {
+        mpcpySession = pySessionManager.getSpecialSession(getModleId(), mpcscript);
+        simulatepySession = pySessionManager.getSpecialSession(getModleId(), simulatorscript);
+        int trycheckcount=10;
+        while ((trycheckcount-->0)&&(mpcpySession == null || simulatepySession == null)) {
             //等待连接上来
             try {
                 TimeUnit.SECONDS.sleep(2);
@@ -312,6 +371,7 @@ public class MPCModle extends BaseModleImp {
             mpcpySession = pySessionManager.getSpecialSession(getModleId(), mpcscript);
             simulatepySession = pySessionManager.getSpecialSession(getModleId(), simulatorscript);
         }
+
 
         //模型构建
         if (false && modleBuild(false)) {
@@ -415,7 +475,6 @@ public class MPCModle extends BaseModleImp {
 
 
     /**
-     *
      * 0判断是pv、ff类型的引脚是否越界还是已经恢复
      * 1-1、如果是则设置模型引脚停运，新建一个引脚停止运行的任务
      * 2运行
@@ -423,56 +482,56 @@ public class MPCModle extends BaseModleImp {
      */
     private void checkmodlepinisinLimit(List<ModleProperty> pins) {
         /**引脚类型判断，筛选出pv或者ff引脚，这里限制了pv和ff这个范围，因为如果是mv也是有上下限的，二mv是不需要通过这个进行设置引脚运行还是停止*/
-        boolean ishavebreakOrRestorepin=false;
-        for(ModleProperty pin:pins){
-            MPCModleProperty mpcModleProperty=(MPCModleProperty)pin;
-            boolean ispvpin=(mpcModleProperty.getPintype()!=null)&&(mpcModleProperty.getPintype().equals(MPCModleProperty.TYPE_PIN_PV));
-            boolean isffpin=(mpcModleProperty.getPintype()!=null)&&(mpcModleProperty.getPintype().equals(MPCModleProperty.TYPE_PIN_FF));
-                if (ispvpin|| isffpin) {
-                    /**模型引脚停止*/
-                    /**
-                     * 判断是否超过置信区间
-                     * */
-                    if (mpcModleProperty.isBreakLimit()) {
-                        /**突破边界*/
-                        if (mpcModleProperty.isThisTimeParticipate()) {
-                            /*参与控制了，停止他*/
-                            mpcModleProperty.setThisTimeParticipate(false);
-                            ishavebreakOrRestorepin=true;//越界了
-                        }
+        boolean ishavebreakOrRestorepin = false;
+        for (ModleProperty pin : pins) {
+            MPCModleProperty mpcModleProperty = (MPCModleProperty) pin;
+            boolean ispvpin = (mpcModleProperty.getPintype() != null) && (mpcModleProperty.getPintype().equals(MPCModleProperty.TYPE_PIN_PV));
+            boolean isffpin = (mpcModleProperty.getPintype() != null) && (mpcModleProperty.getPintype().equals(MPCModleProperty.TYPE_PIN_FF));
+            if (ispvpin || isffpin) {
+                /**模型引脚停止*/
+                /**
+                 * 判断是否超过置信区间
+                 * */
+                if (mpcModleProperty.isBreakLimit()) {
+                    /**突破边界*/
+                    if (mpcModleProperty.isThisTimeParticipate()) {
+                        /*参与控制了，停止他*/
+                        mpcModleProperty.setThisTimeParticipate(false);
+                        ishavebreakOrRestorepin = true;//越界了
+                    }
 
+                } else {
+                    /**在边界内*/
+                    if (mpcModleProperty.isThisTimeParticipate()) {
+                        /*参与控制*/
+                        if (null != mpcModleProperty.getRunClock()) {
+                            /*闹铃时间到了吗*/
+                            if (mpcModleProperty.clockAlarm()) {
+                                ishavebreakOrRestorepin = true;//恢复了
+                                mpcModleProperty.clearRunClock();
+                            }
+                        }
                     } else {
-                        /**在边界内*/
-                        if (mpcModleProperty.isThisTimeParticipate()) {
-                            /*参与控制*/
-                            if (null != mpcModleProperty.getRunClock()) {
-                                /*闹铃时间到了吗*/
-                                if (mpcModleProperty.clockAlarm()) {
-                                    ishavebreakOrRestorepin=true;//恢复了
-                                    mpcModleProperty.clearRunClock();
-                                }
-                            }
-                        } else {
-                            /*没参与控制,设立闹钟*/
-                            mpcModleProperty.setThisTimeParticipate(true);
-                            int checktime = 10;
-                            /*如果模型的输出周期为null/0，则直接设置引脚保持在置信区间为10s*/
-                            if (getControlAPCOutCycle() != null && getControlAPCOutCycle() != 0) {
-                                checktime = 3 * getControlAPCOutCycle();
-                            }
-                            mpcModleProperty.setRunClock(Instant.now().plusSeconds(checktime));
-
+                        /*没参与控制,设立闹钟*/
+                        mpcModleProperty.setThisTimeParticipate(true);
+                        int checktime = 10;
+                        /*如果模型的输出周期为null/0，则直接设置引脚保持在置信区间为10s*/
+                        if (getControlAPCOutCycle() != null && getControlAPCOutCycle() != 0) {
+                            checktime = 3 * getControlAPCOutCycle();
                         }
-
+                        mpcModleProperty.setRunClock(Instant.now().plusSeconds(checktime));
 
                     }
 
+
                 }
+
+            }
 
         }
 
-        if(ishavebreakOrRestorepin){
-            logger.info("some pin breakk limit");
+        if (ishavebreakOrRestorepin) {
+            logger.info("some pin break limit");
             setJavabuildcomplet(false);
             pythonbuildcomplet = false;
             if (simulatControlModle != null) {
@@ -532,7 +591,7 @@ public class MPCModle extends BaseModleImp {
     }
 
     //模型短路，直接将输入的mv赋值给输出的mv
-    private void modleshortcircuit(){
+    private void modleshortcircuit() {
         List<MPCModleProperty> modlePropertyList = new ArrayList<>();
         for (ModleProperty modleProperty : propertyImpList) {
             MPCModleProperty mpcModleProperty = (MPCModleProperty) modleProperty;
@@ -560,19 +619,21 @@ public class MPCModle extends BaseModleImp {
 
     @Override
     public void docomputeprocess() {
+        //首先判断下是否dcs打自动
         BaseModlePropertyImp autopin = Tool.selectmodleProperyByPinname(ModleProperty.TYPE_PIN_MODLE_AUTO, propertyImpList, ModleProperty.PINDIRINPUT);
         //判断是否dcs已经打了自动
         if (autopin != null) {
             if (autopin.getValue() == 0) {
                 //把输入的mv直接丢给输出mv，短路模型
 //                JSONObject fakecomputedata = new JSONObject();
-                modleshortcircuit();//
+                modleshortcircuit();//模型短路
 
 //                computresulteprocess(null, fakecomputedata);
 //                outprocess(null, null);
-                setAutovalue(0);
+                setAutovalue(0);//记录下当前的dcs自动位号值
                 return;
             } else if ((autopin.getValue() != 0) && (getAutovalue() == 0)) {
+                //之前为0，且当前dcs位号也不为0,开始重启模型
                 setAutovalue(1);
                 //清除java模型构建模型和python模型构建标志位
                 setJavabuildcomplet(false);
@@ -600,7 +661,7 @@ public class MPCModle extends BaseModleImp {
 //        JSONObject scriptinputcontext = new JSONObject();
         //modle build
         if (mpcpySession != null && simulatepySession != null) {
-            if (!javabuildcomplet) {
+            if (!javabuildcomplet&&((simulatControlModle==null)||(!simulatControlModle.isJavabuildcomplet()))) {
                 if (modleBuild(true)) {
                     JSONObject mpcmodlebuild = dataForpythonBuildmpc();
                     JSONObject simulatemodlebuild = simulatControlModle.dataforpythonbuildsimulate();
@@ -616,70 +677,79 @@ public class MPCModle extends BaseModleImp {
                         logger.error(e.getMessage(), e);
                     }
                     //pythonmodle 构架未完成，且在线
-                    while (!pythonbuildcomplet && pySessionManager.getSpecialSession(getModleId(), mpcscript) != null) {
-                        int i = 3;
-                        while (i-- > 0) {
-                            try {
-                                TimeUnit.SECONDS.sleep(1);
-                            } catch (InterruptedException e) {
-                                logger.error(e.getMessage(), e);
-                            }
-                            if (pythonbuildcomplet) {
-                                break;
-                            }
-                        }
-                        if (!pythonbuildcomplet) {
-                            mpcmodlebuild = dataForpythonBuildmpc();
-                            try {
-                                mpcpySession.getCtx().writeAndFlush(CommandImp.PARAM.build(mpcmodlebuild.toJSONString().getBytes("utf-8"), getModleId()));
-                            } catch (UnsupportedEncodingException e) {
-                                logger.error(e.getMessage(), e);
-                            }
-
-                        }
-                    }
-
-
-                    while (!simulatControlModle.isPythonbuildcomplet() && pySessionManager.getSpecialSession(getModleId(), simulatorscript) != null) {
-                        int i = 3;
-                        while (i-- > 0) {
-                            try {
-                                TimeUnit.SECONDS.sleep(1);
-                            } catch (InterruptedException e) {
-                                logger.error(e.getMessage(), e);
-                            }
-                            if (simulatControlModle.isPythonbuildcomplet()) {
-                                break;
-                            }
-                        }
-                        if (!simulatControlModle.isPythonbuildcomplet()) {
-                            simulatemodlebuild = simulatControlModle.dataforpythonbuildsimulate();
-                            try {
-                                simulatepySession.getCtx().writeAndFlush(CommandImp.PARAM.build(simulatemodlebuild.toJSONString().getBytes("utf-8"), getModleId()));
-                            } catch (UnsupportedEncodingException e) {
-                                logger.error(e.getMessage(), e);
-                            }
-
-                        }
-                    }
-
-                }else {
+                } else {
                     //短路模型
-                    setErrormsg("modle build error:\n"+"p:"+numOfRunnablePVPins_pp+" m:"+numOfRunnableMVpins_mm+" ff:"+numOfRunnableFFpins_vv);
+                    setErrormsg("modle build error:\n" + "p:" + numOfRunnablePVPins_pp + " m:" + numOfRunnableMVpins_mm + " ff:" + numOfRunnableFFpins_vv);
                     modleshortcircuit();
+                    return;
                 }
 
             }
+            JSONObject mpcmodlebuild = dataForpythonBuildmpc();
+            JSONObject simulatemodlebuild = simulatControlModle.dataforpythonbuildsimulate();
+            while (javabuildcomplet&&!pythonbuildcomplet && pySessionManager.getSpecialSession(getModleId(), mpcscript) != null) {
+                int i = 3;
+                while (i-- > 0) {
+                    try {
+                        TimeUnit.SECONDS.sleep(1);
+                    } catch (InterruptedException e) {
+                        logger.error(e.getMessage(), e);
+                    }
+                    if (pythonbuildcomplet) {
+                        break;
+                    }
+                }
+                if (!pythonbuildcomplet) {
+                    mpcmodlebuild = dataForpythonBuildmpc();
+                    try {
+                        mpcpySession.getCtx().writeAndFlush(CommandImp.PARAM.build(mpcmodlebuild.toJSONString().getBytes("utf-8"), getModleId()));
+                    } catch (UnsupportedEncodingException e) {
+                        logger.error(e.getMessage(), e);
+                    }
+
+                }
+            }
+
+
+            while (simulatControlModle.isJavabuildcomplet()&&!simulatControlModle.isPythonbuildcomplet() && pySessionManager.getSpecialSession(getModleId(), simulatorscript) != null) {
+                int i = 3;
+                while (i-- > 0) {
+                    try {
+                        TimeUnit.SECONDS.sleep(1);
+                    } catch (InterruptedException e) {
+                        logger.error(e.getMessage(), e);
+                    }
+                    if (simulatControlModle.isPythonbuildcomplet()) {
+                        break;
+                    }
+                }
+                if (!simulatControlModle.isPythonbuildcomplet()) {
+                    simulatemodlebuild = simulatControlModle.dataforpythonbuildsimulate();
+                    try {
+                        simulatepySession.getCtx().writeAndFlush(CommandImp.PARAM.build(simulatemodlebuild.toJSONString().getBytes("utf-8"), getModleId()));
+                    } catch (UnsupportedEncodingException e) {
+                        logger.error(e.getMessage(), e);
+                    }
+
+                }
+            }
+
 //            else {
             //modle build completed
             //send compute parame
             try {
-                if (javabuildcomplet && (simulatControlModle != null) && (simulatControlModle.isJavabuildcomplet())) {
-                    setModlerunlevel(BaseModleImp.RUNLEVEL_RUNNING);
-                    simulatControlModle.setModlerunlevel(BaseModleImp.RUNLEVEL_RUNNING);
-                    mpcpySession.getCtx().writeAndFlush(CommandImp.PARAM.build(getRealData().toJSONString().getBytes("utf-8"), getModleId()));
-                    simulatepySession.getCtx().writeAndFlush(CommandImp.PARAM.build(simulatControlModle.getRealSimulateData().toJSONString().getBytes("utf-8"), getModleId()));
+
+                mpcpySession = pySessionManager.getSpecialSession(getModleId(), mpcscript);
+                simulatepySession = pySessionManager.getSpecialSession(getModleId(), simulatorscript);
+                if (mpcpySession != null && simulatepySession != null) {
+                    if (javabuildcomplet && (simulatControlModle != null) && (simulatControlModle.isJavabuildcomplet())) {
+                        setModlerunlevel(BaseModleImp.RUNLEVEL_RUNNING);
+                        simulatControlModle.setModlerunlevel(BaseModleImp.RUNLEVEL_RUNNING);
+                        mpcpySession.getCtx().writeAndFlush(CommandImp.PARAM.build(getRealData().toJSONString().getBytes("utf-8"), getModleId()));
+                        simulatepySession.getCtx().writeAndFlush(CommandImp.PARAM.build(simulatControlModle.getRealSimulateData().toJSONString().getBytes("utf-8"), getModleId()));
+                    }
                 }
+
             } catch (UnsupportedEncodingException e) {
                 logger.error(e.getMessage(), e);
             }
@@ -815,6 +885,8 @@ public class MPCModle extends BaseModleImp {
     @Override
     public void outprocess(Project project, JSONObject outdata) {
         setModlerunlevel(BaseModleImp.RUNLEVEL_RUNCOMPLET);
+        //activetime
+        setActivetime(Instant.now());
     }
 
     @Override
@@ -1184,7 +1256,7 @@ public class MPCModle extends BaseModleImp {
             numOfRunnableFFpins_vv = 0;
             initStatisticRunnablePinNum();
             //没有可以运行的引脚直接不需要进行build了
-            if(numOfRunnablePVPins_pp==0||numOfRunnableMVpins_mm==0){
+            if (numOfRunnablePVPins_pp == 0 || numOfRunnableMVpins_mm == 0) {
                 return false;
             }
 //            logger.debug("p="+numOfRunnablePVPins_pp+" ,m="+numOfRunnableMVpins_mm+" ,v="+numOfRunnableFFpins_vv);

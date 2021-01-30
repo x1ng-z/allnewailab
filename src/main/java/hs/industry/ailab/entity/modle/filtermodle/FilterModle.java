@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -223,6 +224,7 @@ public class FilterModle extends BaseModleImp {
     @Override
     public void outprocess(Project project, JSONObject outdata) {
         setModlerunlevel(BaseModleImp.RUNLEVEL_RUNCOMPLET);
+        setActivetime(Instant.now());
     }
 
     @Override

@@ -1490,13 +1490,31 @@ public class ProjectEdit {
                             kdid);//new BaseModlePropertyImp();
                     pidproperties.add(kdbasemodleproperty);
 
+
+                    String deadZone = jsonmodeinfo.getString("deadZone");
+                    String deadZoneid = jsonmodeinfo.getString("deadZoneid");
+                    String deadZoneopcTagName = jsonmodeinfo.getString("deadZoneopcTagName");
+                    String deadZoneresourcemodleId = jsonmodeinfo.getString("deadZoneresourcemodleId");
+                    String deadZoneresourcemodlepinsId = jsonmodeinfo.getString("deadZoneresourcemodlepinsId");
+                    String deadZonemodleOpcTag = jsonmodeinfo.getString("deadZonemodleOpcTag");
+                    BaseModlePropertyImp deadZonebasemodleproperty = initpidproperty(
+                            deadZonemodleOpcTag,
+                            deadZoneopcTagName,
+                           "deadZone",
+                            modleId,
+                            deadZoneresourcemodleId,
+                            deadZoneresourcemodlepinsId,
+                            deadZone, deadZoneid);//new BaseModlePropertyImp();
+                    pidproperties.add(deadZonebasemodleproperty);
+
+
                     String pv = jsonmodeinfo.getString("pv");
                     String pvid = jsonmodeinfo.getString("pvid");
                     String pvopcTagName = jsonmodeinfo.getString("pvopcTagName");
                     String pvresourcemodleId = jsonmodeinfo.getString("pvresourcemodleId");
                     String pvresourcemodlepinsId = jsonmodeinfo.getString("pvresourcemodlepinsId");
                     String pvmodleOpcTag = jsonmodeinfo.getString("pvmodleOpcTag");
-                    double deadZone = jsonmodeinfo.getDouble("deadZone");
+//                    double deadZone = jsonmodeinfo.getDouble("deadZone");
                     BaseModlePropertyImp pvbasemodleproperty = initpidplusproperty(
                             pvmodleOpcTag,
                             pvopcTagName,
@@ -1504,7 +1522,7 @@ public class ProjectEdit {
                             modleId,
                             pvresourcemodleId,
                             pvresourcemodlepinsId,
-                            pv, pvid,0,0,deadZone);//new BaseModlePropertyImp();
+                            pv, pvid,0,0,0);//new BaseModlePropertyImp();
                     pidproperties.add(pvbasemodleproperty);
 
                     String sp = jsonmodeinfo.getString("sp");
@@ -2479,9 +2497,109 @@ public class ProjectEdit {
     public String deletemodleproperties(@RequestParam("modlepropertyid") int modlepropertyid) {
         JSONObject result = new JSONObject();
         try {
-            int count = projectOperaterImp.deleteBaseModlePropertyByid(modlepropertyid);
-            result.put("msg", "success");
-            result.put("count", count);
+            BaseModlePropertyImp baseModlePropertyImp=projectOperaterImp.findBaseModlePropertyByid(modlepropertyid);
+            Modle modle=projectOperaterImp.findModleByid(baseModlePropertyImp.getRefmodleId());
+            if(modle instanceof MPCModle){
+                MPCModle mpcmodle=(MPCModle)modle;
+
+                if(baseModlePropertyImp.getPindir().equals(MPCModleProperty.PINDIRINPUT)){
+
+                    if(baseModlePropertyImp instanceof MPCModleProperty){
+                        MPCModleProperty mpcModleProperty=(MPCModleProperty)baseModlePropertyImp;
+                        switch (mpcModleProperty.getPintype()){
+
+                            case ModleProperty.TYPE_PIN_PV:
+                            {
+                                int pinorder = 0;
+                                Matcher pvmatch = pvpattern.matcher(baseModlePropertyImp.getModlePinName());
+                                if (pvmatch.find()) {
+                                    pinorder = Integer.parseInt(pvmatch.group(2));
+                                } else {
+                                    throw new RuntimeException("can't match pin order");
+                                }
+                                BaseModlePropertyImp pvup=Tool.selectmodleProperyByPinname( ModleProperty.TYPE_PIN_PVUP+pinorder,mpcmodle.getPropertyImpList(),MPCModleProperty.PINDIRINPUT);
+                                BaseModlePropertyImp pvdown=Tool.selectmodleProperyByPinname( ModleProperty.TYPE_PIN_PVDOWN+pinorder,mpcmodle.getPropertyImpList(),MPCModleProperty.PINDIRINPUT);
+                                BaseModlePropertyImp sp=Tool.selectmodleProperyByPinname( ModleProperty.TYPE_PIN_SP+pinorder,mpcmodle.getPropertyImpList(),MPCModleProperty.PINDIRINPUT);
+                                List<BaseModlePropertyImp> waittodelte=new ArrayList<>();
+                                if(pvup!=null){
+                                    waittodelte.add(pvup);
+                                }
+                                if(pvdown!=null){
+                                    waittodelte.add(pvdown);
+                                }
+                                if(sp!=null){
+                                    waittodelte.add(sp);
+                                }
+                                if(mpcModleProperty!=null){
+                                    waittodelte.add(mpcModleProperty);
+                                }
+                                projectOperaterImp.deletempcmodlepropertiesbusiness(waittodelte);
+                                break;
+                            }
+                            case ModleProperty.TYPE_PIN_MV:{
+                                int pinorder = 0;
+                                Matcher mvmatch = mvpattern.matcher(baseModlePropertyImp.getModlePinName());
+                                if (mvmatch.find()) {
+                                    pinorder = Integer.parseInt(mvmatch.group(2));
+                                } else {
+                                    throw new RuntimeException("can't match pin order");
+                                }
+                                BaseModlePropertyImp mvup=Tool.selectmodleProperyByPinname( ModleProperty.TYPE_PIN_MVUP+pinorder,mpcmodle.getPropertyImpList(),MPCModleProperty.PINDIRINPUT);
+                                BaseModlePropertyImp mvdown=Tool.selectmodleProperyByPinname( ModleProperty.TYPE_PIN_MVDOWN+pinorder,mpcmodle.getPropertyImpList(),MPCModleProperty.PINDIRINPUT);
+                                BaseModlePropertyImp mvfb=Tool.selectmodleProperyByPinname( ModleProperty.TYPE_PIN_MVFB+pinorder,mpcmodle.getPropertyImpList(),MPCModleProperty.PINDIRINPUT);
+                                List<BaseModlePropertyImp> waittodelte=new ArrayList<>();
+                                if(mvup!=null){
+                                    waittodelte.add(mvup);
+                                }
+                                if(mvdown!=null){
+                                    waittodelte.add(mvdown);
+                                }
+                                if(mvfb!=null){
+                                    waittodelte.add(mvfb);
+                                }
+                                if(mpcModleProperty!=null){
+                                    waittodelte.add(mpcModleProperty);
+                                }
+                                projectOperaterImp.deletempcmodlepropertiesbusiness(waittodelte);
+                                break;
+                            }
+                            case ModleProperty.TYPE_PIN_FF:{
+                                int pinorder = 0;
+                                Matcher ffmatch = ffpattern.matcher(baseModlePropertyImp.getModlePinName());
+                                if (ffmatch.find()) {
+                                    pinorder = Integer.parseInt(ffmatch.group(2));
+                                } else {
+                                    throw new RuntimeException("can't match pin order");
+                                }
+                                BaseModlePropertyImp ffup=Tool.selectmodleProperyByPinname( ModleProperty.TYPE_PIN_FFUP+pinorder,mpcmodle.getPropertyImpList(),MPCModleProperty.PINDIRINPUT);
+                                BaseModlePropertyImp ffdown=Tool.selectmodleProperyByPinname( ModleProperty.TYPE_PIN_FFDOWN+pinorder,mpcmodle.getPropertyImpList(),MPCModleProperty.PINDIRINPUT);
+                                List<BaseModlePropertyImp> waittodelte=new ArrayList<>();
+                                if(ffup!=null){
+                                    waittodelte.add(ffup);
+                                }
+                                if(ffdown!=null){
+                                    waittodelte.add(ffdown);
+                                }
+                                if(mpcModleProperty!=null){
+                                    waittodelte.add(mpcModleProperty);
+                                }
+                                projectOperaterImp.deletempcmodlepropertiesbusiness(waittodelte);
+                                break;
+                            }
+                        }
+
+                    }
+
+
+                }
+                result.put("msg", "success");
+//                result.put("count", );
+            }else{
+                int count = projectOperaterImp.deleteBaseModlePropertyByid(modlepropertyid);
+                result.put("msg", "success");
+                result.put("count", count);
+            }
+
 
         } catch (Exception e) {
             result.put("msg", "error");
@@ -3300,6 +3418,7 @@ public class ProjectEdit {
                     modelAndView.addObject("kp", Tool.selectmodleProperyByPinname("kp", pidModle.getPropertyImpList(), ModleProperty.PINDIRINPUT));
                     modelAndView.addObject("ki", Tool.selectmodleProperyByPinname("ki", pidModle.getPropertyImpList(), ModleProperty.PINDIRINPUT));
                     modelAndView.addObject("kd", Tool.selectmodleProperyByPinname("kd", pidModle.getPropertyImpList(), ModleProperty.PINDIRINPUT));
+                    modelAndView.addObject("deadZone", Tool.selectmodleProperyByPinname("deadZone", pidModle.getPropertyImpList(), ModleProperty.PINDIRINPUT));
 
                     modelAndView.addObject("pv", (MPCModleProperty)Tool.selectmodleProperyByPinname("pv", pidModle.getPropertyImpList(), ModleProperty.PINDIRINPUT));
 

@@ -9,6 +9,7 @@ import hs.industry.ailab.utils.httpclient.HttpUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -91,6 +92,7 @@ public class INModle extends BaseModleImp {
             }
         }
         setModlerunlevel(BaseModleImp.RUNLEVEL_RUNCOMPLET);
+        setActivetime(Instant.now());
     }
 
 

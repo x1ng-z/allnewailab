@@ -324,14 +324,55 @@
             </div>
         </div>
 
+<%--        <div class="layui-inline">--%>
+<%--            <label class="layui-form-label">pv死区</label>--%>
+<%--            <div class="layui-input-inline">--%>
+<%--                <input type="number" name="deadZone" lay-verify="required"  autocomplete="off" lay-verify="required|number"--%>
+<%--                       class="layui-input" placeholder="pv的死区" value="${deadZone.resource.getDouble("value")}"--%>
+<%--                       onmousewheel='scrollFunc()'>--%>
+<%--            </div>--%>
+<%--        </div>--%>
+
+
         <div class="layui-inline">
-            <label class="layui-form-label">pv死区</label>
+            <label class="layui-form-label">deadZone</label>
             <div class="layui-input-inline">
-                <input type="number" name="deadZone" lay-verify="required"  autocomplete="off" lay-verify="required|number"
-                       class="layui-input" placeholder="pv的死区" value="${pv.deadZone}"
-                       onmousewheel='scrollFunc()'>
+                <input type="number" name="deadZone" autocomplete="off" class="layui-input"
+                       value="${deadZone.resource.getDouble("value")}" placeholder="pv死区" id="deadZoneconstantid">
             </div>
         </div>
+        <div class="layui-inline">
+            <label class="layui-form-label">deadZone映射</label>
+            <div class="layui-input-inline">
+                <select name="deadZonemodleOpcTag" lay-search="" id="deadZoneselect" lay-filter="deadZoneselect">
+                    <option value="">请选择</option>
+                    <c:forEach items="${points}" var="point" varStatus="Count">
+                        <optgroup label="${point.key}">
+                            <c:forEach items="${point.value}" var="parentpin">
+                                <c:choose>
+                                    <c:when test="${parentpin.modlepinsId==deadZone.resource.getInteger('modlepinsId')}">
+                                        <option value="${parentpin.modlepinsId}_${parentpin.modlePinName}"
+                                                deadZoneresourcemodleId="${parentpin.refmodleId}"
+                                                deadZoneresourcemodlepinsId="${parentpin.modlepinsId}"
+                                                selected>${parentpin.modlePinName}(${parentpin.opcTagName})
+                                        </option>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <option value="${parentpin.modlepinsId}_${parentpin.modlePinName}"
+                                                deadZoneresourcemodleId="${parentpin.refmodleId}"
+                                                deadZoneresourcemodlepinsId="${parentpin.modlepinsId}">${parentpin.modlePinName}(${parentpin.opcTagName})
+                                        </option>
+                                    </c:otherwise>
+                                </c:choose>
+                            </c:forEach>
+                        </optgroup>
+
+                    </c:forEach>
+                </select>
+            </div>
+        </div>
+
+
 
 
     </div>
@@ -645,6 +686,9 @@
             ${auto.resource.getString("resource")=="constant"||auto.resource.getString("resource")!="modle"}
                 ? $('#autoconstantid').removeAttr("disabled") : $("#autoconstantid").attr("disabled", true);
 
+            ${deadZone.resource.getString("resource")=="constant"||sp.resource.getString("resource")!="modle"}
+                ? $("#deadZoneconstantid").removeAttr("disabled") : $("#deadZoneconstantid").attr("disabled", true);
+
             form.render(); //更新全部
             // form.render('select'); //刷新select选择框渲染
             form.on('submit(motifymodlesubmit)', function (data) {
@@ -699,6 +743,12 @@
                 partcontex['autoopcTagName'] = $('#autoselect').find("option:selected").html();
                 partcontex['autoresourcemodleId'] = $('#autoselect').find("option:selected").attr("autoresourcemodleId");
                 partcontex['autoresourcemodlepinsId'] = $('#autoselect').find("option:selected").attr("autoresourcemodlepinsId");
+
+
+
+                partcontex['deadZoneopcTagName'] = $('#deadZoneselect').find("option:selected").html();
+                partcontex['deadZoneresourcemodleId'] = $('#deadZoneselect').find("option:selected").attr("deadZoneresourcemodleId");
+                partcontex['deadZoneresourcemodlepinsId'] = $('#deadZoneselect').find("option:selected").attr("deadZoneresourcemodlepinsId");
 
                 if (api.updatemodle(url, partcontex, layer)) {
                     layer.close(layer.getFrameIndex(window.name));
@@ -841,6 +891,19 @@
                     element.render();
                 } else {
                     $('#autoconstantid').attr('disabled', true);
+                    form.render();
+                    element.render();
+                }
+            });
+
+            form.on('select(deadZoneselect)', function (data) {
+                if (data.value == '') {
+                    $('#deadZoneconstantid').removeAttr('disabled');
+                    // $('#modlePincontantvalueid').attr('value','');
+                    form.render();
+                    element.render();
+                } else {
+                    $('#deadZoneconstantid').attr('disabled', true);
                     form.render();
                     element.render();
                 }

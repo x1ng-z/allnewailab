@@ -1,6 +1,7 @@
 package hs.industry.ailab.entity;
 
 import hs.industry.ailab.dao.mysql.service.ProjectOperaterImp;
+import hs.industry.ailab.entity.modle.BaseModleImp;
 import hs.industry.ailab.entity.modle.Modle;
 import hs.industry.ailab.entity.modle.controlmodle.MPCModle;
 import hs.industry.ailab.entity.modle.controlmodle.PIDModle;
@@ -17,6 +18,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PreDestroy;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -89,17 +92,31 @@ public class ProjectManager {
         this.mpcscrip = mpcscrip;
         this.oceandir = oceandir;
         this.pydriverport = pydriverport;
-        this.ioServer=ioServer;
+        this.ioServer = ioServer;
         ioServer.getNettyServerInitializer().msgDecoder_inbound.setProjectManager(this);
         List<Project> dbprojetc = projectOperaterImp.findAllProject();
         for (Project project : dbprojetc) {
-            activeProject(project);
-        }
+//            if(project.getProjectid()==10){
+                activeProject(project);
+//            }
 
+        }
 
 
     }
 
+
+    @PreDestroy
+    public void destory() {
+        for (Project project : projectPool.values()) {
+            for (Modle modle : project.getModleList()) {
+                BaseModleImp baseModleImp = (BaseModleImp) modle;
+                if (baseModleImp != null) {
+                    baseModleImp.destory();
+                }
+            }
+        }
+    }
 
     public void activeProject(Project project) {
         if (project != null) {
@@ -162,15 +179,16 @@ public class ProjectManager {
     }
 
 
-    public Modle getspecialModle(int modleid){
-        for(Project project:projectPool.values()){
-            if(project.getIndexmodles().containsKey(modleid)){
+    public Modle getspecialModle(int modleid) {
+        for (Project project : projectPool.values()) {
+            if (project.getIndexmodles().containsKey(modleid)) {
                 return project.getIndexmodles().get(modleid);
             }
 
         }
         return null;
     }
+
     public void setProjectPool(Map<Integer, Project> projectPool) {
         this.projectPool = projectPool;
     }

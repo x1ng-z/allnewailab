@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +75,22 @@ public class CUSTOMIZEModle extends BaseModleImp {
 
     @Override
     public void reconnect() {
+        PySession mpcpySession = pySessionManager.getSpecialSession(getModleId(), noscripNametail());
+        if (mpcpySession != null) {
+            JSONObject json = new JSONObject();
+            json.put("msg", "stop");
+            try {
+                mpcpySession.getCtx().writeAndFlush(CommandImp.STOP.build(json.toJSONString().getBytes("utf-8"), getModleId()));
+            } catch (UnsupportedEncodingException e) {
+                logger.error(e.getMessage(), e);
+            }
+            pySessionManager.removeSessionModule(mpcpySession.getCtx()).getCtx().close();
+        }
+        try {
+            TimeUnit.SECONDS.sleep(1);
+        } catch (InterruptedException e) {
+            logger.error(e.getMessage(),e);
+        }
         executepythonbridge.stop();
         executepythonbridge.execute();
     }
@@ -193,6 +210,7 @@ public class CUSTOMIZEModle extends BaseModleImp {
     @Override
     public void outprocess(Project project, JSONObject outdata) {
         setModlerunlevel(BaseModleImp.RUNLEVEL_RUNCOMPLET);
+        setActivetime(Instant.now());
     }
 
     @Override

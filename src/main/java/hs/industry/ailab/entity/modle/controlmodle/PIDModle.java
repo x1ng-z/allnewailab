@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +75,23 @@ public class PIDModle extends BaseModleImp {
 
     @Override
     public void reconnect() {
+        PySession mpcpySession = pySessionManager.getSpecialSession(getModleId(), pidscript);
+        if (mpcpySession != null) {
+            JSONObject json = new JSONObject();
+            json.put("msg", "stop");
+            try {
+                mpcpySession.getCtx().writeAndFlush(CommandImp.STOP.build(json.toJSONString().getBytes("utf-8"), getModleId()));
+            } catch (UnsupportedEncodingException e) {
+                logger.error(e.getMessage(), e);
+            }
+            pySessionManager.removeSessionModule(mpcpySession.getCtx()).getCtx().close();
+        }
+        try {
+            TimeUnit.SECONDS.sleep(1);
+        } catch (InterruptedException e) {
+            logger.error(e.getMessage(),e);
+        }
+
         executepythonbridge.stop();
         setModlerunlevel(BaseModleImp.RUNLEVEL_INITE);
         executepythonbridge.execute();
@@ -95,29 +113,37 @@ public class PIDModle extends BaseModleImp {
     }
 
 
+    //模型短路
+    private void modleshortcircuit() {
+        BaseModlePropertyImp mvinputpin = Tool.selectmodleProperyByPinname(ModleProperty.TYPE_PIN_MV, propertyImpList, ModleProperty.PINDIRINPUT);
+        BaseModlePropertyImp mvoutputpin = Tool.selectmodleProperyByPinname(ModleProperty.TYPE_PIN_MV, propertyImpList, ModleProperty.PINDIROUTPUT);
+        if ((mvinputpin != null) && (mvoutputpin != null)) {
+            JSONObject fakecomputedata = new JSONObject();
+            JSONObject data = new JSONObject();
+            data.put("value", mvinputpin.getValue());
+            data.put("partkp", 0f);
+            data.put("partki", 0f);
+            data.put("partkd", 0f);
+            JSONObject pindata = new JSONObject();
+            pindata.put(mvoutputpin.getModlePinName(), data);
+            fakecomputedata.put("data", pindata);
+            computresulteprocess(null, fakecomputedata);
+            outprocess(null, null);
+            setAutovalue(0);
+        }
+
+    }
+
     @Override
     public void docomputeprocess() {
 
 //            BaseModlePropertyImp baseModlePropertyImp=(BaseModlePropertyImp)modleProperty;
         BaseModlePropertyImp autopin = Tool.selectmodleProperyByPinname(ModleProperty.TYPE_PIN_MODLE_AUTO, propertyImpList, ModleProperty.PINDIRINPUT);
-        BaseModlePropertyImp mvinputpin = Tool.selectmodleProperyByPinname(ModleProperty.TYPE_PIN_MV, propertyImpList, ModleProperty.PINDIRINPUT);
-        BaseModlePropertyImp mvoutputpin = Tool.selectmodleProperyByPinname(ModleProperty.TYPE_PIN_MV, propertyImpList, ModleProperty.PINDIROUTPUT);
 
-        if((autopin!=null)&&(mvinputpin!=null)&&(mvoutputpin!=null)){
+        if ((autopin != null)) {
             if (autopin.getValue() == 0) {
                 //把输入的mv直接丢给输出mv
-                JSONObject fakecomputedata = new JSONObject();
-                JSONObject data = new JSONObject();
-                data.put("value", mvinputpin.getValue());
-                data.put("partki", 0f);
-                data.put("partki", 0f);
-                data.put("partki", 0f);
-                JSONObject pindata=new JSONObject();
-                pindata.put(mvoutputpin.getModlePinName(),data);
-                fakecomputedata.put("data", pindata);
-                computresulteprocess(null, fakecomputedata);
-                outprocess(null, null);
-                setAutovalue(0);
+                modleshortcircuit();
                 return;
             } else if ((autopin.getValue() != 0) && (getAutovalue() == 0)) {
                 setAutovalue(1);
@@ -147,11 +173,13 @@ public class PIDModle extends BaseModleImp {
                     JSONObject invalue = new JSONObject();
                     invalue.put("value", baseModlePropertyImp.getValue());
                     INjson.put(baseModlePropertyImp.getModlePinName(), invalue);
-                    if (baseModlePropertyImp.getModlePinName().equals(ModleProperty.TYPE_PIN_PV)) {
-                        JSONObject inpvdeadZonealue = new JSONObject();
-                        inpvdeadZonealue.put("value", ((MPCModleProperty) baseModlePropertyImp).getDeadZone());
-                        INjson.put("deadZone", inpvdeadZonealue);
-                    } else if (baseModlePropertyImp.getModlePinName().equals(ModleProperty.TYPE_PIN_MV)) {
+//                    if (baseModlePropertyImp.getModlePinName().equals(ModleProperty.TYPE_PIN_PV)) {
+//                        JSONObject inpvdeadZonealue = new JSONObject();
+//                        inpvdeadZonealue.put("value", ((MPCModleProperty) baseModlePropertyImp).getDeadZone());
+//                        INjson.put("deadZone", inpvdeadZonealue);
+//                    } else
+
+                        if (baseModlePropertyImp.getModlePinName().equals(ModleProperty.TYPE_PIN_MV)) {
                         JSONObject inmvdmvHighnealue = new JSONObject();
                         inmvdmvHighnealue.put("value", ((MPCModleProperty) baseModlePropertyImp).getDmvHigh());
                         INjson.put("dmvHigh", inmvdmvHighnealue);
@@ -252,6 +280,7 @@ public class PIDModle extends BaseModleImp {
     @Override
     public void outprocess(Project project, JSONObject outdata) {
         setModlerunlevel(BaseModleImp.RUNLEVEL_RUNCOMPLET);
+        setActivetime(Instant.now());
     }
 
 

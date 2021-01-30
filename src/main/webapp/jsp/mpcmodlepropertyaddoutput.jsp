@@ -61,7 +61,7 @@
                 <label class="layui-form-label">引脚名称</label>
                 <div class="layui-input-inline">
                     <input type="text" name="modlePinName" lay-verify="required" autocomplete="off" class="layui-input"
-                           value="">
+                           value="" placeholder="规则dpvimvj 其中i,j为引脚序列">
                 </div>
             </div>
 

@@ -10,6 +10,7 @@ import hs.industry.ailab.entity.modle.modlerproerty.MPCModleProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -343,7 +344,7 @@ public class SimulatControlModle extends BaseModleImp {
 
             //FF
             int indexEnableFF = 0;
-            if (controlModle.getCategoryFFmodletag().size() != 0) {
+            if (controlModle.getNumOfRunnableFFpins_vv() != 0) {
                 Double[] ff = new Double[controlModle.getNumOfRunnableFFpins_vv()];
                 Double[] fflmt = new Double[controlModle.getNumOfRunnableFFpins_vv()];
                 for (int indexff = 0; indexff < controlModle.getCategoryFFmodletag().size(); indexff++) {
@@ -443,7 +444,7 @@ public class SimulatControlModle extends BaseModleImp {
         /**
          *mv
          * */
-        if (controlModle.getCategoryMVmodletag().size() != 0) {
+        if (controlModle.getNumOfRunnableMVpins_mm() != 0) {
             jsonObject.put("A", simulatControlModle.getA_SimulatetimeseriseMatrix());
             jsonObject.put("origionA", controlModle.getA_RunnabletimeseriseMatrix());
             /**
@@ -457,7 +458,7 @@ public class SimulatControlModle extends BaseModleImp {
         /**
          *ff
          */
-        if (controlModle.getCategoryFFmodletag().size() != 0) {
+        if (controlModle.getNumOfRunnableFFpins_vv() != 0) {
             jsonObject.put("B", simulatControlModle.getB_SimulatetimeseriseMatrix());
             jsonObject.put("origionB", controlModle.getB_RunnabletimeseriseMatrix());
             jsonObject.put("pvffmapping", controlModle.getMaskMatrixRunnablePVUseFF());
@@ -510,7 +511,7 @@ public class SimulatControlModle extends BaseModleImp {
                 JSONArray writemvJson = modlestatus.getJSONArray("writemv");//要进行写入
                 JSONArray eJson = modlestatus.getJSONArray("e");//
                 JSONArray funelupAnddownJson = modlestatus.getJSONArray("funelupAnddown");//
-                JSONArray dmvJson = modlestatus.getJSONArray("dmv");//实时显示
+                JSONArray dmvJson = modlestatus.getJSONArray("dmv");//实时显示拆分以后的dmv,如mv-对pv1和pv2都有影响，则返回的是dmv[0]是pv1对mv1 dmv[2]是pv2对dmv1
                 JSONArray dffJson = modlestatus.getJSONArray("dff");//
                 JSONArray writedmvJson = modlestatus.getJSONArray("writedmv");//要进行写入
 
@@ -558,7 +559,7 @@ public class SimulatControlModle extends BaseModleImp {
 //                writemvJson;//要进行写入
 //                writedmvJson;
 
-                if (controlModle.getRunstyle().equals(RUNSTYLEBYMANUL) ) {
+                if (controlModle.getRunstyle().equals(RUNSTYLEBYMANUL)) {
                     int index = 0;
                     for (MPCModleProperty mpcModleProperty : controlModle.getCategoryMVmodletag()) {
                         String outputpinname = mpcModleProperty.getModlePinName();
@@ -568,19 +569,28 @@ public class SimulatControlModle extends BaseModleImp {
                         for (ModleProperty modleProperty : controlModle.getPropertyImpList()) {
                             MPCModleProperty outputpin = (MPCModleProperty) modleProperty;
                             if (outputpin.getPindir().equals(MPCModleProperty.PINDIROUTPUT)) {
+
+                                //mv
                                 if (outputpinname.equals(outputpin.getModlePinName())) {
                                     outputpin.setValue(outmvvalue);
                                 }
-                                if (("d" + outputpinname).equals(outputpin.getModlePinName())) {
-                                    outputpin.setValue(outdmvvalue);
+
+                                //dmv
+                                for (int indexpv = 0; indexpv < extendModlePVPins.size(); indexpv++) {
+                                    /**拆分计算的dMV值*/
+                                    if (("d" + extendModlePVPins.get(indexpv).getModlePinName() + extendModleMVPins.get(indexpv).getModlePinName()).equals(outputpin.getModlePinName())) {
+                                        outputpin.setValue(dmvArray[indexpv]);
+                                    }
                                 }
+
+
                             }
 
                         }
                     }
                 }
 
-                iscomputecomplete=true;
+                iscomputecomplete = true;
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
             }
@@ -593,6 +603,7 @@ public class SimulatControlModle extends BaseModleImp {
     @Override
     public void outprocess(Project project, JSONObject outdata) {
         setModlerunlevel(BaseModleImp.RUNLEVEL_RUNCOMPLET);
+        setActivetime(Instant.now());
     }
 
     @Override
@@ -614,6 +625,10 @@ public class SimulatControlModle extends BaseModleImp {
          * init A matrix
          * 数据填入方式是按照pv-mv映射矩阵的行顺序进行填入
          * */
+        if (numOfIOMappingRelation == 0) {
+            //映射数量为0，那就不需要构建了，构建也是报错的
+            return;
+        }
         A_SimulatetimeseriseMatrix = new double[numOfIOMappingRelation][numOfIOMappingRelation][timeserise_N];
 
         /**pv用了哪些mv,标记矩阵*/

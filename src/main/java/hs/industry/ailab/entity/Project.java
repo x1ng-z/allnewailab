@@ -60,11 +60,13 @@ public class Project implements Runnable {
                                 break;
                             }
                         }
+                        //父节点全部运行完成的条件下，如果mpc运行处于初始化状态下或者mpcModle不为空的时候，simultor也是运行状态处于初始状态下，就达到运算条件
                         if (isneedrun && ((mpcModle.getModlerunlevel() == BaseModleImp.RUNLEVEL_INITE) || (mpcModle.getSimulatControlModle() != null ? (mpcModle.getSimulatControlModle().getModlerunlevel() == BaseModleImp.RUNLEVEL_INITE) : true))) {
                             //根节点设置开始运行时间
                             if (mpcModle.getModleSight().getParents().size() == 0) {
                                 mpcModle.setBeginruntime(Instant.now());
                             }
+
                             mpcModle.inprocess(this);
                             mpcModle.docomputeprocess();
                         }

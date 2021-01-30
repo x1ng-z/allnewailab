@@ -8,14 +8,14 @@
 		<meta http-equiv="X-UA-Compatible" content="ie=edge">
 		<link rel="stylesheet" href="/js/layui/css/layui.css" />
 		<link rel="stylesheet" href="/css/login.css" />
-		<title>${companyName}过程控制系统</title>
+		<title>${companyName}边缘控制系统BCS</title>
 	</head>
 	<body class="layui-layout-body" onkeydown="onEnter();">
 		<div class="layui-fluid" style="padding: 0px;">
 			<canvas id="particle"></canvas>
 			<div class="layui-form layui-form-pane layui-admin-login">
 				<div class="layui-admin-login-header">
-					<h1>${companyName}过程控制系统</h1>
+					<h1>${companyName}边缘控制系统BCS</h1>
 <%--					<p>Power by 智能制作研究所</p>--%>
 				</div>
 				<div class="layui-form-item">
@@ -47,7 +47,7 @@
 					</div>
 				</div>
 				<!--底部-->
-				<div class="layui-footer">© 2020 Power by 智能制造研究所</div>
+				<div class="layui-footer">© 2021 Power by 智能制造研究所 v1.1.0</div>
 			</div>
 		</div>
 		<script src="js/layui/layui.js"></script>

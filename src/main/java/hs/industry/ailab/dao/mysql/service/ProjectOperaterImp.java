@@ -376,7 +376,6 @@ public class ProjectOperaterImp {
         projectOperate.deleteFilterByModleid(modleid);
         projectOperate.deleteResponTimeSeriseByModleid(modleid);
 
-
     }
 
 
@@ -748,5 +747,14 @@ public class ProjectOperaterImp {
         return count;
     }
 
+
+    @Transactional(isolation = Isolation.READ_COMMITTED, transactionManager = "mysqlTransactionManager")
+    public int deletempcmodlepropertiesbusiness(List<BaseModlePropertyImp> mpcModleautoProperties) {
+        int count = 0;
+        for(BaseModlePropertyImp baseModlePropertyImp:mpcModleautoProperties){
+            count+=projectOperate.deleteMPCModlePropertyByid(baseModlePropertyImp.getModlepinsId());
+        }
+        return count;
+    }
 
 }

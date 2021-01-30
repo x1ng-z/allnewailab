@@ -27,7 +27,8 @@ public abstract class BaseModleImp implements Modle {
     private String errormsg="";
     private long errortimestamp;
     private int autovalue=1;
-    private Instant beginruntime;//模型开始运行时间
+    private Instant beginruntime;//模型开始运行时间，用于重置模型运行状态
+    private Instant activetime;//用于判断模型是否已经离线
 
 
     /***db***/
@@ -147,5 +148,13 @@ public abstract class BaseModleImp implements Modle {
 
     public void setBeginruntime(Instant beginruntime) {
         this.beginruntime = beginruntime;
+    }
+
+    public Instant getActivetime() {
+        return activetime;
+    }
+
+    public void setActivetime(Instant activetime) {
+        this.activetime = activetime;
     }
 }

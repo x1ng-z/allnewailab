@@ -7,7 +7,7 @@
           href="/img/favicon.ico" type="image/x-icon"/>
     <meta charset="UTF-8"/>
     <meta http-equiv="X-UA-Compatible" content="ie=edge,chrome=1">
-    <title>${companyName}过程控制系统</title>
+    <title>${companyName}边缘控制系统(BCS)</title>
     <link rel="stylesheet" href="/js/layui/css/layui.css"/>
 <%--    <link rel="stylesheet" href="../css/index.css"/>--%>
     <script src="${pageContext.request.contextPath}/js/layui/layui.js"></script>
@@ -178,7 +178,7 @@
     <div class="layui-side layui-side-menu">
         <!--带滚动条垂直导航-->
         <div class="layui-side-scroll layui-bg-black">
-            <div class="layui-logo">${companyName}过程控制系统</div>
+            <div class="layui-logo" style="color: #FFFFFF">${companyName}边缘控制系统BCS</div>
             <ul class="layui-nav layui-nav-tree" lay-filter="navtree">
                 <!--默认展开-->
                 <li class="layui-nav-item layui-nav-itemed">
@@ -248,7 +248,7 @@
 
     </div>
     <!--底部-->
-    <div class="layui-footer">© 2020 智能制造研究所</div>
+    <div class="layui-footer">© 2021 智能制造研究所 v1.1.0</div>
 </div>
 
 <script>

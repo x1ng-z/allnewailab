@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.net.InetSocketAddress;
+import java.time.Instant;
 import java.util.Arrays;
 
 import static hs.industry.ailab.entity.modle.controlmodle.MPCModle.MSGTYPE_BUILD;
@@ -92,10 +93,17 @@ public class MsgDecoder_Inbound extends ChannelInboundHandlerAdapter {
                             JSONObject computeresult = CommandImp.RESULT.analye(bytes);
                             logger.info(computeresult.toJSONString());
                             Modle modle = projectManager.getspecialModle(modleid);
-                            if (computeresult.getString("msg").equals("reason")) {
+                            if (computeresult.getString("msg").equals("error")) {
                                 BaseModleImp baseModleImp = (BaseModleImp) modle;
-                                baseModleImp.setErrormsg(computeresult.getString("msg"));
+                                baseModleImp.setErrormsg(computeresult.getString("reason"));
                                 baseModleImp.setErrortimestamp(computeresult.getLong("errortimestamp"));
+                                baseModleImp.setActivetime(Instant.now());
+                                if(modle instanceof MPCModle){
+                                    MPCModle mpcmodle=(MPCModle)modle;
+                                    if(mpcmodle.getSimulatControlModle()!=null) {
+                                        mpcmodle.setActivetime(Instant.now());
+                                    }
+                                }
                             } else {
                                 if (modle instanceof MPCModle) {
                                     MPCModle mpcModle = (MPCModle) modle;
@@ -149,6 +157,18 @@ public class MsgDecoder_Inbound extends ChannelInboundHandlerAdapter {
                             JSONObject heartmsg = CommandImp.HEART.analye(bytes);
                             logger.info(heartmsg.toJSONString());
                             sessionManager.addSessionModule(modleid, heartmsg.getString("scriptName"), ctx);
+                            Modle modle = projectManager.getspecialModle(modleid);
+                            if(modle!=null){
+                                if(modle instanceof MPCModle){
+                                    MPCModle mpcModle=(MPCModle)modle;
+                                    if(mpcModle.getSimulatControlModle()!=null){
+                                        mpcModle.setActivetime(Instant.now());
+                                    }
+                                }
+                                BaseModleImp baseModleImp=(BaseModleImp)modle;
+                                baseModleImp.setActivetime(Instant.now());
+                            }
+
                         }
                         break;
                     }
