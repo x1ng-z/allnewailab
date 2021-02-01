@@ -96,6 +96,13 @@
         </div>
 
 
+        <div class="layui-inline">
+            <input type="text" name="deadZoneid" value="${deadZone.modlepinsId}" autocomplete="off"
+                   class="layui-input"
+                   style="visibility: hidden;width: 0px;height: 0px;z-index: -99;">
+        </div>
+
+
     </div>
 
     <fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
@@ -423,7 +430,7 @@
             <label class="layui-form-label">MV</label>
             <div class="layui-input-inline">
                 <input type="number" name="mv" autocomplete="off" class="layui-input"
-                       value="" placeholder="请输入MV常量值" id="mvconstantid">
+                       value="${mv.resource.getDouble("value")}" placeholder="请输入MV常量值" id="mvconstantid">
             </div>
         </div>
         <div class="layui-inline">
