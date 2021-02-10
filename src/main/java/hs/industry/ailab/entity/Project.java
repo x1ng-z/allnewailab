@@ -211,7 +211,6 @@ public class Project implements Runnable {
                                 break;
                             }
                         }
-                        //System.out.println("projectid=" + outModle.getModleName() + "  isneedrun=" + isneedrun + "  " + outModle.getModlerunlevel() + "");
 
                         if (isneedrun && (outModle.getModlerunlevel() == BaseModleImp.RUNLEVEL_INITE)) {
                             if (outModle.getModleSight().getParents().size() == 0) {
@@ -226,20 +225,6 @@ public class Project implements Runnable {
                     }
 
                 }
-
-//                boolean allcomplete = true;
-//                for (Modle modle : modleList) {
-//                    BaseModleImp baseModleImp = (BaseModleImp) modle;
-//                    if(baseModleImp instanceof MPCModle){
-//                        allcomplete = allcomplete &&((MPCModle)baseModleImp).ismpcmodleruncomplet();
-//                    }else {
-//                        allcomplete = allcomplete && (baseModleImp.getModlerunlevel() == BaseModleImp.RUNLEVEL_RUNCOMPLET);
-//                    }
-//                    if(!allcomplete){
-//                        break;
-//                    }
-//
-//                }
 
 
                 try {
@@ -256,7 +241,6 @@ public class Project implements Runnable {
                         if (leafmodle.getModleSight().getChilds().size() == 0) {
                             if (leafmodle.getModlerunlevel() == BaseModleImp.RUNLEVEL_RUNCOMPLET) {
                                 //已经完成状态的叶节点
-
                                 List<BaseModleImp> rootmodles = new ArrayList<>();
                                 //查找到所有的根节点
                                 findRootModle(rootmodles, leafmodle.getModleId());

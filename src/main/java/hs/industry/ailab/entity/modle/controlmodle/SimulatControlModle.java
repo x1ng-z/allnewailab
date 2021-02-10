@@ -513,7 +513,7 @@ public class SimulatControlModle extends BaseModleImp {
                 JSONArray funelupAnddownJson = modlestatus.getJSONArray("funelupAnddown");//
                 JSONArray dmvJson = modlestatus.getJSONArray("dmv");//实时显示拆分以后的dmv,如mv-对pv1和pv2都有影响，则返回的是dmv[0]是pv1对mv1 dmv[2]是pv2对dmv1
                 JSONArray dffJson = modlestatus.getJSONArray("dff");//
-                JSONArray writedmvJson = modlestatus.getJSONArray("writedmv");//要进行写入
+                JSONArray writedmvJson = modlestatus.getJSONArray("writedmv");
 
 
                 int p = controlModle.getNumOfRunnablePVPins_pp();
@@ -561,25 +561,28 @@ public class SimulatControlModle extends BaseModleImp {
 
                 if (controlModle.getRunstyle().equals(RUNSTYLEBYMANUL)) {
                     int index = 0;
-                    for (MPCModleProperty mpcModleProperty : controlModle.getCategoryMVmodletag()) {
+                    List<MPCModleProperty> runablemv = controlModle.getRunablePins(controlModle.getCategoryMVmodletag(), controlModle.getMaskisRunnableMVMatrix());
+                    for (MPCModleProperty mpcModleProperty : runablemv) {
+
                         String outputpinname = mpcModleProperty.getModlePinName();
                         double outmvvalue = writemvJson.getDouble(index);
-                        double outdmvvalue = writedmvJson.getDouble(index);
+//                        double outdmvvalue = writedmvJson.getDouble(index);
                         index++;
                         for (ModleProperty modleProperty : controlModle.getPropertyImpList()) {
                             MPCModleProperty outputpin = (MPCModleProperty) modleProperty;
+                            //找到输出的引脚
                             if (outputpin.getPindir().equals(MPCModleProperty.PINDIROUTPUT)) {
 
-                                //mv
+                                //赋值mv
                                 if (outputpinname.equals(outputpin.getModlePinName())) {
                                     outputpin.setValue(outmvvalue);
-                                }
-
-                                //dmv
-                                for (int indexpv = 0; indexpv < extendModlePVPins.size(); indexpv++) {
-                                    /**拆分计算的dMV值*/
-                                    if (("d" + extendModlePVPins.get(indexpv).getModlePinName() + extendModleMVPins.get(indexpv).getModlePinName()).equals(outputpin.getModlePinName())) {
-                                        outputpin.setValue(dmvArray[indexpv]);
+                                } else {
+                                    //dmv
+                                    for (int indexpv = 0; indexpv < extendModlePVPins.size(); indexpv++) {
+                                        /**拆分计算的dPViMVi值*/
+                                        if (("d" + extendModlePVPins.get(indexpv).getModlePinName() + extendModleMVPins.get(indexpv).getModlePinName()).equals(outputpin.getModlePinName())) {
+                                            outputpin.setValue(dmvArray[indexpv]);
+                                        }
                                     }
                                 }
 

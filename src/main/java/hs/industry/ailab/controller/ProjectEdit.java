@@ -2594,6 +2594,26 @@ public class ProjectEdit {
                 }
                 result.put("msg", "success");
 //                result.put("count", );
+            }
+            else if(modle instanceof OUTModle){
+                OUTModle outModle=(OUTModle)modle;
+                BaseModlePropertyImp mappingoutbaseproperty=null;
+                for(ModleProperty modleProperty:outModle.getPropertyImpList()){
+                    BaseModlePropertyImp transbaseproperty=(BaseModlePropertyImp)modleProperty;
+                    if(transbaseproperty.getPindir().equals(BaseModlePropertyImp.PINDIROUTPUT)&&transbaseproperty.getResource().getInteger("modlepinsId").equals(modlepropertyid)){
+                        mappingoutbaseproperty=transbaseproperty;
+                        break;
+                    }
+                }
+                List<BaseModlePropertyImp> waitdelet=new ArrayList<>();
+                if(mappingoutbaseproperty!=null){
+                    waitdelet.add(mappingoutbaseproperty);
+                }
+                waitdelet.add(baseModlePropertyImp);
+                int count=projectOperaterImp.deletempcmodlepropertiesbusiness(waitdelet);
+                result.put("msg", "success");
+                result.put("count", count);
+
             }else{
                 int count = projectOperaterImp.deleteBaseModlePropertyByid(modlepropertyid);
                 result.put("msg", "success");

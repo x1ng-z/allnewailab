@@ -65,7 +65,9 @@ public class MsgDecoder_Inbound extends ChannelInboundHandlerAdapter {
         String clientIp = ipSocket.getAddress().getHostAddress();
         Integer port = ipSocket.getPort();
         PySession pySession = sessionManager.removeSessionModule(ctx);
-        logger.info("come out" + clientIp + ":" + port + " modleid=" + pySession.getModleid() + " scriptName=" + pySession.getScriptName());
+        if(pySession!=null){
+            logger.info("come out" + clientIp + ":" + port + " modleid=" + pySession.getModleid() + " scriptName=" + pySession.getScriptName());
+        }
     }
 
     @Override

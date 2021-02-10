@@ -96,7 +96,7 @@ public class ProjectManager {
         ioServer.getNettyServerInitializer().msgDecoder_inbound.setProjectManager(this);
         List<Project> dbprojetc = projectOperaterImp.findAllProject();
         for (Project project : dbprojetc) {
-//            if(project.getProjectid()==10){
+//            if(project.getProjectid()==2){
                 activeProject(project);
 //            }
 

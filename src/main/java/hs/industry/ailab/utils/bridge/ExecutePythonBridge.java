@@ -27,8 +27,8 @@ public class ExecutePythonBridge {
     public boolean stop() {
         if (p != null) {
             p.destroy();
-            result.interrupt();
-            error.interrupt();
+//            result.interrupt();
+//            error.interrupt();
             p = null;
         }
 

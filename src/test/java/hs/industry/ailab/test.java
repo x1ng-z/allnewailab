@@ -13,6 +13,16 @@ import java.util.regex.Pattern;
 public class test {
     public static void main(String[] args) {
 
+
+        Pattern pattern=Pattern.compile("\\(+.*\\)+");
+
+        Matcher matcher=pattern.matcher("AI51C5(AI51C5(AI51C5))");
+        int i=0;
+        while (matcher.find()){
+            System.out.println("i="+i+" context="+matcher.group(i));
+            i++;
+        }
+
         JSONObject data=new JSONObject();
         JSONObject user=new JSONObject();
         user.put("id",1);
@@ -22,7 +32,7 @@ public class test {
         System.out.println(data.toJSONString());
         Pattern pvenablepattern = Pattern.compile("(^filter(\\w+)$)");
 
-        Matcher matcher =pvenablepattern.matcher("filtermvav");
+         matcher =pvenablepattern.matcher("filtermvav");
         if(matcher.find()){
             System.out.println(matcher.group(2));
         }

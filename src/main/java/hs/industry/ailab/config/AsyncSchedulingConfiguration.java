@@ -12,6 +12,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * @author zzx
@@ -38,6 +39,8 @@ public class AsyncSchedulingConfiguration implements AsyncConfigurer, Scheduling
         scheduler.setAwaitTerminationSeconds(20);
         // 该方法用来设置 线程池关闭 的时候 等待 所有任务都完成后，再继续 销毁 其他的 Bean，这样这些 异步任务 的 销毁 就会先于 数据库连接池对象 的销毁
         scheduler.setWaitForTasksToCompleteOnShutdown(true);
+
+        scheduler.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         return scheduler;
     }
 

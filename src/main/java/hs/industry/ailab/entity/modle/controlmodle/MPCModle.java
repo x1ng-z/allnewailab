@@ -858,11 +858,14 @@ public class MPCModle extends BaseModleImp {
                 JSONArray mvJson = modlestatus.getJSONArray("mv");//
                 if (runstyle.equals(RUNSTYLEBYAUTO)) {
                     int index = 0;
-                    for (MPCModleProperty mpcModleProperty : categoryMVmodletag) {
+                    List<MPCModleProperty> runablemv = getRunablePins(getCategoryMVmodletag(), getMaskisRunnableMVMatrix());
+                    for (MPCModleProperty mpcModleProperty : runablemv) {
                         String outputpinname = mpcModleProperty.getModlePinName();
                         double outvalue = mvJson.getDouble(index);
                         index++;
                         for (ModleProperty modleProperty : propertyImpList) {
+
+                            //查询输出引脚并赋值mv
                             MPCModleProperty outputpin = (MPCModleProperty) modleProperty;
                             if (outputpin.getPindir().equals(MPCModleProperty.PINDIROUTPUT)) {
                                 if (outputpinname.equals(outputpin.getModlePinName())) {
