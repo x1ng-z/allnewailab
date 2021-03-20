@@ -139,6 +139,8 @@ public class MPCModle extends BaseModleImp {
 
     private double[][][] A_RunnabletimeseriseMatrix = null;//输入响应 shape=[pv][mv][resp_N]
     private double[][][] B_RunnabletimeseriseMatrix = null;//前馈响应 shape=[pv][ff][resp_N]
+    private double[][] runnableintegrationInc_mv =null;//mv的积分增量
+    private double[][] runnableintegrationInc_ff =null;//ff的积分增量
     private Double[] Q = null;//误差权重矩阵
     private Double[] R = null;//控制权矩阵、正则化
     private Double[] alpheTrajectoryCoefficients = null;//参考轨迹的柔化系数
@@ -156,7 +158,7 @@ public class MPCModle extends BaseModleImp {
     private SimulatControlModle simulatControlModle;
 
     /***仿真模型python执行器*/
-    private ExecutePythonBridge simulateexecutePythonBridge;
+//    private ExecutePythonBridge simulateexecutePythonBridge;
     /**
      * 仿真器脚本名称
      */
@@ -271,13 +273,14 @@ public class MPCModle extends BaseModleImp {
             //判断下mpc完成状态下，simultor模型是否完成模型构建
             if (javabuildcomplet) {
                 //mpc的javabuild完成，那么就要要求simulator的也javabuild完成，否则就是simulator的python数据肯定还没有计算完成
-                if ((simulatControlModle != null) && (simulatControlModle.isJavabuildcomplet()) && simulatControlModle.getModlerunlevel() == BaseModleImp.RUNLEVEL_RUNCOMPLET) {
-                    //simulator的javabuild成功，且运行完成
-                    return true;
-                } else {
-                    //simulator的javabuild出错 模型整体被短路
-                    return false;
-                }
+//                if ((simulatControlModle != null) && (simulatControlModle.isJavabuildcomplet()) && simulatControlModle.getModlerunlevel() == BaseModleImp.RUNLEVEL_RUNCOMPLET) {
+//                    //simulator的javabuild成功，且运行完成
+//                    return true;
+//                } else {
+//                    //simulator的javabuild出错 模型整体被短路
+//                    return false;
+//                }
+                return true;
             } else {
                 //mpc javabuild有问题，模型短路，那么就要直接判断模型已经运行成功了
                 return true;
@@ -293,7 +296,7 @@ public class MPCModle extends BaseModleImp {
     @Override
     public void connect() {
         mpcexecutepythonbridge.execute();
-        simulateexecutePythonBridge.execute();
+//        simulateexecutePythonBridge.execute();
 //        PySession mpcpySession = pySessionManager.getSpecialSession(getModleId(), mpcscript);
 //        PySession simulatepySession = pySessionManager.getSpecialSession(getModleId(), simulatorscript);
 //        while (mpcpySession == null || simulatepySession == null) {
@@ -317,10 +320,10 @@ public class MPCModle extends BaseModleImp {
     public void reconnect() {
         setJavabuildcomplet(false);
         pythonbuildcomplet = false;
-        if (simulatControlModle != null) {
-            simulatControlModle.setJavabuildcomplet(false);
-            simulatControlModle.setPythonbuildcomplet(false);
-        }
+//        if (simulatControlModle != null) {
+//            simulatControlModle.setJavabuildcomplet(false);
+//            simulatControlModle.setPythonbuildcomplet(false);
+//        }
 
         PySession mpcpySession = pySessionManager.getSpecialSession(getModleId(), mpcscript);
         if (mpcpySession != null) {
@@ -334,17 +337,17 @@ public class MPCModle extends BaseModleImp {
             pySessionManager.removeSessionModule(mpcpySession.getCtx()).getCtx().close();
         }
 
-        PySession simulatepySession = pySessionManager.getSpecialSession(getModleId(), simulatorscript);
-        if (simulatepySession != null) {
-            JSONObject json = new JSONObject();
-            json.put("msg", "stop");
-            try {
-                simulatepySession.getCtx().writeAndFlush(CommandImp.STOP.build(json.toJSONString().getBytes("utf-8"), getModleId()));
-            } catch (UnsupportedEncodingException e) {
-                logger.error(e.getMessage(), e);
-            }
-            pySessionManager.removeSessionModule(simulatepySession.getCtx()).getCtx().close();
-        }
+//        PySession simulatepySession = pySessionManager.getSpecialSession(getModleId(), simulatorscript);
+//        if (simulatepySession != null) {
+//            JSONObject json = new JSONObject();
+//            json.put("msg", "stop");
+//            try {
+//                simulatepySession.getCtx().writeAndFlush(CommandImp.STOP.build(json.toJSONString().getBytes("utf-8"), getModleId()));
+//            } catch (UnsupportedEncodingException e) {
+//                logger.error(e.getMessage(), e);
+//            }
+//            pySessionManager.removeSessionModule(simulatepySession.getCtx()).getCtx().close();
+//        }
 
         try {
             TimeUnit.SECONDS.sleep(1);
@@ -353,15 +356,15 @@ public class MPCModle extends BaseModleImp {
         }
 
         mpcexecutepythonbridge.stop();
-        simulateexecutePythonBridge.stop();
+//        simulateexecutePythonBridge.stop();
 
         mpcexecutepythonbridge.execute();
-        simulateexecutePythonBridge.execute();
+//        simulateexecutePythonBridge.execute();
 
         mpcpySession = pySessionManager.getSpecialSession(getModleId(), mpcscript);
-        simulatepySession = pySessionManager.getSpecialSession(getModleId(), simulatorscript);
+//        simulatepySession = pySessionManager.getSpecialSession(getModleId(), simulatorscript);
         int trycheckcount=10;
-        while ((trycheckcount-->0)&&(mpcpySession == null || simulatepySession == null)) {
+        while ((trycheckcount-->0)&&(mpcpySession == null /**|| simulatepySession == null*/)) {
             //等待连接上来
             try {
                 TimeUnit.SECONDS.sleep(2);
@@ -369,7 +372,7 @@ public class MPCModle extends BaseModleImp {
                 logger.error(e.getMessage(), e);
             }
             mpcpySession = pySessionManager.getSpecialSession(getModleId(), mpcscript);
-            simulatepySession = pySessionManager.getSpecialSession(getModleId(), simulatorscript);
+//            simulatepySession = pySessionManager.getSpecialSession(getModleId(), simulatorscript);
         }
 
 
@@ -384,7 +387,7 @@ public class MPCModle extends BaseModleImp {
 
                 mpcpySession.getCtx().writeAndFlush(CommandImp.PARAM.build(mpcmodlebuild.toJSONString().getBytes("utf-8"), getModleId()));
 
-                simulatepySession.getCtx().writeAndFlush(CommandImp.PARAM.build(simulatemodlebuild.toJSONString().getBytes("utf-8"), getModleId()));
+//                simulatepySession.getCtx().writeAndFlush(CommandImp.PARAM.build(simulatemodlebuild.toJSONString().getBytes("utf-8"), getModleId()));
 
             } catch (UnsupportedEncodingException e) {
                 logger.error(e.getMessage(), e);
@@ -414,28 +417,28 @@ public class MPCModle extends BaseModleImp {
             }
 
             //simulatepython 模型构建完成且在线
-            while (!simulatControlModle.isPythonbuildcomplet() && pySessionManager.getSpecialSession(getModleId(), simulatorscript) != null) {
-                int i = 3;
-                while (i-- > 0) {
-                    try {
-                        TimeUnit.SECONDS.sleep(2);
-                    } catch (InterruptedException e) {
-                        logger.error(e.getMessage(), e);
-                    }
-                    if (simulatControlModle.isPythonbuildcomplet()) {
-                        break;
-                    }
-                }
-                if (!simulatControlModle.isPythonbuildcomplet()) {
-                    simulatemodlebuild = simulatControlModle.dataforpythonbuildsimulate();
-                    try {
-                        simulatepySession.getCtx().writeAndFlush(CommandImp.PARAM.build(simulatemodlebuild.toJSONString().getBytes("utf-8"), getModleId()));
-                    } catch (UnsupportedEncodingException e) {
-                        logger.error(e.getMessage(), e);
-                    }
-
-                }
-            }
+//            while (!simulatControlModle.isPythonbuildcomplet() && pySessionManager.getSpecialSession(getModleId(), simulatorscript) != null) {
+//                int i = 3;
+//                while (i-- > 0) {
+//                    try {
+//                        TimeUnit.SECONDS.sleep(2);
+//                    } catch (InterruptedException e) {
+//                        logger.error(e.getMessage(), e);
+//                    }
+//                    if (simulatControlModle.isPythonbuildcomplet()) {
+//                        break;
+//                    }
+//                }
+//                if (!simulatControlModle.isPythonbuildcomplet()) {
+//                    simulatemodlebuild = simulatControlModle.dataforpythonbuildsimulate();
+//                    try {
+//                        simulatepySession.getCtx().writeAndFlush(CommandImp.PARAM.build(simulatemodlebuild.toJSONString().getBytes("utf-8"), getModleId()));
+//                    } catch (UnsupportedEncodingException e) {
+//                        logger.error(e.getMessage(), e);
+//                    }
+//
+//                }
+//            }
 
         }
     }
@@ -455,20 +458,20 @@ public class MPCModle extends BaseModleImp {
         }
         mpcexecutepythonbridge.stop();
 
-
-        PySession simulatepySession = pySessionManager.getSpecialSession(getModleId(), simulatorscript);
-        if (simulatepySession != null) {
-            JSONObject json = new JSONObject();
-            json.put("msg", "stop");
-            try {
-                simulatepySession.getCtx().writeAndFlush(CommandImp.STOP.build(json.toJSONString().getBytes("utf-8"), getModleId()));
-            } catch (UnsupportedEncodingException e) {
-                logger.error(e.getMessage(), e);
-            }
-            pySessionManager.removeSessionModule(simulatepySession.getCtx()).getCtx().close();
-        }
-
-        simulateexecutePythonBridge.stop();
+//
+//        PySession simulatepySession = pySessionManager.getSpecialSession(getModleId(), simulatorscript);
+//        if (simulatepySession != null) {
+//            JSONObject json = new JSONObject();
+//            json.put("msg", "stop");
+//            try {
+//                simulatepySession.getCtx().writeAndFlush(CommandImp.STOP.build(json.toJSONString().getBytes("utf-8"), getModleId()));
+//            } catch (UnsupportedEncodingException e) {
+//                logger.error(e.getMessage(), e);
+//            }
+//            pySessionManager.removeSessionModule(simulatepySession.getCtx()).getCtx().close();
+//        }
+//
+//        simulateexecutePythonBridge.stop();
 
 
     }
@@ -534,10 +537,10 @@ public class MPCModle extends BaseModleImp {
             logger.info("some pin break limit");
             setJavabuildcomplet(false);
             pythonbuildcomplet = false;
-            if (simulatControlModle != null) {
-                simulatControlModle.setJavabuildcomplet(false);
-                simulatControlModle.setPythonbuildcomplet(false);
-            }
+//            if (simulatControlModle != null) {
+//                simulatControlModle.setJavabuildcomplet(false);
+//                simulatControlModle.setPythonbuildcomplet(false);
+//            }
             reconnect();
             try {
                 TimeUnit.SECONDS.sleep(1);
@@ -573,6 +576,7 @@ public class MPCModle extends BaseModleImp {
          * */
         if (getNumOfRunnablePVPins_pp() != 0) {
             jsonObject.put("A", getA_RunnabletimeseriseMatrix());
+            jsonObject.put("integrationInc_mv",runnableintegrationInc_mv);
         }
 
         /**
@@ -580,6 +584,7 @@ public class MPCModle extends BaseModleImp {
          */
         if (getNumOfRunnableFFpins_vv() != 0) {
             jsonObject.put("B", getB_RunnabletimeseriseMatrix());
+            jsonObject.put("integrationInc_ff",runnableintegrationInc_ff);
         }
 
         jsonObject.put("Q", getQ());
@@ -611,9 +616,9 @@ public class MPCModle extends BaseModleImp {
             }
         }
         outprocess(null, null);
-        if (simulatControlModle != null) {
-            simulatControlModle.outprocess(null, null);
-        }
+//        if (simulatControlModle != null) {
+//            simulatControlModle.outprocess(null, null);
+//        }
     }
 
 
@@ -638,10 +643,10 @@ public class MPCModle extends BaseModleImp {
                 //清除java模型构建模型和python模型构建标志位
                 setJavabuildcomplet(false);
                 pythonbuildcomplet = false;
-                if (simulatControlModle != null) {
-                    simulatControlModle.setJavabuildcomplet(false);
-                    simulatControlModle.setPythonbuildcomplet(false);
-                }
+//                if (simulatControlModle != null) {
+//                    simulatControlModle.setJavabuildcomplet(false);
+//                    simulatControlModle.setPythonbuildcomplet(false);
+//                }
                 reconnect();
                 try {
                     TimeUnit.SECONDS.sleep(1);
@@ -657,11 +662,29 @@ public class MPCModle extends BaseModleImp {
 
 
         PySession mpcpySession = pySessionManager.getSpecialSession(getModleId(), mpcscript);
-        PySession simulatepySession = pySessionManager.getSpecialSession(getModleId(), simulatorscript);
+//        PySession simulatepySession = pySessionManager.getSpecialSession(getModleId(), simulatorscript);
 //        JSONObject scriptinputcontext = new JSONObject();
         //modle build
-        if (mpcpySession != null && simulatepySession != null) {
-            if (!javabuildcomplet&&((simulatControlModle==null)||(!simulatControlModle.isJavabuildcomplet()))) {
+
+        //是否断线
+        if (mpcpySession == null) {
+            int retry = 3;
+            while (retry-- > 0 && (null == mpcpySession)) {
+                try {
+                    TimeUnit.MILLISECONDS.sleep(1000);
+                } catch (InterruptedException e) {
+                    logger.error(e.getMessage(), e);
+                }
+                mpcpySession = pySessionManager.getSpecialSession(getModleId(), mpcscript);
+            }
+            if (null == mpcpySession) {
+                reconnect();
+            }
+        }
+
+
+        if (mpcpySession != null /**&& simulatepySession != null*/) {
+            if (!javabuildcomplet/**&&((simulatControlModle==null)||(!simulatControlModle.isJavabuildcomplet()))*/) {
                 if (modleBuild(true)) {
                     JSONObject mpcmodlebuild = dataForpythonBuildmpc();
                     JSONObject simulatemodlebuild = simulatControlModle.dataforpythonbuildsimulate();
@@ -671,7 +694,7 @@ public class MPCModle extends BaseModleImp {
 
                         mpcpySession.getCtx().writeAndFlush(CommandImp.PARAM.build(mpcmodlebuild.toJSONString().getBytes("utf-8"), getModleId()));
 
-                        simulatepySession.getCtx().writeAndFlush(CommandImp.PARAM.build(simulatemodlebuild.toJSONString().getBytes("utf-8"), getModleId()));
+//                        simulatepySession.getCtx().writeAndFlush(CommandImp.PARAM.build(simulatemodlebuild.toJSONString().getBytes("utf-8"), getModleId()));
 
                     } catch (UnsupportedEncodingException e) {
                         logger.error(e.getMessage(), e);
@@ -710,29 +733,29 @@ public class MPCModle extends BaseModleImp {
                 }
             }
 
-
-            while (simulatControlModle.isJavabuildcomplet()&&!simulatControlModle.isPythonbuildcomplet() && pySessionManager.getSpecialSession(getModleId(), simulatorscript) != null) {
-                int i = 3;
-                while (i-- > 0) {
-                    try {
-                        TimeUnit.SECONDS.sleep(1);
-                    } catch (InterruptedException e) {
-                        logger.error(e.getMessage(), e);
-                    }
-                    if (simulatControlModle.isPythonbuildcomplet()) {
-                        break;
-                    }
-                }
-                if (!simulatControlModle.isPythonbuildcomplet()) {
-                    simulatemodlebuild = simulatControlModle.dataforpythonbuildsimulate();
-                    try {
-                        simulatepySession.getCtx().writeAndFlush(CommandImp.PARAM.build(simulatemodlebuild.toJSONString().getBytes("utf-8"), getModleId()));
-                    } catch (UnsupportedEncodingException e) {
-                        logger.error(e.getMessage(), e);
-                    }
-
-                }
-            }
+//
+//            while (simulatControlModle.isJavabuildcomplet()&&!simulatControlModle.isPythonbuildcomplet() && pySessionManager.getSpecialSession(getModleId(), simulatorscript) != null) {
+//                int i = 3;
+//                while (i-- > 0) {
+//                    try {
+//                        TimeUnit.SECONDS.sleep(1);
+//                    } catch (InterruptedException e) {
+//                        logger.error(e.getMessage(), e);
+//                    }
+//                    if (simulatControlModle.isPythonbuildcomplet()) {
+//                        break;
+//                    }
+//                }
+//                if (!simulatControlModle.isPythonbuildcomplet()) {
+//                    simulatemodlebuild = simulatControlModle.dataforpythonbuildsimulate();
+//                    try {
+//                        simulatepySession.getCtx().writeAndFlush(CommandImp.PARAM.build(simulatemodlebuild.toJSONString().getBytes("utf-8"), getModleId()));
+//                    } catch (UnsupportedEncodingException e) {
+//                        logger.error(e.getMessage(), e);
+//                    }
+//
+//                }
+//            }
 
 //            else {
             //modle build completed
@@ -740,13 +763,13 @@ public class MPCModle extends BaseModleImp {
             try {
 
                 mpcpySession = pySessionManager.getSpecialSession(getModleId(), mpcscript);
-                simulatepySession = pySessionManager.getSpecialSession(getModleId(), simulatorscript);
-                if (mpcpySession != null && simulatepySession != null) {
-                    if (javabuildcomplet && (simulatControlModle != null) && (simulatControlModle.isJavabuildcomplet())) {
+//                simulatepySession = pySessionManager.getSpecialSession(getModleId(), simulatorscript);
+                if (mpcpySession != null /**&& simulatepySession != null*/) {
+                    if (javabuildcomplet /**&& (simulatControlModle != null) && (simulatControlModle.isJavabuildcomplet())*/) {
                         setModlerunlevel(BaseModleImp.RUNLEVEL_RUNNING);
-                        simulatControlModle.setModlerunlevel(BaseModleImp.RUNLEVEL_RUNNING);
+//                        simulatControlModle.setModlerunlevel(BaseModleImp.RUNLEVEL_RUNNING);
                         mpcpySession.getCtx().writeAndFlush(CommandImp.PARAM.build(getRealData().toJSONString().getBytes("utf-8"), getModleId()));
-                        simulatepySession.getCtx().writeAndFlush(CommandImp.PARAM.build(simulatControlModle.getRealSimulateData().toJSONString().getBytes("utf-8"), getModleId()));
+//                        simulatepySession.getCtx().writeAndFlush(CommandImp.PARAM.build(simulatControlModle.getRealSimulateData().toJSONString().getBytes("utf-8"), getModleId()));
                     }
                 }
 
@@ -892,6 +915,11 @@ public class MPCModle extends BaseModleImp {
         setActivetime(Instant.now());
     }
 
+
+    public PySession getMysession(){
+        return pySessionManager.getSpecialSession(getModleId(), mpcscript);
+    }
+
     @Override
     public void init() {
         indexproperties = new HashMap<>();
@@ -902,7 +930,7 @@ public class MPCModle extends BaseModleImp {
         String filterpath = System.getProperty("user.dir") + "\\" + pyproxyexecute;
         mpcexecutepythonbridge = new ExecutePythonBridge(filterpath, "127.0.0.1", port, mpcscript, getModleId() + "");
 
-        simulateexecutePythonBridge = new ExecutePythonBridge(filterpath, "127.0.0.1", port, simulatorscript, getModleId() + "");
+//        simulateexecutePythonBridge = new ExecutePythonBridge(filterpath, "127.0.0.1", port, simulatorscript, getModleId() + "");
     }
 
 
@@ -1139,6 +1167,7 @@ public class MPCModle extends BaseModleImp {
                     A_RunnabletimeseriseMatrix[looppv][loopmv] = responTimeSerisePVMV.responOneTimeSeries(timeserise_N, controlAPCOutCycle);
                     maskMatrixRunnablePVUseMV[looppv][loopmv] = 1;
                     maskMatrixRunnablePvEffectMv[looppv][loopmv] = responTimeSerisePVMV.getEffectRatio();
+                    runnableintegrationInc_mv[looppv][loopmv]=responTimeSerisePVMV.getStepRespJson().getDouble("Ki");
                 }
 
                 ++loopmv;
@@ -1190,6 +1219,7 @@ public class MPCModle extends BaseModleImp {
                 if (responTimeSerisePVFF != null) {
                     B_RunnabletimeseriseMatrix[looppv][loopff] = responTimeSerisePVFF.responOneTimeSeries(timeserise_N, controlAPCOutCycle);
                     maskMatrixRunnablePVUseFF[looppv][loopff] = 1;
+                    runnableintegrationInc_ff[looppv][loopff]=responTimeSerisePVFF.getStepRespJson().getDouble("Ki");
                 }
                 ++loopff;
             }
@@ -1269,6 +1299,9 @@ public class MPCModle extends BaseModleImp {
              * */
             A_RunnabletimeseriseMatrix = new double[numOfRunnablePVPins_pp][numOfRunnableMVpins_mm][timeserise_N];
 
+            runnableintegrationInc_mv =new double[numOfRunnablePVPins_pp][numOfRunnableMVpins_mm];//mv的积分增量
+
+
 
             /**可运行的pv和mv的作用比例矩阵*/
             maskMatrixRunnablePvEffectMv = new float[numOfRunnablePVPins_pp][numOfRunnableMVpins_mm];
@@ -1308,6 +1341,7 @@ public class MPCModle extends BaseModleImp {
              * init B matrix
              * */
             B_RunnabletimeseriseMatrix = new double[numOfRunnablePVPins_pp][numOfRunnableFFpins_vv][timeserise_N];
+            runnableintegrationInc_ff =new double[numOfRunnablePVPins_pp][numOfRunnableFFpins_vv];//ff的积分增量
 
             /**
              *fill respon into B matrix

@@ -18,6 +18,7 @@ import hs.industry.ailab.utils.bridge.ExecutePythonBridge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.websocket.Session;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.util.HashMap;
@@ -113,6 +114,22 @@ public class CUSTOMIZEModle extends BaseModleImp {
     @Override
     public void docomputeprocess() {
         PySession pySession = pySessionManager.getSpecialSession(getModleId(), noscripNametail());
+
+        if (pySession == null) {
+            int retry = 3;
+            while (retry-- > 0 && (null == pySession)) {
+                try {
+                    TimeUnit.MILLISECONDS.sleep(1000);
+                } catch (InterruptedException e) {
+                    logger.error(e.getMessage(), e);
+                }
+                pySession = pySessionManager.getSpecialSession(getModleId(), noscripNametail());
+            }
+            if (null == pySession) {
+                reconnect();
+            }
+        }
+
         if (pySession != null) {
             JSONObject scriptinputcontext = new JSONObject();
             for (ModleProperty modleProperty : propertyImpList) {
@@ -270,6 +287,10 @@ public class CUSTOMIZEModle extends BaseModleImp {
 
     public PySessionManager getPySessionManager() {
         return pySessionManager;
+    }
+
+    public PySession getMysession(){
+        return pySessionManager.getSpecialSession(getModleId(), noscripNametail());
     }
 
     public void setPySessionManager(PySessionManager pySessionManager) {

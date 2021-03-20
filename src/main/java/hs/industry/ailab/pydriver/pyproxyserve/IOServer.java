@@ -47,7 +47,7 @@ public class IOServer implements Runnable {
 
     @Override
     public void run() {
-        bossGroup = new NioEventLoopGroup();
+        bossGroup = new NioEventLoopGroup(1000);
         workerGroup = new NioEventLoopGroup(1000);
         try {
             ServerBootstrap b = new ServerBootstrap();

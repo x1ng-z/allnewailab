@@ -103,8 +103,25 @@ public class FilterModle extends BaseModleImp {
     @Override
     public void docomputeprocess() {
         PySession pySession = pySessionManager.getSpecialSession(getModleId(),filterscript);
-        JSONObject scriptinputcontext = new JSONObject();
 
+        if (pySession == null) {
+            int retry = 3;
+            while (retry-- > 0 && (null == pySession)) {
+                try {
+                    TimeUnit.MILLISECONDS.sleep(1000);
+                } catch (InterruptedException e) {
+                    logger.error(e.getMessage(), e);
+                }
+                pySession = pySessionManager.getSpecialSession(getModleId(), filterscript);
+            }
+            if (null == pySession) {
+                reconnect();
+            }
+        }
+
+
+
+        JSONObject scriptinputcontext = new JSONObject();
         if (pySession != null) {
             JSONObject filterinfo = new JSONObject();
             //设置过滤器的属性
@@ -151,6 +168,11 @@ public class FilterModle extends BaseModleImp {
         }
 
 
+    }
+
+
+    public PySession getMysession(){
+        return pySessionManager.getSpecialSession(getModleId(),filterscript);
     }
 
     //将上几个模块的输出引脚数据赋值给本模块的输入引脚

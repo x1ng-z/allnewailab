@@ -61,7 +61,7 @@ public class Project implements Runnable {
                             }
                         }
                         //父节点全部运行完成的条件下，如果mpc运行处于初始化状态下或者mpcModle不为空的时候，simultor也是运行状态处于初始状态下，就达到运算条件
-                        if (isneedrun && ((mpcModle.getModlerunlevel() == BaseModleImp.RUNLEVEL_INITE) || (mpcModle.getSimulatControlModle() != null ? (mpcModle.getSimulatControlModle().getModlerunlevel() == BaseModleImp.RUNLEVEL_INITE) : true))) {
+                        if (isneedrun && ((mpcModle.getModlerunlevel() == BaseModleImp.RUNLEVEL_INITE)||(mpcModle.getMysession()==null) /**|| (mpcModle.getSimulatControlModle() != null ? (mpcModle.getSimulatControlModle().getModlerunlevel() == BaseModleImp.RUNLEVEL_INITE) : true)*/)) {
                             //根节点设置开始运行时间
                             if (mpcModle.getModleSight().getParents().size() == 0) {
                                 mpcModle.setBeginruntime(Instant.now());
@@ -92,7 +92,7 @@ public class Project implements Runnable {
                             }
 
                         }
-                        if (isneedrun && (pidModle.getModlerunlevel() == BaseModleImp.RUNLEVEL_INITE)) {
+                        if (isneedrun && ((pidModle.getModlerunlevel() == BaseModleImp.RUNLEVEL_INITE)||(pidModle.getMysession()==null))) {
                             if (pidModle.getModleSight().getParents().size() == 0) {
                                 pidModle.setBeginruntime(Instant.now());
                             }
@@ -120,7 +120,7 @@ public class Project implements Runnable {
                                 break;
                             }
                         }
-                        if (isneedrun && (customizeModle.getModlerunlevel() == BaseModleImp.RUNLEVEL_INITE)) {
+                        if (isneedrun && ((customizeModle.getModlerunlevel() == BaseModleImp.RUNLEVEL_INITE)||(customizeModle.getMysession()==null))) {
                             if (customizeModle.getModleSight().getParents().size() == 0) {
                                 customizeModle.setBeginruntime(Instant.now());
                             }
@@ -150,7 +150,7 @@ public class Project implements Runnable {
                         }
                         //                    System.out.println("projectid="+filterModle.getModleName()+"  isneedrun="+isneedrun+"  "+ filterModle.getModlerunlevel()+"");
 
-                        if (isneedrun && (filterModle.getModlerunlevel() == BaseModleImp.RUNLEVEL_INITE)) {
+                        if (isneedrun && ((filterModle.getModlerunlevel() == BaseModleImp.RUNLEVEL_INITE)||(filterModle.getMysession()==null))) {
                             if (filterModle.getModleSight().getParents().size() == 0) {
                                 filterModle.setBeginruntime(Instant.now());
                             }
@@ -358,12 +358,12 @@ public class Project implements Runnable {
         }
         //根节点运行完成
         if (baseModleImp.getModlerunlevel() == BaseModleImp.RUNLEVEL_RUNCOMPLET) {
-            if (baseModleImp instanceof MPCModle) {
-                MPCModle mpcModle = (MPCModle) baseModleImp;
-                if(mpcModle.getSimulatControlModle()!=null){
-                    mpcModle.setModlerunlevel(BaseModleImp.RUNLEVEL_INITE);
-                }
-            }
+//            if (baseModleImp instanceof MPCModle) {
+//                MPCModle mpcModle = (MPCModle) baseModleImp;
+//                if(mpcModle.getSimulatControlModle()!=null){
+//                    mpcModle.setModlerunlevel(BaseModleImp.RUNLEVEL_INITE);
+//                }
+//            }
             baseModleImp.setModlerunlevel(BaseModleImp.RUNLEVEL_INITE);
             JSONArray parents = baseModleImp.getModleSight().getParents();
             for (int index = 0; index < parents.size(); index++) {

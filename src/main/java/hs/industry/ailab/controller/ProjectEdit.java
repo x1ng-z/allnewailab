@@ -1769,6 +1769,7 @@ public class ProjectEdit {
                 pincontext.put("K", jsonresp.getFloat("k"));
                 pincontext.put("T", jsonresp.getFloat("t"));
                 pincontext.put("Tau", jsonresp.getFloat("tao"));
+                pincontext.put("Ki", jsonresp.getFloat("Ki"));
                 pincontext.put("effectRatio", resp.getEffectRatio());
                 datas.add(pincontext);
             }
@@ -2446,6 +2447,7 @@ public class ProjectEdit {
         float K;
         float T;
         float Tau;
+        float Ki;
         float effectRatio;
         ResponTimeSerise respontimeserise;
         JSONObject jsonres;
@@ -2458,6 +2460,7 @@ public class ProjectEdit {
             K = modlejsonObject.getFloat("K");
             T = modlejsonObject.getFloat("T");
             Tau = modlejsonObject.getFloat("Tau");
+            Ki = modlejsonObject.getFloat("Ki");
             effectRatio = ((modlejsonObject.getString("effectRatio").equals("")) || (modlejsonObject.getString("effectRatio") == null)) ? 1f : modlejsonObject.getFloat("effectRatio");
             respontimeserise = projectOperaterImp.findResponTimeSeriseByid(modlejsonObject.getInteger("responid"));//new ResponTimeSerise();
 
@@ -2469,6 +2472,7 @@ public class ProjectEdit {
             jsonres.put("k", K);
             jsonres.put("t", T);
             jsonres.put("tao", Tau);
+            jsonres.put("Ki", Ki);
             respontimeserise.setStepRespJson(jsonres);
             respontimeserise.setEffectRatio(effectRatio);
 
@@ -2591,6 +2595,8 @@ public class ProjectEdit {
                     }
 
 
+                }else if(baseModlePropertyImp.getPindir().equals(MPCModleProperty.PINDIROUTPUT)){
+                    projectOperaterImp.deleteBaseModlePropertyByid(baseModlePropertyImp.getModlepinsId());
                 }
                 result.put("msg", "success");
 //                result.put("count", );
@@ -2783,8 +2789,6 @@ public class ProjectEdit {
                     break;
                 }
                 case Modle.MODLETYPE_PID: {
-
-
                     BaseModlePropertyImp propertyImp = new BaseModlePropertyImp();
                     propertyImp.setRefmodleId(jsonmodlepropertyinfo.getInteger("refmodleId"));
                     propertyImp.setModleOpcTag(jsonmodlepropertyinfo.getString("modlePinName"));
@@ -3300,6 +3304,7 @@ public class ProjectEdit {
         float T;
         float Tau;
         float effectRatio;
+        float Ki;
         ResponTimeSerise respontimeserise;
         JSONObject jsonres;
 
@@ -3311,6 +3316,7 @@ public class ProjectEdit {
             K = modlejsonObject.getFloat("K");
             T = modlejsonObject.getFloat("T");
             Tau = modlejsonObject.getFloat("Tau");
+            Ki= modlejsonObject.getFloat("Ki");
             effectRatio = ((modlejsonObject.getString("effectRatio").equals("")) || (modlejsonObject.getString("effectRatio") == null)) ? 1f : modlejsonObject.getFloat("effectRatio");
             respontimeserise = new ResponTimeSerise();
 
@@ -3322,6 +3328,7 @@ public class ProjectEdit {
             jsonres.put("k", K);
             jsonres.put("t", T);
             jsonres.put("tao", Tau);
+            jsonres.put("Ki",Ki);
             respontimeserise.setStepRespJson(jsonres);
             respontimeserise.setEffectRatio(effectRatio);
 
@@ -4127,6 +4134,7 @@ public class ProjectEdit {
             view.addObject("K", jsonrespm.get("k"));
             view.addObject("T", jsonrespm.get("t"));
             view.addObject("Tau", jsonrespm.get("tao"));
+            view.addObject("Ki", jsonrespm.get("Ki"));
 
             return view;
         } catch (Exception e) {

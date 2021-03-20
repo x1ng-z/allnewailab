@@ -59,17 +59,6 @@ public class PIDModle extends BaseModleImp {
     @Override
     public void connect() {
         executepythonbridge.execute();
-        PySession pidpySession = pySessionManager.getSpecialSession(getModleId(), pidscript);
-//        while (pidpySession == null) {
-////            logger.info("try");
-//            try {
-//                TimeUnit.MILLISECONDS.sleep(500);
-//            } catch (InterruptedException e) {
-//                logger.error(e.getMessage(),e);
-//            }
-//
-//
-//        }
 
     }
 
@@ -158,6 +147,24 @@ public class PIDModle extends BaseModleImp {
         }
 
         PySession pySession = pySessionManager.getSpecialSession(getModleId(), pidscript);
+
+
+        if (pySession == null) {
+            int retry = 3;
+            while (retry-- > 0 && (null == pySession)) {
+                try {
+                    TimeUnit.MILLISECONDS.sleep(1000);
+                } catch (InterruptedException e) {
+                    logger.error(e.getMessage(), e);
+                }
+                pySession = pySessionManager.getSpecialSession(getModleId(), pidscript);
+            }
+            if (null == pySession) {
+                reconnect();
+            }
+        }
+
+
         if (pySession != null) {
             JSONObject scriptinputcontext = new JSONObject();
 
@@ -204,6 +211,11 @@ public class PIDModle extends BaseModleImp {
         }
 
 
+    }
+
+
+    public PySession getMysession(){
+        return pySessionManager.getSpecialSession(getModleId(), pidscript);
     }
 
     @Override

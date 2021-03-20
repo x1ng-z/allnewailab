@@ -91,6 +91,14 @@
                         </div>
                     </div>
 
+                    <div class="layui-inline">
+                        <label class="layui-form-label">Ki</label>
+                        <div class="layui-input-inline">
+                            <input type="number" name="Ki" autocomplete="off" class="layui-input"
+                                   placeholder="积分比例/60s" lay-verify="required" onmousewheel='scrollFunc()'>
+                        </div>
+                    </div>
+
 
                     <div class="layui-inline">
                         <label class="layui-form-label">手动分配作用比例</label>

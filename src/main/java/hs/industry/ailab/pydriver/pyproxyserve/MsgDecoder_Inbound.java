@@ -55,7 +55,6 @@ public class MsgDecoder_Inbound extends ChannelInboundHandlerAdapter {
         String clientIp = ipSocket.getAddress().getHostAddress();
         Integer port = ipSocket.getPort();
         logger.info("come in " + clientIp + ":" + port);
-
     }
 
     @Override

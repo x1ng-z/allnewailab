@@ -516,6 +516,7 @@
                 , {field: 'K', title: 'K', width: 150}
                 , {field: 'T', title: 'T', width: 150}
                 , {field: 'Tau', title: 'Tau', width: 150}
+                , {field: 'Ki', title: 'Ki', width: 150}
                 , {field: 'effectRatio', title: '作用比例', width: 150}
                 , {fixed: 'right', title: '操作', toolbar: '#barrespon', width: 300}
             ]]
