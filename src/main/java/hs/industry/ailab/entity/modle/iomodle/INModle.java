@@ -1,13 +1,19 @@
 package hs.industry.ailab.entity.modle.iomodle;
 
 import com.alibaba.fastjson.JSONObject;
+import hs.industry.ailab.config.DcsApiConfig;
+import hs.industry.ailab.constant.ModelRunStatusEnum;
 import hs.industry.ailab.entity.Project;
 import hs.industry.ailab.entity.modle.BaseModleImp;
 import hs.industry.ailab.entity.modle.BaseModlePropertyImp;
 import hs.industry.ailab.entity.modle.ModleProperty;
+import hs.industry.ailab.service.HttpClientService;
 import hs.industry.ailab.utils.httpclient.HttpUtils;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -19,47 +25,36 @@ import java.util.Map;
  * @version 1.0
  * @date 2021/1/9 11:19
  */
+@Slf4j
+@Data
 public class INModle extends BaseModleImp {
-    private Logger logger = LoggerFactory.getLogger(INModle.class);
-
-    /**
-     * memery
-     */
-//    private boolean javabuildcomplet = false;//java控制模型是构建完成？
-//    private boolean pythonbuildcomplet = false;//python的控制模型是否构建完成
-//    private boolean iscomputecomplete = false;//运算是否完成
     private String datasource;
-    private Map<Integer, BaseModlePropertyImp> indexproperties;//key=modleid
+
 
 
     public void toBeRealModle(String datasource) {
         this.datasource = datasource;
     }
 
-    @Override
-    public void connect() {
-
-    }
-
-    @Override
-    public void reconnect() {
-
-    }
 
     @Override
     public void destory() {
-
+        //todo nothing
     }
+
 
     @Override
     public void docomputeprocess() {
-        setModlerunlevel(BaseModleImp.RUNLEVEL_RUNNING);
 
     }
 
 
     @Override
     public JSONObject inprocess(Project project) {
+        setBeginruntime(Instant.now());
+
+        setModlerunlevel(ModelRunStatusEnum.MODEL_RUN_STATUS_RUNNING);
+
         StringBuilder tags = new StringBuilder();
         Map<String, String> postdata = new HashMap<>();
         for (ModleProperty modleProperty : propertyImpList) {
@@ -67,17 +62,47 @@ public class INModle extends BaseModleImp {
         }
         if (propertyImpList.size() > 0) {
             postdata.put("tags", tags.toString().substring(0, tags.length() - 1));
-            String inputdata = HttpUtils.PostData(datasource + "/realdata/read", postdata);
-            JSONObject jsoninputdata = JSONObject.parseObject(inputdata);
-            return jsoninputdata.getJSONObject("data");
+            HttpClientService httpClientService =getHttpClientService();
+            DcsApiConfig dcsApiConfig =httpClientService.getDcsApiConfig();
+            String inputdata = httpClientService.PostParam(dcsApiConfig.getOceandir()+dcsApiConfig.getDcsread(),postdata);//HttpUtils.PostParam(datasource + "/realdata/read", postdata);
+
+            if(StringUtils.isEmpty(inputdata)){
+                setModlerunlevel(ModelRunStatusEnum.MODEL_RUN_STATUS_INITE);
+                return null;
+            }
+
+
+            try {
+                JSONObject jsoninputdata = JSONObject.parseObject(inputdata);
+                //更新到输出引脚
+                JSONObject values =jsoninputdata.getJSONObject("data");
+                propertyImpList.forEach(p->{
+                    BaseModlePropertyImp baseModlePropertyImp=(BaseModlePropertyImp) p;
+                    String tag=baseModlePropertyImp.getModlePinName();
+                    if (values.containsKey(tag)){
+                        baseModlePropertyImp.setValue(values.getFloat(tag));
+                    }else{
+                        setModlerunlevel(ModelRunStatusEnum.MODEL_RUN_STATUS_INITE);
+                        return;
+                    }
+
+                });
+                setModlerunlevel(ModelRunStatusEnum.MODEL_RUN_STATUS_COMPELTE);
+                return jsoninputdata.getJSONObject("data");
+            } catch (Exception e) {
+                log.error(e.getMessage(),e);
+                setModlerunlevel(ModelRunStatusEnum.MODEL_RUN_STATUS_INITE);
+            }
+            return null;
         }
-        return new JSONObject();
+        setModlerunlevel(ModelRunStatusEnum.MODEL_RUN_STATUS_COMPELTE);
+        return null;
 
     }
 
     @Override
     public JSONObject computresulteprocess(Project project, JSONObject computedata) {
-
+        //do nothing
         return null;
     }
 
@@ -91,71 +116,23 @@ public class INModle extends BaseModleImp {
                 ((BaseModlePropertyImp) modleProperty).setValue(tagvalue);
             }
         }
-        setModlerunlevel(BaseModleImp.RUNLEVEL_RUNCOMPLET);
+        setModlerunlevel(ModelRunStatusEnum.MODEL_RUN_STATUS_COMPELTE);
         setActivetime(Instant.now());
     }
 
 
+
     @Override
     public void init() {
-        indexproperties = new HashMap<>();
+        setIndexproperties(new HashMap<>());
         for (ModleProperty modleProperty : propertyImpList) {
             BaseModlePropertyImp baseModlePropertyImp = (BaseModlePropertyImp) modleProperty;
-            indexproperties.put(baseModlePropertyImp.getModlepinsId(), baseModlePropertyImp);
+            getIndexproperties().put(baseModlePropertyImp.getModlepinsId(), baseModlePropertyImp);
         }
     }
 
-    /**
-     * db
-     **/
+
+
+    /**db*/
     private List<ModleProperty> propertyImpList;
-
-    public List<ModleProperty> getPropertyImpList() {
-        return propertyImpList;
-    }
-
-    public void setPropertyImpList(List<ModleProperty> propertyImpList) {
-        this.propertyImpList = propertyImpList;
-    }
-
-
-    public String getDatasource() {
-        return datasource;
-    }
-
-    public void setDatasource(String datasource) {
-        this.datasource = datasource;
-    }
-
-    public Map<Integer, BaseModlePropertyImp> getIndexproperties() {
-        return indexproperties;
-    }
-
-    public void setIndexproperties(Map<Integer, BaseModlePropertyImp> indexproperties) {
-        this.indexproperties = indexproperties;
-    }
-//
-//    public boolean isJavabuildcomplet() {
-//        return javabuildcomplet;
-//    }
-//
-//    public void setJavabuildcomplet(boolean javabuildcomplet) {
-//        this.javabuildcomplet = javabuildcomplet;
-//    }
-//
-//    public boolean isPythonbuildcomplet() {
-//        return pythonbuildcomplet;
-//    }
-//
-//    public void setPythonbuildcomplet(boolean pythonbuildcomplet) {
-//        this.pythonbuildcomplet = pythonbuildcomplet;
-//    }
-//
-//    public boolean isIscomputecomplete() {
-//        return iscomputecomplete;
-//    }
-//
-//    public void setIscomputecomplete(boolean iscomputecomplete) {
-//        this.iscomputecomplete = iscomputecomplete;
-//    }
 }

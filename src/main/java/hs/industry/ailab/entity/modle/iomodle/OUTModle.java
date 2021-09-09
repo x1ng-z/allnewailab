@@ -1,6 +1,7 @@
 package hs.industry.ailab.entity.modle.iomodle;
 
 import com.alibaba.fastjson.JSONObject;
+import hs.industry.ailab.constant.ModelRunStatusEnum;
 import hs.industry.ailab.entity.Project;
 import hs.industry.ailab.entity.modle.BaseModleImp;
 import hs.industry.ailab.entity.modle.BaseModlePropertyImp;
@@ -10,8 +11,10 @@ import hs.industry.ailab.entity.modle.controlmodle.MPCModle;
 import hs.industry.ailab.entity.modle.controlmodle.PIDModle;
 import hs.industry.ailab.entity.modle.customizemodle.CUSTOMIZEModle;
 import hs.industry.ailab.entity.modle.filtermodle.FilterModle;
-import hs.industry.ailab.utils.bridge.ExecutePythonBridge;
+import hs.industry.ailab.service.HttpClientService;
 import hs.industry.ailab.utils.httpclient.HttpUtils;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,33 +28,20 @@ import java.util.Map;
  * @version 1.0
  * @date 2021/1/9 11:20
  */
+@Slf4j
+@Data
 public class OUTModle extends BaseModleImp {
-    private Logger logger = LoggerFactory.getLogger(OUTModle.class);
 
     /**
      * memory
      */
-//    private boolean javabuildcomplet = false;//java控制模型是构建完成？
-//    private boolean pythonbuildcomplet = false;//python的控制模型是否构建完成
-//    private boolean iscomputecomplete = false;//运算是否完成
     private String datasource;
-    private Map<Integer, BaseModlePropertyImp> indexproperties;//key=modleid
 
 
-
-    public void toBeRealModle(String datasource){
-        this.datasource=datasource;
+    public void toBeRealModle(String datasource) {
+        this.datasource = datasource;
     }
 
-    @Override
-    public void connect() {
-
-    }
-
-    @Override
-    public void reconnect() {
-
-    }
 
     @Override
     public void destory() {
@@ -60,9 +50,9 @@ public class OUTModle extends BaseModleImp {
 
     @Override
     public void docomputeprocess() {
-        setModlerunlevel(BaseModleImp.RUNLEVEL_RUNNING);
+        outprocess(null, null);
+        setModlerunlevel(ModelRunStatusEnum.MODEL_RUN_STATUS_COMPELTE);
     }
-
 
 
     /***
@@ -70,45 +60,23 @@ public class OUTModle extends BaseModleImp {
      * */
     @Override
     public JSONObject inprocess(Project project) {
+        setBeginruntime(Instant.now());
 
+        setModlerunlevel(ModelRunStatusEnum.MODEL_RUN_STATUS_RUNNING);
         for (ModleProperty property : propertyImpList) {
             BaseModlePropertyImp outmodlepin = (BaseModlePropertyImp) property;
             if (outmodlepin.getPindir().equals(ModleProperty.PINDIRINPUT)) {
-
+                //get model id
                 int modleId = outmodlepin.getResource().getInteger("modleId");
+                //get modelpin id
                 int modlepinsId = outmodlepin.getResource().getInteger("modlepinsId");
 
                 Modle modle = project.getIndexmodles().get(modleId);
                 if (modle != null) {
-                    if (modle instanceof MPCModle) {
-                        MPCModle mpcModle = (MPCModle) modle;
-                        BaseModlePropertyImp baseModlePropertyImp = mpcModle.getIndexproperties().get(modlepinsId);
-                        outmodlepin.setValue(baseModlePropertyImp.getValue());
-                    } else if (modle instanceof PIDModle) {
-                        PIDModle pidModle = (PIDModle) modle;
-                        BaseModlePropertyImp baseModlePropertyImp = pidModle.getIndexproperties().get(modlepinsId);
-                        outmodlepin.setValue(baseModlePropertyImp.getValue());
-                    } else if (modle instanceof CUSTOMIZEModle) {
-                        CUSTOMIZEModle customizeModle = (CUSTOMIZEModle) modle;
-                        BaseModlePropertyImp baseModlePropertyImp = customizeModle.getIndexproperties().get(modlepinsId);
-                        outmodlepin.setValue(baseModlePropertyImp.getValue());
-                    } else if (modle instanceof FilterModle) {
-                        FilterModle filterModle = (FilterModle) modle;
-                        BaseModlePropertyImp baseModlePropertyImp = filterModle.getIndexproperties().get(modlepinsId);
-                        outmodlepin.setValue(baseModlePropertyImp.getValue());
-                    } else if (modle instanceof INModle) {
-                        INModle inModle = (INModle) modle;
-                        BaseModlePropertyImp baseModlePropertyImp = inModle.getIndexproperties().get(modlepinsId);
-                        outmodlepin.setValue(baseModlePropertyImp.getValue());
-                    } else if (modle instanceof OUTModle) {
-                        OUTModle outModle = (OUTModle) modle;
-                        BaseModlePropertyImp baseModlePropertyImp = outModle.getIndexproperties().get(modlepinsId);
-                        outmodlepin.setValue(baseModlePropertyImp.getValue());
-                    }
-
+                    BaseModleImp mpcModle = (BaseModleImp) modle;
+                    BaseModlePropertyImp baseModlePropertyImp = mpcModle.getIndexproperties().get(modlepinsId);
+                    outmodlepin.setValue(baseModlePropertyImp.getValue());
                 }
-
-
             }
 
         }
@@ -117,42 +85,48 @@ public class OUTModle extends BaseModleImp {
     }
 
     @Override
-    public JSONObject computresulteprocess(Project project,JSONObject computedata) {
+    public JSONObject computresulteprocess(Project project, JSONObject computedata) {
         return null;
     }
 
 
-
-    /**将本模块的输入引脚输出给本模块的输出引脚，并且将输出数据提交给ocean*/
+    /**
+     * 将本模块的输入引脚输出给本模块的输出引脚，并且将输出数据提交给ocean
+     */
     @Override
     public void outprocess(Project project, JSONObject outdata) {
 
-        JSONObject writecontext=new JSONObject();
-        for (ModleProperty property : propertyImpList) {
-            BaseModlePropertyImp outmodlepin = (BaseModlePropertyImp) property;
-            if (outmodlepin.getPindir().equals(ModleProperty.PINDIROUTPUT)) {
-                int modlepinsId=outmodlepin.getResource().getInteger("modlepinsId");
-                String outmappingtag=outmodlepin.getResource().getString("outmappingtag");
-                writecontext.put(outmappingtag,indexproperties.get(modlepinsId).getValue());
-                outmodlepin.setValue(indexproperties.get(modlepinsId).getValue());
+        try {
+            JSONObject writecontext = new JSONObject();
+            for (ModleProperty property : propertyImpList) {
+                BaseModlePropertyImp outmodlepin = (BaseModlePropertyImp) property;
+                if (outmodlepin.getPindir().equals(ModleProperty.PINDIROUTPUT)) {
+                    int modlepinsId = outmodlepin.getResource().getInteger("modlepinsId");
+                    String outmappingtag = outmodlepin.getResource().getString("outmappingtag");
+                    writecontext.put(outmappingtag, getIndexproperties().get(modlepinsId).getValue());
+                    outmodlepin.setValue(getIndexproperties().get(modlepinsId).getValue());
+                }
             }
+
+            Map<String, String> postdata = new HashMap<>();
+            postdata.put("tagvalue", writecontext.toJSONString());
+            HttpClientService httpClientService = getHttpClientService();
+            String inputdata = httpClientService.PostParam(httpClientService.getDcsApiConfig().getOceandir() + httpClientService.getDcsApiConfig().getDcswrite(), postdata);//HttpUtils.PostData(datasource + "/opc/write", postdata);
+            log.info("modleid=" + getModleId() + " write info" + inputdata);
+            setModlerunlevel(ModelRunStatusEnum.MODEL_RUN_STATUS_COMPELTE);
+            setActivetime(Instant.now());
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
         }
 
-        Map<String,String> postdata=new HashMap<>();
-        postdata.put("tagvalue",writecontext.toJSONString());
-        String inputdata = HttpUtils.PostData(datasource + "/opc/write", postdata);
-        logger.info("modleid="+getModleId()+" write info"+inputdata);
-        setModlerunlevel(BaseModleImp.RUNLEVEL_RUNCOMPLET);
-        setActivetime(Instant.now());
-        return;
     }
 
     @Override
     public void init() {
-        indexproperties = new HashMap<>();
+        setIndexproperties(new HashMap<>());
         for (ModleProperty modleProperty : propertyImpList) {
             BaseModlePropertyImp baseModlePropertyImp = (BaseModlePropertyImp) modleProperty;
-            indexproperties.put(baseModlePropertyImp.getModlepinsId(), baseModlePropertyImp);
+            getIndexproperties().put(baseModlePropertyImp.getModlepinsId(), baseModlePropertyImp);
         }
     }
 
@@ -160,54 +134,4 @@ public class OUTModle extends BaseModleImp {
      * db
      */
     private List<ModleProperty> propertyImpList;
-
-    public List<ModleProperty> getPropertyImpList() {
-        return propertyImpList;
-    }
-
-    public void setPropertyImpList(List<ModleProperty> propertyImpList) {
-        this.propertyImpList = propertyImpList;
-    }
-
-
-
-    public String getDatasource() {
-        return datasource;
-    }
-
-    public void setDatasource(String datasource) {
-        this.datasource = datasource;
-    }
-
-    public Map<Integer, BaseModlePropertyImp> getIndexproperties() {
-        return indexproperties;
-    }
-
-    public void setIndexproperties(Map<Integer, BaseModlePropertyImp> indexproperties) {
-        this.indexproperties = indexproperties;
-    }
-//
-//    public boolean isJavabuildcomplet() {
-//        return javabuildcomplet;
-//    }
-//
-//    public void setJavabuildcomplet(boolean javabuildcomplet) {
-//        this.javabuildcomplet = javabuildcomplet;
-//    }
-//
-//    public boolean isPythonbuildcomplet() {
-//        return pythonbuildcomplet;
-//    }
-//
-//    public void setPythonbuildcomplet(boolean pythonbuildcomplet) {
-//        this.pythonbuildcomplet = pythonbuildcomplet;
-//    }
-//
-//    public boolean isIscomputecomplete() {
-//        return iscomputecomplete;
-//    }
-//
-//    public void setIscomputecomplete(boolean iscomputecomplete) {
-//        this.iscomputecomplete = iscomputecomplete;
-//    }
 }

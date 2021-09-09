@@ -1,5 +1,7 @@
 package hs.industry.ailab.entity.modle;
 
+import lombok.Data;
+
 import java.time.Instant;
 import java.util.regex.Pattern;
 
@@ -8,6 +10,7 @@ import java.util.regex.Pattern;
  * @version 1.0
  * @date 2020/9/2 13:12
  */
+
 public interface ModleProperty {
 
     //mpc引脚
@@ -34,7 +37,7 @@ public interface ModleProperty {
     public static final String TYPE_PIN_KP = "kp";
     public static final String TYPE_PIN_KI = "ki";
     public static final String TYPE_PIN_KD = "kd";
-
+    public static final String TYPE_PIN_KF = "kf";
 
     String SOURCE_TYPE_CONSTANT = "constant";
     String SOURCE_TYPE_MEMORY = "memory";//+node

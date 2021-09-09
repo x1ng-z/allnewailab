@@ -1,7 +1,16 @@
 package hs.industry.ailab.entity.modle.customizemodle;
 
 import com.alibaba.fastjson.JSONObject;
+import hs.industry.ailab.config.AlgprithmApiConfig;
+import hs.industry.ailab.constant.ModelRunStatusEnum;
+import hs.industry.ailab.constant.ModelTypeEnum;
 import hs.industry.ailab.entity.Project;
+import hs.industry.ailab.entity.dto.PinDataDto;
+import hs.industry.ailab.entity.dto.request.customize.PythonAdapter;
+import hs.industry.ailab.entity.dto.request.customize.PythonBaseParam;
+import hs.industry.ailab.entity.dto.request.customize.PythonOutParam;
+import hs.industry.ailab.entity.dto.response.customize.CPythonDataDto;
+import hs.industry.ailab.entity.dto.response.customize.CPythonResponse4PlantDto;
 import hs.industry.ailab.entity.modle.BaseModleImp;
 import hs.industry.ailab.entity.modle.BaseModlePropertyImp;
 import hs.industry.ailab.entity.modle.Modle;
@@ -11,150 +20,138 @@ import hs.industry.ailab.entity.modle.controlmodle.PIDModle;
 import hs.industry.ailab.entity.modle.filtermodle.FilterModle;
 import hs.industry.ailab.entity.modle.iomodle.INModle;
 import hs.industry.ailab.entity.modle.iomodle.OUTModle;
-import hs.industry.ailab.pydriver.command.CommandImp;
-import hs.industry.ailab.pydriver.session.PySession;
-import hs.industry.ailab.pydriver.session.PySessionManager;
-import hs.industry.ailab.utils.bridge.ExecutePythonBridge;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import hs.industry.ailab.service.HttpClientService;
+import hs.industry.ailab.utils.help.FileHelp;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
-import javax.websocket.Session;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @author zzx
  * @version 1.0
  * @date 2021/1/9 11:28
  */
+@Slf4j
+@Data
 public class CUSTOMIZEModle extends BaseModleImp {
-    private Logger logger = LoggerFactory.getLogger(CUSTOMIZEModle.class);
     public static Pattern scriptpattern = Pattern.compile("^(.*).py$");
     /**
      * memery
      */
-//    private boolean javabuildcomplet = false;//java控制模型是构建完成？
-//    private boolean pythonbuildcomplet = false;//python的控制模型是否构建完成
-//    private boolean iscomputecomplete = false;//运算是否完成
     private String datasource;
-    private Map<Integer, BaseModlePropertyImp> indexproperties;//key=modleid
-    private PySessionManager pySessionManager;
-    private ExecutePythonBridge executepythonbridge;
     private String pyproxyexecute;
     private String port;
 
 
-    public void toBeRealModle(PySessionManager pySessionManager, String nettyport, String pyproxyexecute) {
-        this.port = nettyport;
-        this.pyproxyexecute = pyproxyexecute;
-        this.pySessionManager = pySessionManager;
-    }
-
-
-    @Override
-    public void connect() {
-        executepythonbridge.execute();
-//        PySession customizpySession = pySessionManager.getSpecialSession(getModleId(), getCustomizepyname());
-//        while (customizpySession == null) {
-////            logger.info("try");
-//            try {
-//                TimeUnit.MILLISECONDS.sleep(500);
-//            } catch (InterruptedException e) {
-//                logger.error(e.getMessage(),e);
-//            }
-//
-//
-//        }
-
-    }
-
-    @Override
-    public void reconnect() {
-        PySession mpcpySession = pySessionManager.getSpecialSession(getModleId(), noscripNametail());
-        if (mpcpySession != null) {
-            JSONObject json = new JSONObject();
-            json.put("msg", "stop");
-            try {
-                mpcpySession.getCtx().writeAndFlush(CommandImp.STOP.build(json.toJSONString().getBytes("utf-8"), getModleId()));
-            } catch (UnsupportedEncodingException e) {
-                logger.error(e.getMessage(), e);
-            }
-            pySessionManager.removeSessionModule(mpcpySession.getCtx()).getCtx().close();
-        }
-        try {
-            TimeUnit.SECONDS.sleep(1);
-        } catch (InterruptedException e) {
-            logger.error(e.getMessage(),e);
-        }
-        executepythonbridge.stop();
-        executepythonbridge.execute();
-    }
 
     @Override
     public void destory() {
-        PySession pySession = pySessionManager.getSpecialSession(getModleId(), noscripNametail());
-        if (pySession != null) {
-            JSONObject json = new JSONObject();
-            json.put("msg", "stop");
-            try {
-                pySession.getCtx().writeAndFlush(CommandImp.STOP.build(json.toJSONString().getBytes("utf-8"), getModleId()));
-            } catch (UnsupportedEncodingException e) {
-                logger.error(e.getMessage(), e);
-            }
-        }
-        executepythonbridge.stop();
+        HttpClientService httpClientService = getHttpClientService();
+        AlgprithmApiConfig algprithmApiConfig = httpClientService.getAlgprithmApiConfig();
+        httpClientService.PostParam(algprithmApiConfig.getUrl() + algprithmApiConfig.getStop() + getModleId(), null);
     }
 
     @Override
     public void docomputeprocess() {
-        PySession pySession = pySessionManager.getSpecialSession(getModleId(), noscripNametail());
+        setModlerunlevel(ModelRunStatusEnum.MODEL_RUN_STATUS_RUNNING);
+        HttpClientService httpClientService = getHttpClientService();
+        AlgprithmApiConfig algprithmApiConfig = httpClientService.getAlgprithmApiConfig();
 
-        if (pySession == null) {
-            int retry = 3;
-            while (retry-- > 0 && (null == pySession)) {
-                try {
-                    TimeUnit.MILLISECONDS.sleep(1000);
-                } catch (InterruptedException e) {
-                    logger.error(e.getMessage(), e);
-                }
-                pySession = pySessionManager.getSpecialSession(getModleId(), noscripNametail());
-            }
-            if (null == pySession) {
-                reconnect();
-            }
-        }
 
-        if (pySession != null) {
-            JSONObject scriptinputcontext = new JSONObject();
-            for (ModleProperty modleProperty : propertyImpList) {
-                BaseModlePropertyImp baseModlePropertyImp = (BaseModlePropertyImp) modleProperty;
+        PythonAdapter pythonAdapter = new PythonAdapter();
+//        private PythonBaseParam basemodelparam;
+//        private String pythoncontext;
+//        private Map<String,String> inputparam;//输出参数数据，key=参数名称,value=值
+//        private List<PythonOutParam> outputparam;
 
-                if (baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIRINPUT)) {
-                    JSONObject invalue = new JSONObject();
-                    invalue.put("value", baseModlePropertyImp.getValue());
-                    scriptinputcontext.put(baseModlePropertyImp.getModlePinName(), invalue);
-                }
-            }
-            try {
-                setModlerunlevel(BaseModleImp.RUNLEVEL_RUNNING);
-                pySession.getCtx().writeAndFlush(CommandImp.PARAM.build(scriptinputcontext.toJSONString().getBytes("utf-8"), getModleId()));
-            } catch (UnsupportedEncodingException e) {
-                logger.error(e.getMessage(), e);
+        PythonBaseParam pythonBaseParam = new PythonBaseParam();
+        pythonBaseParam.setModelid(getModleId());
+        pythonBaseParam.setModelname(getModleName());
+        pythonBaseParam.setModeltype(ModelTypeEnum.MODEL_TYPE_CUSTOMIZE.getCode());
+        pythonAdapter.setBasemodelparam(pythonBaseParam);
+
+
+        pythonAdapter.setPythoncontext(FileHelp.readInfoFromFile(getCustomizepyname()));
+
+        Map<String, String> inputParams = new HashMap<>();
+        List<PythonOutParam> pythonOutParams = new ArrayList<>();
+        for (ModleProperty modleProperty : propertyImpList) {
+            BaseModlePropertyImp baseModlePropertyImp = (BaseModlePropertyImp) modleProperty;
+            if (baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIRINPUT)) {
+                inputParams.put(baseModlePropertyImp.getModlePinName(), baseModlePropertyImp.getValue() + "");
+            } else if (baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIROUTPUT)) {
+                PythonOutParam pythonOutParam = new PythonOutParam();
+                pythonOutParam.setOutputpinname(baseModlePropertyImp.getModlePinName());
+                pythonOutParams.add(pythonOutParam);
             }
         }
+        pythonAdapter.setInputparam(inputParams);
+        pythonAdapter.setOutputparam(pythonOutParams);
+
+        String customizeResult = httpClientService.postForEntity(algprithmApiConfig.getUrl() + algprithmApiConfig.getPython(), pythonAdapter, String.class);
 
 
+        if (customizeResult == null) {
+            setErrormsg("http request error");
+            setModlerunlevel(ModelRunStatusEnum.MODEL_RUN_STATUS_INITE);
+        }
+        if (!StringUtils.isEmpty(customizeResult)) {
+            CPythonResponse4PlantDto cPythonResponse4PlantDto = JSONObject.parseObject(customizeResult, CPythonResponse4PlantDto.class);
+            if (cPythonResponse4PlantDto.getStatus() ==200) {
+                CPythonDataDto cPythonDataDto = cPythonResponse4PlantDto.getData();
+                if (!ObjectUtils.isEmpty(cPythonDataDto)) {
+                    List<PinDataDto> pinDataDtos = cPythonDataDto.getMvData();
+                    if (!CollectionUtils.isEmpty(pinDataDtos)) {
+                        Map<String, List<PinDataDto>> pinDataMaps = pinDataDtos.stream().collect(Collectors.groupingBy(PinDataDto::getPinname));
+                        for (ModleProperty modleProperty : propertyImpList) {
+                            BaseModlePropertyImp baseModlePropertyImp = (BaseModlePropertyImp) modleProperty;
+                            if (baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIROUTPUT)) {
+                                if(pinDataMaps.containsKey(baseModlePropertyImp.getModlePinName())){
+                                    baseModlePropertyImp.setValue(pinDataMaps.get(baseModlePropertyImp.getModlePinName()).get(0).getValue());
+                                }else{
+                                    setModlerunlevel(ModelRunStatusEnum.MODEL_RUN_STATUS_INITE);
+                                    return;
+                                }
+
+                            }
+
+                        }
+                        setModlerunlevel(ModelRunStatusEnum.MODEL_RUN_STATUS_COMPELTE);
+                        setErrormsg(cPythonResponse4PlantDto.getMessage());
+                    }
+                }else{
+                    setErrormsg("http request error");
+                    setModlerunlevel(ModelRunStatusEnum.MODEL_RUN_STATUS_INITE);
+                    log.error("python request error. reason={}",customizeResult);
+                }
+
+            } else {
+                setErrormsg(cPythonResponse4PlantDto.getMessage());
+                setModlerunlevel(ModelRunStatusEnum.MODEL_RUN_STATUS_INITE);
+            }
+        }else{
+            setErrormsg("http request error");
+            setModlerunlevel(ModelRunStatusEnum.MODEL_RUN_STATUS_INITE);
+        }
     }
 
 
     @Override
     public JSONObject inprocess(Project project) {
+        setBeginruntime(Instant.now());
         for (ModleProperty modleProperty : propertyImpList) {
             BaseModlePropertyImp customizeinproperty = (BaseModlePropertyImp) modleProperty;
             if (customizeinproperty.getPindir().equals(ModleProperty.PINDIRINPUT)) {
@@ -210,39 +207,24 @@ public class CUSTOMIZEModle extends BaseModleImp {
     @Override
     public JSONObject computresulteprocess(Project project, JSONObject computedata) {
 
-        for (ModleProperty modleProperty : propertyImpList) {
-            BaseModlePropertyImp baseModlePropertyImp = (BaseModlePropertyImp) modleProperty;
-            if (baseModlePropertyImp.getPindir().equals(ModleProperty.PINDIROUTPUT)) {
-                JSONObject jsonObject = computedata.getJSONObject("data").getJSONObject(baseModlePropertyImp.getModlePinName());
-                if (jsonObject != null) {
-                    baseModlePropertyImp.setValue(jsonObject.getDouble("value"));
-                }
-            }
-
-        }
+        //do nothing
 
         return null;
     }
 
     @Override
     public void outprocess(Project project, JSONObject outdata) {
-        setModlerunlevel(BaseModleImp.RUNLEVEL_RUNCOMPLET);
+        setModlerunlevel(ModelRunStatusEnum.MODEL_RUN_STATUS_COMPELTE);
         setActivetime(Instant.now());
     }
 
     @Override
     public void init() {
-        indexproperties = new HashMap<>();
+         setIndexproperties(new HashMap<>());;
         for (ModleProperty modleProperty : propertyImpList) {
             BaseModlePropertyImp baseModlePropertyImp = (BaseModlePropertyImp) modleProperty;
-            indexproperties.put(baseModlePropertyImp.getModlepinsId(), baseModlePropertyImp);
+            getIndexproperties().put(baseModlePropertyImp.getModlepinsId(), baseModlePropertyImp);
         }
-
-        String filterpath = System.getProperty("user.dir") + "\\" + pyproxyexecute;
-
-            executepythonbridge = new ExecutePythonBridge(filterpath, "127.0.0.1", port, noscripNametail(), getModleId() + "");
-
-
     }
 
 
@@ -252,68 +234,6 @@ public class CUSTOMIZEModle extends BaseModleImp {
     private List<ModleProperty> propertyImpList;
 
 
-    public List<ModleProperty> getPropertyImpList() {
-        return propertyImpList;
-    }
-
-    public void setPropertyImpList(List<ModleProperty> propertyImpList) {
-        this.propertyImpList = propertyImpList;
-    }
-
-    public String getCustomizepyname() {
-        return customizepyname;
-    }
-
-    public void setCustomizepyname(String customizepyname) {
-        this.customizepyname = customizepyname;
-    }
-
-
-    public String getDatasource() {
-        return datasource;
-    }
-
-    public void setDatasource(String datasource) {
-        this.datasource = datasource;
-    }
-
-    public Map<Integer, BaseModlePropertyImp> getIndexproperties() {
-        return indexproperties;
-    }
-
-    public void setIndexproperties(Map<Integer, BaseModlePropertyImp> indexproperties) {
-        this.indexproperties = indexproperties;
-    }
-
-    public PySessionManager getPySessionManager() {
-        return pySessionManager;
-    }
-
-    public PySession getMysession(){
-        return pySessionManager.getSpecialSession(getModleId(), noscripNametail());
-    }
-
-    public void setPySessionManager(PySessionManager pySessionManager) {
-        this.pySessionManager = pySessionManager;
-    }
-
-
-    public String getPyproxyexecute() {
-        return pyproxyexecute;
-    }
-
-    public void setPyproxyexecute(String pyproxyexecute) {
-        this.pyproxyexecute = pyproxyexecute;
-    }
-
-    public String getPort() {
-        return port;
-    }
-
-    public void setPort(String port) {
-        this.port = port;
-    }
-
     public String noscripNametail() {
         Matcher matcher = scriptpattern.matcher(customizepyname);
         if (matcher.find()) {
@@ -321,30 +241,4 @@ public class CUSTOMIZEModle extends BaseModleImp {
         }
         return null;
     }
-
-
-//
-//    public boolean isJavabuildcomplet() {
-//        return javabuildcomplet;
-//    }
-//
-//    public void setJavabuildcomplet(boolean javabuildcomplet) {
-//        this.javabuildcomplet = javabuildcomplet;
-//    }
-//
-//    public boolean isPythonbuildcomplet() {
-//        return pythonbuildcomplet;
-//    }
-//
-//    public void setPythonbuildcomplet(boolean pythonbuildcomplet) {
-//        this.pythonbuildcomplet = pythonbuildcomplet;
-//    }
-//
-//    public boolean isIscomputecomplete() {
-//        return iscomputecomplete;
-//    }
-//
-//    public void setIscomputecomplete(boolean iscomputecomplete) {
-//        this.iscomputecomplete = iscomputecomplete;
-//    }
 }

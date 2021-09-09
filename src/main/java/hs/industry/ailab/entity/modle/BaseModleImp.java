@@ -1,17 +1,24 @@
 package hs.industry.ailab.entity.modle;
 
 import com.alibaba.fastjson.JSONObject;
+import hs.industry.ailab.constant.ModelRunStatusEnum;
 import hs.industry.ailab.entity.ModleSight;
 import hs.industry.ailab.entity.Project;
 import hs.industry.ailab.entity.modle.Modle;
+import hs.industry.ailab.service.HttpClientService;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
+import java.util.Map;
 
 /**
  * @author zzx
  * @version 1.0
  * @date 2021/1/8 16:46
  */
+@Data
+@Slf4j
 public abstract class BaseModleImp implements Modle {
     public static final int RUNLEVEL_RUNNING=1;//正在运行中
     public static final int RUNLEVEL_RUNCOMPLET=2;//运行完成
@@ -23,13 +30,15 @@ public abstract class BaseModleImp implements Modle {
 
 
     /**memory*/
-    private int modlerunlevel=RUNLEVEL_INITE;
+    private ModelRunStatusEnum modlerunlevel=ModelRunStatusEnum.MODEL_RUN_STATUS_INITE;
     private String errormsg="";
     private long errortimestamp;
     private int autovalue=1;
     private Instant beginruntime;//模型开始运行时间，用于重置模型运行状态
     private Instant activetime;//用于判断模型是否已经离线
 
+    private HttpClientService httpClientService;
+    private Map<Integer, BaseModlePropertyImp> indexproperties;//key=modleid
 
     /***db***/
     private int modleId;//模型id主键
@@ -41,10 +50,6 @@ public abstract class BaseModleImp implements Modle {
 
     private ModleSight modleSight;//模型视图
 
-    @Override
-    public abstract void connect();
-    @Override
-    public abstract void reconnect();
     @Override
     public abstract void destory() ;
     @Override
@@ -61,100 +66,4 @@ public abstract class BaseModleImp implements Modle {
 
     @Override
     public abstract void init();
-
-    public int getModleId() {
-        return modleId;
-    }
-
-    public void setModleId(int modleId) {
-        this.modleId = modleId;
-    }
-
-    public String getModleName() {
-        return modleName;
-    }
-
-    public void setModleName(String modleName) {
-        this.modleName = modleName;
-    }
-
-    public int getModleEnable() {
-        return modleEnable;
-    }
-
-    public void setModleEnable(int modleEnable) {
-        this.modleEnable = modleEnable;
-    }
-
-    public String getModletype() {
-        return modletype;
-    }
-
-    public void setModletype(String modletype) {
-        this.modletype = modletype;
-    }
-
-    public int getRefprojectid() {
-        return refprojectid;
-    }
-
-    public void setRefprojectid(int refprojectid) {
-        this.refprojectid = refprojectid;
-    }
-
-    public ModleSight getModleSight() {
-        return modleSight;
-    }
-
-    public void setModleSight(ModleSight modleSight) {
-        this.modleSight = modleSight;
-    }
-
-    public int getModlerunlevel() {
-        return modlerunlevel;
-    }
-
-    public void setModlerunlevel(int modlerunlevel) {
-        this.modlerunlevel = modlerunlevel;
-    }
-
-    public String getErrormsg() {
-        return errormsg;
-    }
-
-    public void setErrormsg(String errormsg) {
-        this.errormsg = errormsg;
-    }
-
-    public long getErrortimestamp() {
-        return errortimestamp;
-    }
-
-    public void setErrortimestamp(long errortimestamp) {
-        this.errortimestamp = errortimestamp;
-    }
-
-    public int getAutovalue() {
-        return autovalue;
-    }
-
-    public void setAutovalue(int autovalue) {
-        this.autovalue = autovalue;
-    }
-
-    public Instant getBeginruntime() {
-        return beginruntime;
-    }
-
-    public void setBeginruntime(Instant beginruntime) {
-        this.beginruntime = beginruntime;
-    }
-
-    public Instant getActivetime() {
-        return activetime;
-    }
-
-    public void setActivetime(Instant activetime) {
-        this.activetime = activetime;
-    }
 }

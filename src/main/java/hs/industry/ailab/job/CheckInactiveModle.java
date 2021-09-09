@@ -27,26 +27,4 @@ public class CheckInactiveModle {
 
     @Autowired
     private ProjectManager projectManager;
-
-//    @Scheduled(fixedRate = 1000 * 60 * 10, initialDelay = 1000 * 60 * 30)
-//    @Async
-    public void checkinactivemodle() {
-        try {
-            Map<Integer, Project> projectPool = projectManager.getProjectPool();
-            for (Project project : projectPool.values()) {
-                for (Modle modle : project.getModleList()) {
-                    BaseModleImp baseModleImp = (BaseModleImp) modle;
-                    if (baseModleImp != null) {
-                        if (baseModleImp.getActivetime().plusSeconds(60 * 10).isBefore(Instant.now())) {
-                            baseModleImp.reconnect();
-                        }
-                    }
-                }
-
-            }
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
-
-    }
 }

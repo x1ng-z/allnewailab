@@ -2,6 +2,7 @@ package hs.industry.ailab.entity.modle.controlmodle;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import hs.industry.ailab.constant.ModelRunStatusEnum;
 import hs.industry.ailab.entity.Project;
 import hs.industry.ailab.entity.ResponTimeSerise;
 import hs.industry.ailab.entity.modle.BaseModleImp;
@@ -473,15 +474,6 @@ public class SimulatControlModle extends BaseModleImp {
     }
 
 
-    @Override
-    public void connect() {
-
-    }
-
-    @Override
-    public void reconnect() {
-
-    }
 
     @Override
     public void destory() {
@@ -495,6 +487,8 @@ public class SimulatControlModle extends BaseModleImp {
 
     @Override
     public JSONObject inprocess(Project project) {
+        setBeginruntime(Instant.now());
+
         return null;
     }
 
@@ -605,7 +599,7 @@ public class SimulatControlModle extends BaseModleImp {
 
     @Override
     public void outprocess(Project project, JSONObject outdata) {
-        setModlerunlevel(BaseModleImp.RUNLEVEL_RUNCOMPLET);
+        setModlerunlevel(ModelRunStatusEnum.MODEL_RUN_STATUS_COMPELTE);
         setActivetime(Instant.now());
     }
 

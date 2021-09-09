@@ -2,6 +2,7 @@ package hs.industry.ailab.controller;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import hs.industry.ailab.config.DcsApiConfig;
 import hs.industry.ailab.dao.mysql.service.ProjectOperaterImp;
 import hs.industry.ailab.entity.ModleSight;
 import hs.industry.ailab.entity.Project;
@@ -21,6 +22,7 @@ import hs.industry.ailab.entity.modle.filtermodle.FilterModle;
 import hs.industry.ailab.entity.modle.iomodle.INModle;
 import hs.industry.ailab.entity.modle.iomodle.OUTModle;
 import hs.industry.ailab.entity.modle.modlerproerty.MPCModleProperty;
+import hs.industry.ailab.service.HttpClientService;
 import hs.industry.ailab.utils.help.FileHelp;
 import hs.industry.ailab.utils.help.Tool;
 import hs.industry.ailab.utils.httpclient.HttpUtils;
@@ -54,17 +56,23 @@ public class ProjectEdit {
     private static Pattern ffpattern = Pattern.compile("(^ff(\\d+)$)");
     private static Pattern mvpattern = Pattern.compile("(^mv(\\d+)$)");
 
+    @Autowired
+    private DcsApiConfig dcsApiConfig;
+
+
     @Value("${mpcpinnumber}")
     private int mpcpinnumber;
 
-    @Value("${oceandir}")
-    private String oceandir;
+//    @Value("${oceandir}")
+//    private String oceandir;
 
     @Autowired
     private ProjectOperaterImp projectOperaterImp;
 
     @Autowired
     private ProjectManager projectManager;
+    @Autowired
+    private HttpClientService httpClientServicel;
 
     @RequestMapping("/savenewproject")
     @ResponseBody
@@ -889,9 +897,6 @@ public class ProjectEdit {
             Project project = projectManager.getProjectPool().get(projectid);
             if (project != null) {
                 project.setProjectrun(false);
-                for (Modle modle : project.getModleList()) {
-                    modle.destory();
-                }
             }
             result.put("msg", "success");
         } catch (Exception e) {
@@ -910,13 +915,15 @@ public class ProjectEdit {
             result = new JSONObject();
             Project oldproject=projectManager.getProjectPool().get(projectid);
             if(oldproject!=null){
-                oldproject.setProjectrun(false);
-                for (Modle modle : oldproject.getModleList()) {
-                    modle.destory();
+                if(!oldproject.getIsProjectStop().get()){
+                    result.put("msg", "项目还在停止中，请稍后");
+                    logger.info("项目已经还未停止. id={},name={}",oldproject.getProjectid(),oldproject.getName());
+                    return result.toJSONString();
                 }
             }
             projectManager.getProjectPool().remove(projectid);
             Project project = projectOperaterImp.findProjectById(projectid);
+            logger.info("项目开始调度. id={},name={}",project.getProjectid(),project.getName());
             projectManager.activeProject(project);
             result.put("msg", "success");
         } catch (Exception e) {
@@ -1096,9 +1103,9 @@ public class ProjectEdit {
                 result.put("funelDwon", controlModle.getBackPVFunelDown());
                 result.put("predict", controlModle.getBackPVPrediction());
             } else {
-                result.put("funelUp", controlModle.getSimulatControlModle().getBacksimulatorPVFunelUp());
-                result.put("funelDwon", controlModle.getSimulatControlModle().getBacksimulatorPVFunelDown());
-                result.put("predict", controlModle.getSimulatControlModle().getBacksimulatorPVPrediction());
+                result.put("funelUp", "");
+                result.put("funelDwon", "");
+                result.put("predict", "");
             }
 
             result.put("funneltype", controlModle.getFunneltype());
@@ -1163,7 +1170,7 @@ public class ProjectEdit {
                     if (controlModle.getRunstyle().equals(MPCModle.RUNSTYLEBYAUTO)) {
                         modlereadDatarowcontext.put("e", Tool.getSpecalScale(3, controlModle.getBackPVPredictionError()[indexEnablePV]));
                     } else {
-                        modlereadDatarowcontext.put("e", Tool.getSpecalScale(3, controlModle.getSimulatControlModle().getBacksimulatorPVPredictionError()[indexEnablePV]));
+                        modlereadDatarowcontext.put("e", "");
 
                     }
                     ++indexEnablePV;
@@ -1185,7 +1192,7 @@ public class ProjectEdit {
                     modlereadDatarowcontext.put("mvUpLmt", Tool.getSpecalScale(3, mvUpLmt.getValue()));
                     modlereadDatarowcontext.put("mvFeedBack", Tool.getSpecalScale(3, mvFeedBack.getValue()));
 
-                    modlereadDatarowcontext.put("dmv", Tool.getSpecalScale(3, controlModle.getBackrawDmv()[indexEnableMV]) + "|" + Tool.getSpecalScale(3, controlModle.getSimulatControlModle().getBacksimulatorrawDmv()[indexEnableMV]));
+                    modlereadDatarowcontext.put("dmv", Tool.getSpecalScale(3, controlModle.getBackrawDmv()[indexEnableMV]) + "|" + "");
                     ++indexEnableMV;
 
                     modlereadDatarowcontext.put("shockmv", "");
@@ -1212,7 +1219,7 @@ public class ProjectEdit {
                 for (MPCModleProperty mvpin : mvpinsrunable) {
                     /*是否有映射关系*/
                     if (controlModle.getMaskMatrixRunnablePVUseMV()[indexEnablePV][indexEnableMV] == 1) {
-                        sdmvrowcontext.put(mvpin.getModlePinName(), Tool.getSpecalScale(3, controlModle.getSimulatControlModle().getBacksimulatorDmvWrite()[indexEnablePV][indexEnableMV]));
+                        sdmvrowcontext.put(mvpin.getModlePinName(), "");
                     }
                     ++indexEnableMV;
                 }
@@ -1226,7 +1233,7 @@ public class ProjectEdit {
                             if (controlModle.getRunstyle().equals(MPCModle.RUNSTYLEBYAUTO)) {
                                 ffrowcontext.put("d" + ffpin.getModlePinName(), Tool.getSpecalScale(3, controlModle.getBackDff()[indexEnablePV][indexEnableFF]));
                             } else {
-                                ffrowcontext.put("d" + ffpin.getModlePinName(), Tool.getSpecalScale(3, controlModle.getSimulatControlModle().getBackDff()[indexEnablePV][indexEnableFF]));
+                                ffrowcontext.put("d" + ffpin.getModlePinName(), "");
                             }
                             /**ff值*/
                             ffrowcontext.put(ffpin.getModlePinName(), Tool.getSpecalScale(3, ffpin.getValue()));
@@ -3513,7 +3520,7 @@ public class ProjectEdit {
                     modelAndView.addObject("modleId", modleId);
                     modelAndView.addObject("modletype", modletype);
                     modelAndView.addObject("pindir", pindir);
-                    String pointinfo = HttpUtils.PostData(oceandir + "/pointoperate/getalpoints", null);
+                    String pointinfo = HttpUtils.PostParam(dcsApiConfig.getOceandir() +dcsApiConfig.getPointslist() , null);
                     JSONObject jsonpoints = new JSONObject();
                     if (pointinfo != null) {
                         jsonpoints = JSONObject.parseObject(pointinfo);
@@ -3538,7 +3545,7 @@ public class ProjectEdit {
                     modelAndView.addObject("modleId", modleId);
                     modelAndView.addObject("modletype", modletype);
                     modelAndView.addObject("pindir", pindir);
-                    String pointinfo = HttpUtils.PostData(oceandir + "/pointoperate/getalpoints", null);
+                    String pointinfo = httpClientServicel.PostParam(dcsApiConfig.getOceandir() + dcsApiConfig.getPointslist(), null);
                     JSONObject jsonpoints = new JSONObject();
                     if (pointinfo != null) {
                         jsonpoints = JSONObject.parseObject(pointinfo);
@@ -3784,7 +3791,7 @@ public class ProjectEdit {
                     modelAndView.setViewName("inputmodlepropertyupdate");
                     modelAndView.addObject("modletype", modletype);
                     modelAndView.addObject("baseModlePropertyImp", baseModlePropertyImp);
-                    String pointinfo = HttpUtils.PostData(oceandir + "/pointoperate/getalpoints", null);
+                    String pointinfo = httpClientServicel.PostParam(dcsApiConfig.getOceandir() + dcsApiConfig.getPointslist(), null);
                     JSONObject jsonpoints = JSONObject.parseObject(pointinfo);
                     List<BaseModlePropertyImp> baseModlePropertyImpList = new ArrayList<>();
                     if (jsonpoints.getString("msg").equals("success")) {
@@ -3818,7 +3825,7 @@ public class ProjectEdit {
                     modelAndView.addObject("modletype", modletype);
                     modelAndView.addObject("inputproperty", inputbaseModlePropertyImp);
                     modelAndView.addObject("outproperty", outputbaseModlePropertyImp);
-                    String pointinfo = HttpUtils.PostData(oceandir + "/pointoperate/getalpoints", null);
+                    String pointinfo = httpClientServicel.PostParam(dcsApiConfig.getOceandir() + dcsApiConfig.getPointslist(), null);
                     JSONObject jsonpoints = JSONObject.parseObject(pointinfo);
                     List<BaseModlePropertyImp> baseModlePropertyImpList = new ArrayList<>();
                     if (jsonpoints.getString("msg").equals("success")) {
@@ -4131,10 +4138,10 @@ public class ProjectEdit {
             view.addObject("useroutputpinscope", useroutputpinscope);
             view.addObject("respontimeserise", respontimeserise);
             JSONObject jsonrespm = respontimeserise.getStepRespJson();
-            view.addObject("K", jsonrespm.get("k"));
-            view.addObject("T", jsonrespm.get("t"));
-            view.addObject("Tau", jsonrespm.get("tao"));
-            view.addObject("Ki", jsonrespm.get("Ki"));
+            view.addObject("K",jsonrespm.getFloatValue("k"));
+            view.addObject("T",jsonrespm.getFloatValue("t"));
+            view.addObject("Tau",jsonrespm.getFloatValue("tao"));
+            view.addObject("Ki",jsonrespm.getFloatValue("ki"));
 
             return view;
         } catch (Exception e) {

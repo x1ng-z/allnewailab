@@ -620,7 +620,7 @@ var api = {
                 console.log(result);
                 // layer.close(index);
                 let json = JSON.parse(result);
-                if (json['msg'] == "error") {
+                if (json['msg'] != "success") {
                     layer.msg("运行失败！");
                     deletemodleinfo = false;
                 } else {

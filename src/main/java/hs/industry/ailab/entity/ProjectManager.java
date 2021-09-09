@@ -4,13 +4,10 @@ import hs.industry.ailab.dao.mysql.service.ProjectOperaterImp;
 import hs.industry.ailab.entity.modle.BaseModleImp;
 import hs.industry.ailab.entity.modle.Modle;
 import hs.industry.ailab.entity.modle.controlmodle.MPCModle;
-import hs.industry.ailab.entity.modle.controlmodle.PIDModle;
-import hs.industry.ailab.entity.modle.customizemodle.CUSTOMIZEModle;
-import hs.industry.ailab.entity.modle.filtermodle.FilterModle;
-import hs.industry.ailab.entity.modle.iomodle.INModle;
-import hs.industry.ailab.entity.modle.iomodle.OUTModle;
-import hs.industry.ailab.pydriver.pyproxyserve.IOServer;
-import hs.industry.ailab.pydriver.session.PySessionManager;
+
+import hs.industry.ailab.service.HttpClientService;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,12 +28,13 @@ import java.util.concurrent.ExecutorService;
  * @date 2021/1/26 8:24
  */
 @Component
+@Slf4j
+@Data
 public class ProjectManager {
-    private Logger logger = LoggerFactory.getLogger(ProjectManager.class);
 
+    private HttpClientService httpClientService;
 
     private ProjectOperaterImp projectOperaterImp;
-    private PySessionManager pySessionManager;
     private String pyproxyexecute;
 
     private int mpcpinnumber;
@@ -63,40 +61,24 @@ public class ProjectManager {
     private Map<Integer, Project> projectPool = new ConcurrentHashMap();
 
     private ExecutorService executethreadpool;
-    private IOServer ioServer;
-
 
     @Autowired
     public ProjectManager(
-            IOServer ioServer,
-            PySessionManager pySessionManager,
+            HttpClientService httpClientService,
             ProjectOperaterImp projectOperaterImp,
             @Value("${pyproxyexecute}") String pyproxyexecute,
             @Value("${mpcpinnumber}") int mpcpinnumber,
-            @Value("${filterscript}") String filterscript,
-            @Value("${pidscript}") String pidscript,
-            @Value("${simulatorscript}") String simulatorscript,
-            @Value("${mpcscrip}") String mpcscrip,
-            @Value("${oceandir}") String oceandir,
-            @Value("${pydriverport}") String pydriverport,
             @Qualifier("executethreadpool") ExecutorService executethreadpool
     ) {
         this.executethreadpool = executethreadpool;
-        this.pySessionManager = pySessionManager;
+        this.httpClientService = httpClientService;
         this.projectOperaterImp = projectOperaterImp;
         this.pyproxyexecute = pyproxyexecute;
         this.mpcpinnumber = mpcpinnumber;
-        this.filterscript = filterscript;
-        this.pidscript = pidscript;
-        this.simulatorscript = simulatorscript;
-        this.mpcscrip = mpcscrip;
-        this.oceandir = oceandir;
-        this.pydriverport = pydriverport;
-        this.ioServer = ioServer;
-        ioServer.getNettyServerInitializer().msgDecoder_inbound.setProjectManager(this);
+
         List<Project> dbprojetc = projectOperaterImp.findAllProject();
         for (Project project : dbprojetc) {
-//            if(project.getProjectid()==2){
+//            if(project.getProjectid()==5){
                 activeProject(project);
 //            }
 
@@ -123,47 +105,11 @@ public class ProjectManager {
             project.init();
             List<Modle> projectModleList = project.getModleList();
             for (Modle modle : projectModleList) {
-
-                if (modle instanceof MPCModle) {
-                    MPCModle mpcmodle = (MPCModle) modle;
-                    mpcmodle.toBeRealModle(Double.valueOf(project.getRunperiod()).intValue(),
-                            this.mpcscrip,
-                            this.simulatorscript,
-                            this.mpcpinnumber,
-                            this.pySessionManager,
-                            this.pydriverport,
-                            this.pyproxyexecute);
-                    mpcmodle.init();
-                    mpcmodle.connect();
-
-                } else if (modle instanceof PIDModle) {
-                    PIDModle pidmodle = (PIDModle) modle;
-                    pidmodle.toBeRealModle(this.pySessionManager, this.pidscript, this.pydriverport, this.pyproxyexecute);
-                    pidmodle.init();
-                    pidmodle.connect();
-
-                } else if (modle instanceof CUSTOMIZEModle) {
-                    CUSTOMIZEModle customizeModle = (CUSTOMIZEModle) modle;
-                    customizeModle.toBeRealModle(this.pySessionManager, this.pydriverport, this.pyproxyexecute);
-                    customizeModle.init();
-                    customizeModle.connect();
-                } else if (modle instanceof FilterModle) {
-                    FilterModle filterModle = (FilterModle) modle;
-                    filterModle.toBeRealModle(this.pySessionManager, this.filterscript, this.pydriverport, this.pyproxyexecute);
-                    filterModle.init();
-                    filterModle.connect();
-                } else if (modle instanceof INModle) {
-                    INModle inModle = (INModle) modle;
-                    inModle.toBeRealModle(this.oceandir);
-                    inModle.init();
-                    inModle.connect();
-                } else if (modle instanceof OUTModle) {
-                    OUTModle outModle = (OUTModle) modle;
-                    outModle.toBeRealModle(this.oceandir);
-                    outModle.init();
-                    outModle.connect();
+                if(modle instanceof MPCModle){
+                    ((MPCModle) modle).toBeRealModle(Double.valueOf(project.getRunperiod()).intValue(),mpcpinnumber);
                 }
-
+                modle.init();
+                ((BaseModleImp)modle).setHttpClientService(httpClientService);
             }
 
             projectPool.put(project.getProjectid(), project);
@@ -172,12 +118,6 @@ public class ProjectManager {
 
         }
     }
-
-
-    public Map<Integer, Project> getProjectPool() {
-        return projectPool;
-    }
-
 
     public Modle getspecialModle(int modleid) {
         for (Project project : projectPool.values()) {
@@ -189,7 +129,4 @@ public class ProjectManager {
         return null;
     }
 
-    public void setProjectPool(Map<Integer, Project> projectPool) {
-        this.projectPool = projectPool;
-    }
 }

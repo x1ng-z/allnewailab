@@ -1,21 +1,18 @@
 package hs.industry.ailab.utils.help;
 
-import hs.industry.ailab.utils.bridge.ExecutePythonBridge;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 import java.io.*;
-import java.util.List;
 
 /**
  * @author zzx
  * @version 1.0
  * @date 2021/1/18 13:01
  */
+@Slf4j
 public class FileHelp {
-    private static Logger logger = LoggerFactory.getLogger(ExecutePythonBridge.class);
     public static String pyfilenamepath = System.getProperty("user.dir") + "\\" + "DLLS" + "\\";
 
     public static void clearInfoForFile(String fileName) {
@@ -30,12 +27,12 @@ public class FileHelp {
             fileWriter.flush();
 
         } catch (IOException e) {
-            logger.error(e.getMessage(), e);
+             log.error(e.getMessage(), e);
         } finally {
             try {
                 fileWriter.close();
             } catch (IOException e) {
-                logger.error(e.getMessage(), e);
+                 log.error(e.getMessage(), e);
             }
         }
     }
@@ -50,7 +47,6 @@ public class FileHelp {
             if (pyfile.exists()) {
                 clearInfoForFile(fileName);
                 newpyfilestream = new PrintWriter(pyfile);
-                String s;
                 newpyfilestream.write(codecontext);
                 newpyfilestream.flush();
             } else {
@@ -77,12 +73,12 @@ public class FileHelp {
             }
 
         } catch (IOException e) {
-            logger.error(e.getMessage(), e);
+             log.error(e.getMessage(), e);
         } finally {
             try {
                 bufferedReader.close();
             } catch (IOException e) {
-                logger.error(e.getMessage(), e);
+                 log.error(e.getMessage(), e);
             }
         }
         return resultStr.toString();
@@ -98,13 +94,13 @@ public class FileHelp {
         try {
             comstomizpytempletreader = new BufferedReader(new FileReader(new File(pythontemplet)));
         } catch (IOException e) {
-            logger.error(e.getMessage(), e);
+             log.error(e.getMessage(), e);
             throw new RuntimeException("can't find customizepythontemplates"+ "the dir is "+pythontemplet);
         }
 
 
         File pyfile = new File(pyfilenamepath + pyfilename);
-        logger.info("pyfilename :" + pyfilenamepath + pyfilename);
+         log.info("pyfilename :" + pyfilenamepath + pyfilename);
         PrintWriter newpyfilestream = null;
         try {
             if (!pyfile.exists()) {

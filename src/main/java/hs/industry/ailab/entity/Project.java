@@ -2,6 +2,7 @@ package hs.industry.ailab.entity;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import hs.industry.ailab.constant.ModelRunStatusEnum;
 import hs.industry.ailab.entity.modle.BaseModleImp;
 import hs.industry.ailab.entity.modle.Modle;
 import hs.industry.ailab.entity.modle.controlmodle.MPCModle;
@@ -10,278 +11,190 @@ import hs.industry.ailab.entity.modle.customizemodle.CUSTOMIZEModle;
 import hs.industry.ailab.entity.modle.filtermodle.FilterModle;
 import hs.industry.ailab.entity.modle.iomodle.INModle;
 import hs.industry.ailab.entity.modle.iomodle.OUTModle;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author zzx
  * @version 1.0
  * @date 2021/1/8 17:09
  */
+@Slf4j
+@Data
 public class Project implements Runnable {
-    private Logger logger = LoggerFactory.getLogger(Project.class);
 
     /**
      * memory
      */
     private Map<Integer, Modle> indexmodles;
     private boolean projectrun = true;
-
+    AtomicLong success = new AtomicLong(0);
+    private AtomicBoolean isProjectStop= new AtomicBoolean(false);
     @Override
     public void run() {
         while (!Thread.currentThread().isInterrupted() && projectrun) {
-
+            if (modleList.size() == 0) {
+                isProjectStop.set(true);
+                log.warn("hava no model. id={} name={}",getProjectid(),name);
+                return;
+            }
             try {
+
                 for (Modle modle : modleList) {
-                    if (modle instanceof MPCModle) {
-                        MPCModle mpcModle = (MPCModle) modle;
-                        if(mpcModle.ismpcmodleruncomplet()){
-                            continue;
-                        }
-                        JSONArray parents = mpcModle.getModleSight().getParents();
-                        boolean isneedrun = true;
-                        for (int index = 0; index < parents.size(); index++) {
-                            JSONObject parent = parents.getJSONObject(index);
-                            int parentid = parent.getInteger("id");
-                            BaseModleImp parentmodle = (BaseModleImp) indexmodles.get(parentid);
-                            if (parentmodle instanceof MPCModle) {
-                                isneedrun = isneedrun && ((MPCModle) parentmodle).ismpcmodleruncomplet();
-                            } else {
-                                isneedrun = isneedrun && (parentmodle.getModlerunlevel() == BaseModleImp.RUNLEVEL_RUNCOMPLET);
-                            }
-                            if (!isneedrun) {
-                                break;
-                            }
-                        }
-                        //父节点全部运行完成的条件下，如果mpc运行处于初始化状态下或者mpcModle不为空的时候，simultor也是运行状态处于初始状态下，就达到运算条件
-                        if (isneedrun && ((mpcModle.getModlerunlevel() == BaseModleImp.RUNLEVEL_INITE)||(mpcModle.getMysession()==null) /**|| (mpcModle.getSimulatControlModle() != null ? (mpcModle.getSimulatControlModle().getModlerunlevel() == BaseModleImp.RUNLEVEL_INITE) : true)*/)) {
-                            //根节点设置开始运行时间
-                            if (mpcModle.getModleSight().getParents().size() == 0) {
-                                mpcModle.setBeginruntime(Instant.now());
-                            }
+                    //here request api style
+                    if(!projectrun){
+                        break;
+                    }
+                    BaseModleImp baseModleImp = (BaseModleImp) modle;
 
-                            mpcModle.inprocess(this);
-                            mpcModle.docomputeprocess();
-                        }
-                        continue;
-                    } else if (modle instanceof PIDModle) {
-                        PIDModle pidModle = (PIDModle) modle;
-                        if(pidModle.getModlerunlevel()==BaseModleImp.RUNLEVEL_RUNCOMPLET){
-                            continue;
-                        }
-                        JSONArray parents = pidModle.getModleSight().getParents();
-                        boolean isneedrun = true;
-                        for (int index = 0; index < parents.size(); index++) {
-                            JSONObject parent = parents.getJSONObject(index);
-                            int parentid = parent.getInteger("id");
-                            BaseModleImp parentmodle = (BaseModleImp) indexmodles.get(parentid);
-                            if (parentmodle instanceof MPCModle) {
-                                isneedrun = isneedrun && ((MPCModle) parentmodle).ismpcmodleruncomplet();
-                            } else {
-                                isneedrun = isneedrun && (parentmodle.getModlerunlevel() == BaseModleImp.RUNLEVEL_RUNCOMPLET);
-                            }
-                            if (!isneedrun) {
-                                break;
-                            }
+                    log.debug("############ success={}", success.get());
+                    modleList.forEach(m -> {
+                        BaseModleImp baseModleImp_1 = (BaseModleImp) m;
+                        log.debug(baseModleImp_1.getModleName() + baseModleImp_1.getModlerunlevel().getDesc());
+                    });
+                    log.debug("############");
 
-                        }
-                        if (isneedrun && ((pidModle.getModlerunlevel() == BaseModleImp.RUNLEVEL_INITE)||(pidModle.getMysession()==null))) {
-                            if (pidModle.getModleSight().getParents().size() == 0) {
-                                pidModle.setBeginruntime(Instant.now());
-                            }
-                            pidModle.inprocess(this);
-                            pidModle.docomputeprocess();
-                        }
-                        continue;
-                    } else if (modle instanceof CUSTOMIZEModle) {
-                        CUSTOMIZEModle customizeModle = (CUSTOMIZEModle) modle;
-                        if(customizeModle.getModlerunlevel()==BaseModleImp.RUNLEVEL_RUNCOMPLET){
-                            continue;
-                        }
-                        JSONArray parents = customizeModle.getModleSight().getParents();
-                        boolean isneedrun = true;
-                        for (int index = 0; index < parents.size(); index++) {
-                            JSONObject parent = parents.getJSONObject(index);
-                            int parentid = parent.getInteger("id");
-                            BaseModleImp parentmodle = (BaseModleImp) indexmodles.get(parentid);
-                            if (parentmodle instanceof MPCModle) {
-                                isneedrun = isneedrun && ((MPCModle) parentmodle).ismpcmodleruncomplet();
-                            } else {
-                                isneedrun = isneedrun && (parentmodle.getModlerunlevel() == BaseModleImp.RUNLEVEL_RUNCOMPLET);
-                            }
-                            if (!isneedrun) {
-                                break;
-                            }
-                        }
-                        if (isneedrun && ((customizeModle.getModlerunlevel() == BaseModleImp.RUNLEVEL_INITE)||(customizeModle.getMysession()==null))) {
-                            if (customizeModle.getModleSight().getParents().size() == 0) {
-                                customizeModle.setBeginruntime(Instant.now());
-                            }
-                            customizeModle.inprocess(this);
-                            customizeModle.docomputeprocess();
-                        }
-                        continue;
-                    } else if (modle instanceof FilterModle) {
-                        FilterModle filterModle = (FilterModle) modle;
-                        if(filterModle.getModlerunlevel()==BaseModleImp.RUNLEVEL_RUNCOMPLET){
-                            continue;
-                        }
-                        JSONArray parents = filterModle.getModleSight().getParents();
-                        boolean isneedrun = true;
-                        for (int index = 0; index < parents.size(); index++) {
-                            JSONObject parent = parents.getJSONObject(index);
-                            int parentid = parent.getInteger("id");
-                            BaseModleImp parentmodle = (BaseModleImp) indexmodles.get(parentid);
-                            if (parentmodle instanceof MPCModle) {
-                                isneedrun = isneedrun && ((MPCModle) parentmodle).ismpcmodleruncomplet();
-                            } else {
-                                isneedrun = isneedrun && (parentmodle.getModlerunlevel() == BaseModleImp.RUNLEVEL_RUNCOMPLET);
-                            }
-                            if (!isneedrun) {
-                                break;
-                            }
-                        }
-                        //                    System.out.println("projectid="+filterModle.getModleName()+"  isneedrun="+isneedrun+"  "+ filterModle.getModlerunlevel()+"");
 
-                        if (isneedrun && ((filterModle.getModlerunlevel() == BaseModleImp.RUNLEVEL_INITE)||(filterModle.getMysession()==null))) {
-                            if (filterModle.getModleSight().getParents().size() == 0) {
-                                filterModle.setBeginruntime(Instant.now());
-                            }
-                            filterModle.inprocess(this);
-                            filterModle.docomputeprocess();
+                    JSONArray parents = baseModleImp.getModleSight().getParents();
+                    boolean isneedrun = true;
+                    for (int index = 0; index < parents.size(); index++) {
+                        JSONObject parent = parents.getJSONObject(index);
+                        int parentid = parent.getInteger("id");
+                        BaseModleImp parentmodle = (BaseModleImp) indexmodles.get(parentid);
+                        isneedrun = isneedrun && parentmodle.getModlerunlevel().equals(ModelRunStatusEnum.MODEL_RUN_STATUS_COMPELTE);
+                        if (!isneedrun) {
+                            break;
                         }
-                        continue;
-                    } else if (modle instanceof INModle) {
-                        INModle inModle = (INModle) modle;
-                        if(inModle.getModlerunlevel()==BaseModleImp.RUNLEVEL_RUNCOMPLET){
-                            continue;
-                        }
-                        JSONArray parents = inModle.getModleSight().getParents();
-                        boolean isneedrun = true;
-                        for (int index = 0; index < parents.size(); index++) {
-                            JSONObject parent = parents.getJSONObject(index);
-                            int parentid = parent.getInteger("id");
-                            BaseModleImp parentmodle = (BaseModleImp) indexmodles.get(parentid);
-                            if (parentmodle instanceof MPCModle) {
-                                isneedrun = isneedrun && ((MPCModle) parentmodle).ismpcmodleruncomplet();
-                            } else {
-                                isneedrun = isneedrun && (parentmodle.getModlerunlevel() == BaseModleImp.RUNLEVEL_RUNCOMPLET);
-                            }
-                            if (!isneedrun) {
-                                break;
-                            }
-                        }
-                        //System.out.println("projectid=" + inModle.getModleName() + "  isneedrun=" + isneedrun + "  " + inModle.getModlerunlevel() + "");
+                    }
 
-                        if (isneedrun && (inModle.getModlerunlevel() == BaseModleImp.RUNLEVEL_INITE)) {
-                            if (inModle.getModleSight().getParents().size() == 0) {
-                                inModle.setBeginruntime(Instant.now());
-                            }
-                            JSONObject inputdata = inModle.inprocess(this);
-                            //                        System.out.println("inModle "+inputdata.toJSONString());
-                            inModle.docomputeprocess();
-                            inModle.outprocess(this, inputdata);
-                        }
-                        continue;
-                    } else if (modle instanceof OUTModle) {
-
-                        OUTModle outModle = (OUTModle) modle;
-                        if(outModle.getModlerunlevel()==BaseModleImp.RUNLEVEL_RUNCOMPLET){
-                            continue;
-                        }
-                        JSONArray parents = outModle.getModleSight().getParents();
-                        boolean isneedrun = true;
-                        for (int index = 0; index < parents.size(); index++) {
-                            JSONObject parent = parents.getJSONObject(index);
-                            int parentid = parent.getInteger("id");
-                            BaseModleImp parentmodle = (BaseModleImp) indexmodles.get(parentid);
-                            if (parentmodle instanceof MPCModle) {
-                                isneedrun = isneedrun && ((MPCModle) parentmodle).ismpcmodleruncomplet();
-                            } else {
-                                isneedrun = isneedrun && (parentmodle.getModlerunlevel() == BaseModleImp.RUNLEVEL_RUNCOMPLET);
-                            }
-                            if (!isneedrun) {
-                                break;
-                            }
+                    if (isneedrun && baseModleImp.getModlerunlevel().equals(ModelRunStatusEnum.MODEL_RUN_STATUS_INITE)) {
+                        baseModleImp.inprocess(this);
+                        baseModleImp.docomputeprocess();
+                        if(baseModleImp.getModlerunlevel().equals(ModelRunStatusEnum.MODEL_RUN_STATUS_COMPELTE)){
+                            success.addAndGet(1);
                         }
 
-                        if (isneedrun && (outModle.getModlerunlevel() == BaseModleImp.RUNLEVEL_INITE)) {
-                            if (outModle.getModleSight().getParents().size() == 0) {
-                                outModle.setBeginruntime(Instant.now());
-                            }
-                            outModle.inprocess(this);
-                            //                        System.out.println("outModle ");
-                            outModle.docomputeprocess();
-                            outModle.outprocess(this, null);
-                        }
-                        continue;
                     }
 
                 }
-
 
                 try {
                     TimeUnit.MILLISECONDS.sleep(100);
                 } catch (InterruptedException e) {
-                    logger.error(e.getMessage(), e);
+                    log.error(e.getMessage(), e);
                 }
-//                if (allcomplete) {
 
-                try {
-                    for (Modle modle : modleList) {
-                        BaseModleImp leafmodle = (BaseModleImp) modle;
-                        //是否为叶节点
-                        if (leafmodle.getModleSight().getChilds().size() == 0) {
-                            if (leafmodle.getModlerunlevel() == BaseModleImp.RUNLEVEL_RUNCOMPLET) {
-                                //已经完成状态的叶节点
-                                List<BaseModleImp> rootmodles = new ArrayList<>();
-                                //查找到所有的根节点
-                                findRootModle(rootmodles, leafmodle.getModleId());
-                                Instant earliest = Instant.now();
-                                //找到运行完成最早的根节点
-                                if (rootmodles.size() != 0) {
-                                    for (BaseModleImp rootmodle : rootmodles) {
-                                        if (rootmodle.getBeginruntime() != null) {
-                                            if (rootmodle.getBeginruntime().isBefore(earliest)) {
-                                                earliest = rootmodle.getBeginruntime();
+                if (success.get() != modleList.size()) {
+                    continue;
+                }
+
+
+                log.debug("********** success={}", success.get());
+                modleList.forEach(m -> {
+                    BaseModleImp baseModleImp_1 = (BaseModleImp) m;
+                    log.debug(baseModleImp_1.getModleName() + baseModleImp_1.getModlerunlevel().getDesc());
+                });
+                log.debug("*********");
+
+
+                Instant earliestNode = null;
+                boolean reSetAll = false;
+                while (!reSetAll) {
+                    try {
+                        for (Modle modle : modleList) {
+                            BaseModleImp leafmodle = (BaseModleImp) modle;
+                            //是否为叶节点
+                            if (leafmodle.getModleSight().getChilds().size() == 0) {
+                                log.debug("leafnode={}", leafmodle.getModleName());
+                                if (leafmodle.getModlerunlevel() == ModelRunStatusEnum.MODEL_RUN_STATUS_COMPELTE) {
+                                    //已经完成状态的叶节点
+                                    List<BaseModleImp> rootmodles = new ArrayList<>();
+                                    //查找到所有的根节点
+                                    findRootModle(rootmodles, leafmodle.getModleId());
+                                    Instant earliest = Instant.now();
+                                    //找到运行完成最早的根节点
+                                    if (rootmodles.size() != 0) {
+                                        for (BaseModleImp rootmodle : rootmodles) {
+                                            if (rootmodle.getBeginruntime() != null) {
+                                                if (rootmodle.getBeginruntime().isBefore(earliest)) {
+                                                    earliest = rootmodle.getBeginruntime();
+                                                }
                                             }
                                         }
                                     }
-                                }
-                                //最早的根节点开始运行时间是不是和现在相差一个调度时间了
-                                if (earliest.plusMillis(Double.valueOf(getRunperiod() * 1000).longValue()).isBefore(Instant.now())) {
-                                    //根据叶子模块是的运行完成，去重置输出模块父节点上的运行状态,采用深度优先遍历
-                                    JSONArray outparents = leafmodle.getModleSight().getParents();
-                                    for (int index = 0; index < outparents.size(); index++) {
-                                        reSetParentsModleRunLevel(outparents.getJSONObject(index).getInteger("id"));
+                                    earliestNode = earliest;
+                                    //最早的根节点开始运行时间是不是和现在相差一个调度时间了
+
+                                    log.debug("runtimeend={},now={}", earliest.plusMillis(Double.valueOf(getRunperiod() * 1000).longValue()), Instant.now());
+                                    if (earliest.plusMillis(Double.valueOf(getRunperiod() * 1000).longValue()).isBefore(Instant.now())) {
+                                        //根据叶子模块是的运行完成，去重置输出模块父节点上的运行状态,采用深度优先遍历
+                                        JSONArray outparents = leafmodle.getModleSight().getParents();
+                                        for (int index = 0; index < outparents.size(); index++) {
+                                            reSetParentsModleRunLevel(outparents.getJSONObject(index).getInteger("id"));
+                                        }
+                                        leafmodle.setModlerunlevel(ModelRunStatusEnum.MODEL_RUN_STATUS_INITE);
+
                                     }
-                                    leafmodle.setModlerunlevel(BaseModleImp.RUNLEVEL_INITE);
 
                                 }
+
 
                             }
+                        }
+                    } catch (Exception e) {
+                        return;
+                    }
+
+                   // log.debug("********befor sleep,end={},now={},interval={}", earliestNode.plusMillis(Double.valueOf(getRunperiod() * 1000).longValue()), Instant.now(), earliestNode.plusMillis(Double.valueOf(getRunperiod() * 1000).longValue()).isAfter(Instant.now()));
+                    if (earliestNode != null && earliestNode.plusMillis(Double.valueOf(getRunperiod() * 1000).longValue()).isAfter(Instant.now())) {
+
+                        Duration duration = Duration.between(Instant.now(), earliestNode.plusMillis(Double.valueOf(getRunperiod() * 1000).longValue()));
+                        log.debug("********sleep,end={},now={},interval={}", earliestNode.plusMillis(Double.valueOf(getRunperiod() * 1000).longValue()), Instant.now(), duration.toMillis());
+
+                        TimeUnit.MILLISECONDS.sleep(duration.toMillis());
+                    }
 
 
+                    reSetAll = true;
+                    for (Modle m : modleList) {
+                        BaseModleImp baseModleImp_1 = (BaseModleImp) m;
+                        reSetAll = reSetAll && baseModleImp_1.getModlerunlevel().equals(ModelRunStatusEnum.MODEL_RUN_STATUS_INITE);
+                        if (!reSetAll) {
+                            break;
                         }
                     }
-//                        TimeUnit.MILLISECONDS.sleep(Double.valueOf(getRunperiod() * 1000).intValue());
-                } catch (Exception e) {
-                    return;
+
+
                 }
-//                }
+
+                if (success.get() == modleList.size()) {
+                    success.set(0);
+                }
+
+
             } catch (Exception e) {
-                logger.error(e.getMessage(), e);
+                log.error(e.getMessage(), e);
             }
 
         }
-
+        log.info("try to stop projectid={},name={}",projectid,name);
+        for (Modle modle : modleList) {
+            modle.destory();
+        }
+        log.info("stop projectid={},name={} complete",projectid,name);
+        isProjectStop.set(true);
     }
 
     public void init() {
@@ -357,14 +270,9 @@ public class Project implements Runnable {
             return;
         }
         //根节点运行完成
-        if (baseModleImp.getModlerunlevel() == BaseModleImp.RUNLEVEL_RUNCOMPLET) {
-//            if (baseModleImp instanceof MPCModle) {
-//                MPCModle mpcModle = (MPCModle) baseModleImp;
-//                if(mpcModle.getSimulatControlModle()!=null){
-//                    mpcModle.setModlerunlevel(BaseModleImp.RUNLEVEL_INITE);
-//                }
-//            }
-            baseModleImp.setModlerunlevel(BaseModleImp.RUNLEVEL_INITE);
+        if (baseModleImp.getModlerunlevel() == ModelRunStatusEnum.MODEL_RUN_STATUS_COMPELTE) {
+            log.debug("reset model status={}", baseModleImp.getModleName());
+            baseModleImp.setModlerunlevel(ModelRunStatusEnum.MODEL_RUN_STATUS_INITE);
             JSONArray parents = baseModleImp.getModleSight().getParents();
             for (int index = 0; index < parents.size(); index++) {
                 this.reSetParentsModleRunLevel(parents.getJSONObject(index).getInteger("id"));
